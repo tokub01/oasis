@@ -1,0 +1,143 @@
+/*
+ * Oasis – Design-Tokens und Grundstile
+ * Startpunkt für resources/css/oasis.css (bzw. Tailwind-Theme).
+ * Werte stammen aus den Design-Vorlagen in docs/oasis-design/design/.
+ */
+
+/* Schriften selbst hosten (keine Google-Fonts-Einbindung).
+   Dateinamen an die heruntergeladenen woff2-Dateien anpassen. */
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/fraunces-latin-full-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/fraunces-latin-full-italic.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Manrope";
+  src: url("/fonts/manrope-latin-wght-normal.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Farben */
+  --night: #0E2B2F;          /* Nachtwasser */
+  --night-2: #12353A;        /* Karten auf Nacht */
+  --night-line: #2C4B4F;     /* Linien auf Nacht */
+  --sand: #F4EDE1;           /* Seitenhintergrund */
+  --paper: #FBF8F2;          /* Karten, helle Abschnitte */
+  --field: #FFFDF8;          /* Eingabefelder */
+  --dune: #EADFCC;           /* alternative Abschnitte, Chips */
+  --dune-line: #D6C8B0;      /* Rahmen auf Sand */
+  --paper-line: #E5DBC9;     /* Rahmen auf Papier */
+  --field-line: #9C8E77;     /* Rahmen von Eingabefeldern (≥ 3:1) */
+  --ink: #1C2422;            /* Fließtext */
+  --ink-2: #3E4A47;          /* Sekundärtext */
+  --muted: #5E6B67;          /* Metatext */
+  --sun: #E06A43;            /* Abendsonne: Buttons, Logo, Flächen */
+  --sun-ink: #0B2326;        /* Text auf --sun */
+  --sun-text: #A3441F;       /* Koralle als Text auf hell */
+  --sun-on-night: #F2906B;   /* Koralle als Text auf Nacht */
+  --spring: #2E9E95;         /* Quelle: Wellen, Fortschritt, Fokus */
+  --spring-text: #1F6F69;    /* Türkis als Text/Icon auf hell */
+  --on-night: #F4EDE1;
+  --on-night-2: #C9D6D2;
+  --on-night-muted: #A9BDB8;
+
+  /* Schrift */
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --display-soft: "SOFT" 100;
+
+  --fs-h1-home: clamp(44px, 6.2vw, 88px);
+  --fs-h1: clamp(40px, 5vw, 72px);
+  --fs-h2: clamp(32px, 3.6vw, 52px);
+  --fs-h2-s: clamp(30px, 3.2vw, 46px);
+  --fs-lead: clamp(18px, 1.6vw, 21px);
+  --fs-body: 17px;
+  --fs-small: 15px;
+  --fs-eyebrow: 14px;
+
+  /* Raum */
+  --container: 1296px;
+  --gutter: clamp(20px, 4vw, 48px);
+  --section-y: clamp(72px, 8vw, 120px);
+  --section-y-s: clamp(56px, 6vw, 88px);
+
+  /* Ecken und Schatten */
+  --r-xl: 32px;
+  --r-l: 28px;
+  --r-m: 24px;
+  --r-s: 20px;
+  --r-xs: 14px;
+  --r-pill: 999px;
+  --shadow-float: 0 30px 60px -24px rgba(14, 43, 47, 0.5);
+  --shadow-card: 0 24px 50px -28px rgba(14, 43, 47, 0.45);
+}
+
+/* Grundstile */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--sand);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.6;
+}
+h1, h2, h3, p { margin: 0; }
+img, svg { max-width: 100%; }
+
+/* Fokus: sichtbar und einheitlich */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline: 3px solid var(--spring);
+  outline-offset: 3px;
+}
+
+/* Nur für Screenreader sichtbar */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* „Zum Inhalt springen“ */
+.skip-link {
+  position: absolute; left: 16px; top: -100px;
+  padding: 12px 18px; border-radius: var(--r-pill);
+  background: var(--night); color: var(--on-night); font-weight: 700;
+  z-index: 100;
+}
+.skip-link:focus { top: 16px; }
+
+/* FAQ: Plus dreht sich beim Öffnen */
+summary { list-style: none; cursor: pointer; }
+summary::-webkit-details-marker { display: none; }
+summary svg { transition: transform .2s ease; }
+details[open] summary svg { transform: rotate(45deg); }
+
+/* Bewegung reduzieren, wenn gewünscht */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

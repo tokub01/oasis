@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Oasis – Anmelden</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+body{margin:0;background:#0E2B2F}
+a{transition:opacity .15s ease}
+a:hover{opacity:.82}
+button{font:inherit;cursor:pointer}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #2E9E95;outline-offset:3px}
+</style>
+</helmet>
+<div style="background: #F4EDE1; color: #1C2422; font-family: Manrope, 'Segoe UI', system-ui, sans-serif; font-size: 17px; line-height: 1.6">
+
+<dc-import name="Header" minimal="{{true}}" hint-size="100%,80px"></dc-import>
+
+<main style="position: relative; overflow: hidden; padding: clamp(56px, 7vw, 104px) clamp(20px, 4vw, 48px)">
+<svg viewBox="0 0 600 300" aria-hidden="true" style="position: absolute; right: -80px; bottom: -40px; width: 620px; max-width: 90%; height: auto">
+<path d="M60 300 A240 240 0 0 1 540 300 Z" fill="#EADFCC"></path>
+</svg>
+<form aria-labelledby="login-titel" style="position: relative; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; padding: clamp(28px, 4vw, 48px); background: #FBF8F2; border: 1px solid #E5DBC9; border-radius: 32px; box-shadow: 0 30px 60px -36px rgba(14, 43, 47, 0.45)">
+<svg viewBox="0 0 120 120" width="48" height="48" aria-hidden="true"><path d="M26 62 A34 34 0 0 1 94 62 Z" fill="#E06A43"></path><path d="M14 76 q11.5 -9 23 0 t23 0 t23 0 t23 0" fill="none" stroke="#2E9E95" stroke-width="7" stroke-linecap="round"></path><path d="M32 92 q9.5 -8 19 0 t19 0 t19 0" fill="none" stroke="#2E9E95" stroke-width="7" stroke-linecap="round" opacity="0.6"></path></svg>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1 id="login-titel" style="margin: 0; font-family: Fraunces, Georgia, serif; font-variation-settings: 'SOFT' 100; font-weight: 500; font-size: 40px; line-height: 1.1; letter-spacing: -0.015em; color: #0E2B2F">Willkommen zurück.</h1>
+<p style="margin: 0; font-size: 17px; color: #3E4A47">Schön, dass du wieder da bist.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="l-nutzer" style="font-size: 15px; font-weight: 700">E-Mail oder Benutzername</label>
+<input id="l-nutzer" type="text" autocomplete="username" style="min-height: 52px; padding: 0 16px; border: 1px solid #9C8E77; border-radius: 12px; background: #FFFDF8; font: inherit; font-size: 17px; color: #1C2422">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="l-pass" style="font-size: 15px; font-weight: 700">Passwort</label>
+<input id="l-pass" type="password" autocomplete="current-password" style="min-height: 52px; padding: 0 16px; border: 1px solid #9C8E77; border-radius: 12px; background: #FFFDF8; font: inherit; font-size: 17px; color: #1C2422">
+</div>
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px">
+<label style="display: flex; gap: 10px; align-items: center; min-height: 44px; font-size: 15px">
+<input type="checkbox" style="width: 20px; height: 20px; margin: 0; accent-color: #0E2B2F">
+<span>Angemeldet bleiben</span>
+</label>
+<a href="Hilfe.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; font-weight: 700; color: #0E2B2F; text-decoration: underline; text-underline-offset: 4px">Passwort vergessen?</a>
+</div>
+<button type="button" style="min-height: 56px; border: none; border-radius: 999px; background: #0E2B2F; color: #F4EDE1; font-size: 18px; font-weight: 800">Anmelden</button>
+<div aria-hidden="true" style="height: 1px; background: #E5DBC9; margin: 6px 0"></div>
+<p style="margin: 0; text-align: center; font-size: 16px; color: #3E4A47">Noch kein Konto? <a href="Testen.dc.html" style="color: #A3441F; font-weight: 800; text-decoration: underline; text-underline-offset: 4px">30 Tage kostenlos testen</a></p>
+</form>
+</main>
+
+<dc-import name="Footer" hint-size="100%,440px"></dc-import>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

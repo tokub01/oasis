@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Oasis – Rechtliches</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+body{margin:0;background:#0E2B2F}
+a{transition:opacity .15s ease}
+a:hover{opacity:.82}
+button{font:inherit;cursor:pointer}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #2E9E95;outline-offset:3px}
+</style>
+</helmet>
+<div style="background: #F4EDE1; color: #1C2422; font-family: Manrope, 'Segoe UI', system-ui, sans-serif; font-size: 17px; line-height: 1.6">
+
+<dc-import name="Header" active="keine" hint-size="100%,124px"></dc-import>
+
+<main style="padding: clamp(48px, 5vw, 80px) 0 clamp(56px, 6vw, 88px)">
+<div style="max-width: 1296px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px); display: flex; flex-direction: column; gap: 36px">
+
+<div style="display: flex; flex-direction: column; gap: 14px">
+<p style="margin: 0; font-size: 14px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: #A3441F">Rechtliches</p>
+<h1 style="margin: 0; font-family: Fraunces, Georgia, serif; font-variation-settings: 'SOFT' 100; font-weight: 500; font-size: clamp(36px, 4.4vw, 60px); line-height: 1.08; letter-spacing: -0.015em; color: #0E2B2F">{{titel}}</h1>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start">
+
+<nav aria-label="Rechtliche Dokumente" style="flex: 1 1 240px; display: flex; flex-direction: column; gap: 4px; padding: 12px; background: #FBF8F2; border: 1px solid #E5DBC9; border-radius: 24px">
+<sc-for list="{{dokumente}}" as="d" hint-placeholder-count="6">
+<button type="button" onClick="{{d.waehlen}}" aria-pressed="{{d.aktivText}}" style="display: flex; align-items: center; min-height: 48px; padding: 0 16px; border: none; border-radius: 14px; text-align: left; font-size: 16px; font-weight: 700; background: {{d.bg}}; color: {{d.fg}}">{{d.label}}</button>
+</sc-for>
+</nav>
+
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 28px; padding: clamp(24px, 3.5vw, 44px); background: #FBF8F2; border: 1px solid #E5DBC9; border-radius: 28px">
+
+<sc-if value="{{zeige.impressum}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 24px; max-width: 44em">
+<section style="display: flex; flex-direction: column; gap: 6px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0E2B2F">Angaben gemäß § 5 DDG</h2>
+<p style="margin: 0">[NAME ODER FIRMA]<br>[STRASSE HAUSNUMMER]<br>[PLZ ORT]</p>
+</section>
+<section style="display: flex; flex-direction: column; gap: 6px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0E2B2F">Kontakt</h2>
+<p style="margin: 0">E-Mail: [KONTAKT-E-MAIL]<br>Telefon: [TELEFON]</p>
+</section>
+<section style="display: flex; flex-direction: column; gap: 6px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0E2B2F">Umsatzsteuer</h2>
+<p style="margin: 0">Umsatzsteuer-Identifikationsnummer nach § 27a UStG: [USt-IdNr.]</p>
+</section>
+<section style="display: flex; flex-direction: column; gap: 6px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0E2B2F">Kontaktstelle nach dem Digital Services Act</h2>
+<p style="margin: 0">Zentrale Kontaktstelle für Behörden und Nutzer:innen nach Art. 11 und 12 DSA: [DSA-KONTAKT-E-MAIL]. Sprachen: Deutsch, Englisch.</p>
+</section>
+<section style="display: flex; flex-direction: column; gap: 6px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0E2B2F">Verbraucherstreitbeilegung</h2>
+<p style="margin: 0">[Hinweis nach § 36 VSBG, ob du an Streitbeilegungsverfahren teilnimmst]</p>
+</section>
+</div>
+</sc-if>
+
+<sc-if value="{{zeige.datenschutz}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 22px; max-width: 44em">
+<p style="margin: 0; padding: 14px 18px; border-radius: 14px; background: #EADFCC; font-size: 15px">Platzhalter: Diese Seite braucht einen anwaltlich geprüften Text.</p>
+<section style="display: flex; flex-direction: column; gap: 6px"><h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0E2B2F">1. Verantwortliche Stelle</h2><p style="margin: 0">[Name, Anschrift, Kontakt]</p></section>
+<section style="display: flex; flex-direction: column; gap: 6px"><h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0E2B2F">2. Welche Daten wir verarbeiten</h2><p style="margin: 0">[Kontodaten, Inhalte, Zahlungsdaten, technische Daten]</p></section>
+<section style="display: flex; flex-direction: column; gap: 6px"><h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0E2B2F">3. Zwecke und Rechtsgrundlagen</h2><p style="margin: 0">[Text]</p></section>
+<section style="display: flex; flex-direction: column; gap: 6px"><h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0E2B2F">4. Dienstleister und Speicherort</h2><p style="margin: 0">[Server, Speicher, E-Mail-Versand, Zahlungsanbieter, jeweils mit Standort]</p></section>
+<section style="display: flex; flex-direction: column; gap: 6px"><h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0E2B2F">5. Speicherdauer</h2><p style="margin: 0">[Text]</p></section>
+<section style="display: flex; flex-direction: column; gap: 6px"><h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0E2B2F">6. Deine Rechte</h2><p style="margin: 0">[Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit, Widerspruch, Beschwerde bei einer Aufsichtsbehörde]</p></section>
+</div>
+</sc-if>
+
+<sc-if value="{{zeige.agb}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 22px; max-width: 44em">
+<p style="margin: 0; padding: 14px 18px; border-radius: 14px; background: #EADFCC; font-size: 15px">Platzhalter: Diese Seite braucht einen anwaltlich geprüften Text.</p>
+<section style="display: flex; flex-direction: column; gap: 6px"><h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0E2B2F">§ 1 Geltungsbereich</h2><p style="margin: 0">[Text]</p></section>
+<section style="display: flex; flex-direction: column; gap: 6px"><h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0E2B2F">§ 2 Test und Vertragsschluss</h2><p style="margin: 0">[30 Tage Test ohne Zahlungsdaten, Mitgliedschaft erst nach aktiver Bestellung]</p></section>
+<section style="display: flex; flex-direction: column; gap: 6px"><h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0E2B2F">§ 3 Preise und Zahlung</h2><p style="margin: 0">[Stufen, Abrechnung, Preisgarantie für Gründungsmitglieder]</p></section>
+<section style="display: flex; flex-direction: column; gap: 6px"><h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0E2B2F">§ 4 Laufzeit und Kündigung</h2><p style="margin: 0">[Monatlich kündbar; Jahresbeitrag zum Ende des Jahres, danach monatlich kündbar]</p></section>
+<section style="display: flex; flex-direction: column; gap: 6px"><h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0E2B2F">§ 5 Unsere Versprechen</h2><p style="margin: 0">[Keine Werbung, kein Werbeprofil, kein Datenverkauf; Änderung nur mit Zustimmung der Mitglieder]</p></section>
+<section style="display: flex; flex-direction: column; gap: 6px"><h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0E2B2F">§ 6 Inhalte und Community-Regeln</h2><p style="margin: 0">[Text]</p></section>
+</div>
+</sc-if>
+
+<sc-if value="{{zeige.widerruf}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 18px; max-width: 44em">
+<p style="margin: 0; padding: 14px 18px; border-radius: 14px; background: #EADFCC; font-size: 15px">Platzhalter: Diese Seite braucht einen anwaltlich geprüften Text.</p>
+<p style="margin: 0">[Widerrufsbelehrung nach dem gesetzlichen Muster, angepasst auf digitale Dienstleistungen]</p>
+<a href="Kuendigen.dc.html" style="align-self: flex-start; display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border: 2px solid #0E2B2F; border-radius: 999px; font-size: 16px; font-weight: 800; color: #0E2B2F; text-decoration: none">Vertrag widerrufen</a>
+</div>
+</sc-if>
+
+<sc-if value="{{zeige.regeln}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 20px; max-width: 44em">
+<p style="margin: 0; font-size: 18px; line-height: 1.6">Oasis soll ein Ort sein, an dem man gern ist. Dafür gelten für alle diese Regeln:</p>
+<ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 16px">
+<li style="display: flex; gap: 16px; align-items: flex-start"><span aria-hidden="true" style="flex: none; width: 32px; font-family: Fraunces, Georgia, serif; font-variation-settings: 'SOFT' 100; font-size: 22px; font-weight: 600; color: #A3441F">1</span><span><b>Sei respektvoll.</b> Keine Beleidigungen, keine Belästigung, keine Drohungen.</span></li>
+<li style="display: flex; gap: 16px; align-items: flex-start"><span aria-hidden="true" style="flex: none; width: 32px; font-family: Fraunces, Georgia, serif; font-variation-settings: 'SOFT' 100; font-size: 22px; font-weight: 600; color: #A3441F">2</span><span><b>Kein Hass.</b> Keine Hetze gegen Menschen wegen Herkunft, Religion, Geschlecht, sexueller Orientierung, Behinderung oder anderer Merkmale.</span></li>
+<li style="display: flex; gap: 16px; align-items: flex-start"><span aria-hidden="true" style="flex: none; width: 32px; font-family: Fraunces, Georgia, serif; font-variation-settings: 'SOFT' 100; font-size: 22px; font-weight: 600; color: #A3441F">3</span><span><b>Nichts Rechtswidriges.</b> Keine illegalen Inhalte und keine Aufrufe zu Gewalt.</span></li>
+<li style="display: flex; gap: 16px; align-items: flex-start"><span aria-hidden="true" style="flex: none; width: 32px; font-family: Fraunces, Georgia, serif; font-variation-settings: 'SOFT' 100; font-size: 22px; font-weight: 600; color: #A3441F">4</span><span><b>Sei echt.</b> Keine falschen Profile, keine Täuschung, kein Spam.</span></li>
+<li style="display: flex; gap: 16px; align-items: flex-start"><span aria-hidden="true" style="flex: none; width: 32px; font-family: Fraunces, Georgia, serif; font-variation-settings: 'SOFT' 100; font-size: 22px; font-weight: 600; color: #A3441F">5</span><span><b>Schütze andere.</b> Keine privaten Daten anderer ohne deren Zustimmung.</span></li>
+<li style="display: flex; gap: 16px; align-items: flex-start"><span aria-hidden="true" style="flex: none; width: 32px; font-family: Fraunces, Georgia, serif; font-variation-settings: 'SOFT' 100; font-size: 22px; font-weight: 600; color: #A3441F">6</span><span><b>Oasen dürfen strenger sein.</b> Gastgeber:innen können eigene Hausregeln ergänzen, aber diese Regeln nicht lockern.</span></li>
+</ol>
+<p style="margin: 0; padding: 16px 18px; border-radius: 14px; background: #EADFCC; font-size: 16px; line-height: 1.55">Bei Verstößen entfernen wir Inhalte oder schränken Konten ein. Jede Entscheidung begründen wir, und du kannst widersprechen.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{zeige.melden}}" hint-placeholder-val="{{false}}">
+<form aria-label="Rechtswidrige Inhalte melden" style="display: flex; flex-direction: column; gap: 18px; max-width: 44em">
+<p style="margin: 0; font-size: 17px; line-height: 1.6; color: #3E4A47">Hier kann jede Person Inhalte melden, die sie für rechtswidrig hält, auch ohne Konto.</p>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="r-url" style="font-size: 15px; font-weight: 700">Link zum Inhalt</label>
+<input id="r-url" type="url" placeholder="https://get-oasis.com/…" style="min-height: 52px; padding: 0 16px; border: 1px solid #9C8E77; border-radius: 12px; background: #FFFDF8; font: inherit; font-size: 17px; color: #1C2422">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="r-grund" style="font-size: 15px; font-weight: 700">Warum ist der Inhalt rechtswidrig?</label>
+<textarea id="r-grund" rows="5" style="padding: 12px 16px; border: 1px solid #9C8E77; border-radius: 12px; background: #FFFDF8; font: inherit; font-size: 17px; color: #1C2422; resize: vertical"></textarea>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 18px 20px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="r-name" style="font-size: 15px; font-weight: 700">Dein Name</label>
+<input id="r-name" type="text" autocomplete="name" style="min-height: 52px; padding: 0 16px; border: 1px solid #9C8E77; border-radius: 12px; background: #FFFDF8; font: inherit; font-size: 17px; color: #1C2422">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="r-mail" style="font-size: 15px; font-weight: 700">Deine E-Mail-Adresse</label>
+<input id="r-mail" type="email" autocomplete="email" style="min-height: 52px; padding: 0 16px; border: 1px solid #9C8E77; border-radius: 12px; background: #FFFDF8; font: inherit; font-size: 17px; color: #1C2422">
+</div>
+</div>
+<label style="display: flex; gap: 12px; align-items: flex-start; font-size: 15px; line-height: 1.5">
+<input type="checkbox" style="flex: none; width: 20px; height: 20px; margin: 2px 0 0; accent-color: #0E2B2F">
+<span>Ich bestätige, dass meine Angaben nach bestem Wissen richtig und vollständig sind.</span>
+</label>
+<button type="button" style="align-self: flex-start; min-height: 52px; padding: 0 28px; border: none; border-radius: 999px; background: #0E2B2F; color: #F4EDE1; font-size: 17px; font-weight: 800">Meldung absenden</button>
+</form>
+</sc-if>
+
+</div>
+</div>
+</div>
+</main>
+
+<dc-import name="Footer" hint-size="100%,440px"></dc-import>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const self = this;
+    const aktiv = s.doc || 'impressum';
+    const liste = [
+      { key: 'impressum', label: 'Impressum' },
+      { key: 'datenschutz', label: 'Datenschutzerklärung' },
+      { key: 'agb', label: 'AGB' },
+      { key: 'widerruf', label: 'Widerrufsbelehrung' },
+      { key: 'regeln', label: 'Community-Regeln' },
+      { key: 'melden', label: 'Inhalte melden' }
+    ];
+    const titel = {};
+    liste.forEach(function (d) { titel[d.key] = d.label; });
+    const zeige = {};
+    liste.forEach(function (d) { zeige[d.key] = d.key === aktiv; });
+    return {
+      titel: titel[aktiv],
+      zeige: zeige,
+      dokumente: liste.map(function (d) {
+        const an = d.key === aktiv;
+        return {
+          label: d.label,
+          aktivText: an ? 'true' : 'false',
+          bg: an ? '#0E2B2F' : 'transparent',
+          fg: an ? '#F4EDE1' : '#0E2B2F',
+          waehlen: function () { self.setState({ doc: d.key }); }
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

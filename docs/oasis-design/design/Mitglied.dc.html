@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Oasis – Mitglied werden</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+body{margin:0;background:#0E2B2F}
+a{transition:opacity .15s ease}
+a:hover{opacity:.82}
+button{font:inherit;cursor:pointer}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #2E9E95;outline-offset:3px}
+</style>
+</helmet>
+<div style="background: #F4EDE1; color: #1C2422; font-family: Manrope, 'Segoe UI', system-ui, sans-serif; font-size: 17px; line-height: 1.6">
+
+<dc-import name="Header" minimal="{{true}}" hint-size="100%,80px"></dc-import>
+
+<main style="padding: clamp(40px, 5vw, 64px) 0 clamp(56px, 6vw, 88px)">
+<div style="max-width: 1296px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px); display: flex; flex-direction: column; gap: 32px">
+
+<div style="display: flex; flex-direction: column; gap: 12px">
+<p style="margin: 0; align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; background: #EADFCC; font-size: 15px; font-weight: 700; color: #0E2B2F">
+<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+Noch [5] Tage in deinem Test</p>
+<h1 style="margin: 0; font-family: Fraunces, Georgia, serif; font-variation-settings: 'SOFT' 100; font-weight: 500; font-size: clamp(36px, 4.2vw, 56px); line-height: 1.08; letter-spacing: -0.015em; color: #0E2B2F">Bleib in der Oase.</h1>
+<p style="margin: 0; max-width: 36em; font-size: 18px; color: #3E4A47">Wähle, wie viel du beitragen möchtest. Alle Mitglieder bekommen dasselbe.</p>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start">
+
+<form aria-label="Mitgliedschaft auswählen" style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 28px; padding: clamp(24px, 3vw, 40px); background: #FBF8F2; border: 1px solid #E5DBC9; border-radius: 32px">
+
+<fieldset style="margin: 0; padding: 0; border: none; display: flex; flex-direction: column; gap: 12px">
+<legend style="padding: 0; margin-bottom: 12px; font-size: 20px; font-weight: 800; color: #0E2B2F">1. Deine Stufe</legend>
+<label style="display: flex; align-items: flex-start; gap: 14px; padding: 18px 20px; border-radius: 18px; border: 2px solid {{rand.solidar}}; background: {{grund.solidar}}; cursor: pointer">
+<input type="radio" name="stufe" checked="{{sel.solidar}}" onChange="{{pick.solidar}}" style="flex: none; width: 20px; height: 20px; margin: 4px 0 0; accent-color: #0E2B2F">
+<span style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+<span style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px"><span style="font-size: 18px; font-weight: 800; color: #0E2B2F">Solidar</span><span style="font-size: 17px; font-weight: 700">{{preis.solidar}}</span></span>
+<span style="font-size: 15px; color: #3E4A47">Für alle, denen 5 € gerade zu viel sind. Ohne Nachweis.</span>
+</span>
+</label>
+<label style="display: flex; align-items: flex-start; gap: 14px; padding: 18px 20px; border-radius: 18px; border: 2px solid {{rand.oase}}; background: {{grund.oase}}; cursor: pointer">
+<input type="radio" name="stufe" checked="{{sel.oase}}" onChange="{{pick.oase}}" style="flex: none; width: 20px; height: 20px; margin: 4px 0 0; accent-color: #0E2B2F">
+<span style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+<span style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px"><span style="font-size: 18px; font-weight: 800; color: #0E2B2F">Oase <span style="margin-left: 6px; font-size: 13px; font-weight: 800; padding: 3px 10px; border-radius: 999px; background: #E06A43; color: #0B2326">Standard</span></span><span style="font-size: 17px; font-weight: 700">{{preis.oase}}</span></span>
+<span style="font-size: 15px; color: #3E4A47">Der faire Standard. Deckt deinen eigenen Platz.</span>
+</span>
+</label>
+<label style="display: flex; align-items: flex-start; gap: 14px; padding: 18px 20px; border-radius: 18px; border: 2px solid {{rand.maezen}}; background: {{grund.maezen}}; cursor: pointer">
+<input type="radio" name="stufe" checked="{{sel.maezen}}" onChange="{{pick.maezen}}" style="flex: none; width: 20px; height: 20px; margin: 4px 0 0; accent-color: #0E2B2F">
+<span style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+<span style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px"><span style="font-size: 18px; font-weight: 800; color: #0E2B2F">Mäzen</span><span style="font-size: 17px; font-weight: 700">{{preis.maezen}}</span></span>
+<span style="font-size: 15px; color: #3E4A47">Trägt rechnerisch drei Solidarplätze mit. Nach oben offen.</span>
+</span>
+</label>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 0 4px 0 54px">
+<label for="m-betrag" style="font-size: 15px; font-weight: 700">Dein Mäzen-Beitrag im Monat</label>
+<div style="display: flex; align-items: center; gap: 6px">
+<input id="m-betrag" type="number" min="12" step="1" value="{{betragRoh}}" onChange="{{setBetrag}}" onFocus="{{pick.maezen}}" style="width: 96px; min-height: 44px; padding: 0 12px; border: 1px solid #9C8E77; border-radius: 10px; background: #FFFDF8; font: inherit; font-size: 17px; color: #1C2422">
+<span style="font-size: 17px; font-weight: 700">€</span>
+</div>
+<sc-if value="{{betragZuNiedrig}}" hint-placeholder-val="{{false}}">
+<span style="font-size: 14px; font-weight: 700; color: #A3441F">Mindestens 12 €</span>
+</sc-if>
+</div>
+</fieldset>
+
+<fieldset style="margin: 0; padding: 0; border: none; display: flex; flex-direction: column; gap: 12px">
+<legend style="padding: 0; margin-bottom: 12px; font-size: 20px; font-weight: 800; color: #0E2B2F">2. Zahlweise</legend>
+<div style="display: flex; flex-wrap: wrap; gap: 12px">
+<label style="flex: 1 1 220px; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 18px; border: 1px solid #D6C8B0; border-radius: 16px; background: #FFFDF8; font-size: 17px; font-weight: 700; cursor: pointer">
+<input type="radio" name="rhythmus" checked="{{istMonat}}" onChange="{{setMonat}}" style="width: 20px; height: 20px; margin: 0; accent-color: #0E2B2F">Monatlich</label>
+<label style="flex: 1 1 220px; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 18px; border: 1px solid #D6C8B0; border-radius: 16px; background: #FFFDF8; font-size: 17px; font-weight: 700; cursor: pointer">
+<input type="radio" name="rhythmus" checked="{{istJahr}}" onChange="{{setJahr}}" style="width: 20px; height: 20px; margin: 0; accent-color: #0E2B2F">Jährlich <span style="font-weight: 600; color: #1F6F69">· 2 Monate geschenkt</span></label>
+</div>
+</fieldset>
+
+<fieldset style="margin: 0; padding: 0; border: none; display: flex; flex-direction: column; gap: 12px">
+<legend style="padding: 0; margin-bottom: 12px; font-size: 20px; font-weight: 800; color: #0E2B2F">3. Zahlungsart</legend>
+<div style="display: flex; flex-wrap: wrap; gap: 12px">
+<label style="flex: 1 1 160px; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 18px; border: 1px solid #D6C8B0; border-radius: 16px; background: #FFFDF8; font-size: 17px; font-weight: 700; cursor: pointer">
+<input type="radio" name="zahlart" checked="{{za.sepa}}" onChange="{{setZa.sepa}}" style="width: 20px; height: 20px; margin: 0; accent-color: #0E2B2F">SEPA-Lastschrift</label>
+<label style="flex: 1 1 160px; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 18px; border: 1px solid #D6C8B0; border-radius: 16px; background: #FFFDF8; font-size: 17px; font-weight: 700; cursor: pointer">
+<input type="radio" name="zahlart" checked="{{za.paypal}}" onChange="{{setZa.paypal}}" style="width: 20px; height: 20px; margin: 0; accent-color: #0E2B2F">PayPal</label>
+<label style="flex: 1 1 160px; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 18px; border: 1px solid #D6C8B0; border-radius: 16px; background: #FFFDF8; font-size: 17px; font-weight: 700; cursor: pointer">
+<input type="radio" name="zahlart" checked="{{za.karte}}" onChange="{{setZa.karte}}" style="width: 20px; height: 20px; margin: 0; accent-color: #0E2B2F">Kreditkarte</label>
+</div>
+<sc-if value="{{za.sepa}}" hint-placeholder-val="{{true}}">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 16px 20px; margin-top: 6px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="m-inhaber" style="font-size: 15px; font-weight: 700">Kontoinhaber:in</label>
+<input id="m-inhaber" type="text" autocomplete="name" style="min-height: 52px; padding: 0 16px; border: 1px solid #9C8E77; border-radius: 12px; background: #FFFDF8; font: inherit; font-size: 17px; color: #1C2422">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="m-iban" style="font-size: 15px; font-weight: 700">IBAN</label>
+<input id="m-iban" type="text" inputmode="text" placeholder="DE00 0000 0000 0000 0000 00" style="min-height: 52px; padding: 0 16px; border: 1px solid #9C8E77; border-radius: 12px; background: #FFFDF8; font: inherit; font-size: 17px; color: #1C2422">
+</div>
+</div>
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: #3E4A47">Mit der Bestellung erteilst du [BETREIBER] ein SEPA-Lastschriftmandat. Gläubiger-ID: [GLÄUBIGER-ID].</p>
+</sc-if>
+<sc-if value="{{za.paypal}}" hint-placeholder-val="{{false}}">
+<p style="margin: 6px 0 0; font-size: 15px; color: #3E4A47">Nach der Bestellung leiten wir dich zu PayPal weiter, um die Zahlung zu bestätigen.</p>
+</sc-if>
+<sc-if value="{{za.karte}}" hint-placeholder-val="{{false}}">
+<p style="margin: 6px 0 0; font-size: 15px; color: #3E4A47">Deine Kartendaten gibst du im nächsten Schritt direkt bei [ZAHLUNGSANBIETER] ein. Wir speichern sie nicht.</p>
+</sc-if>
+</fieldset>
+</form>
+
+<aside aria-labelledby="summe-titel" style="flex: 1 1 340px; display: flex; flex-direction: column; gap: 18px; padding: clamp(24px, 3vw, 36px); background: #0E2B2F; color: #F4EDE1; border-radius: 32px">
+<h2 id="summe-titel" style="margin: 0; font-size: 20px; font-weight: 800">Deine Mitgliedschaft</h2>
+<dl style="margin: 0; display: flex; flex-direction: column; gap: 12px; font-size: 16px">
+<div style="display: flex; justify-content: space-between; gap: 16px"><dt style="color: #A9BDB8">Stufe</dt><dd style="margin: 0; font-weight: 700">{{summe.stufe}}</dd></div>
+<div style="display: flex; justify-content: space-between; gap: 16px"><dt style="color: #A9BDB8">Zahlweise</dt><dd style="margin: 0; font-weight: 700">{{summe.rhythmus}}</dd></div>
+<div style="display: flex; justify-content: space-between; gap: 16px"><dt style="color: #A9BDB8">Zahlungsart</dt><dd style="margin: 0; font-weight: 700">{{summe.zahlart}}</dd></div>
+<div style="display: flex; justify-content: space-between; gap: 16px"><dt style="color: #A9BDB8">Erste Zahlung</dt><dd style="margin: 0; font-weight: 700; text-align: right">am [DATUM], zum Ende deines Tests</dd></div>
+</dl>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 18px 0; border-top: 1px solid #2C4B4F; border-bottom: 1px solid #2C4B4F">
+<p style="margin: 0; display: flex; align-items: baseline; gap: 8px"><span style="font-family: Fraunces, Georgia, serif; font-variation-settings: 'SOFT' 100; font-size: 44px; font-weight: 600; line-height: 1.1">{{summe.betrag}}</span><span style="font-size: 16px; color: #C9D6D2">{{summe.einheit}}</span></p>
+<p style="margin: 0; font-size: 14px; color: #A9BDB8">inklusive 19 % Umsatzsteuer ({{summe.ust}})</p>
+</div>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: #C9D6D2">{{summe.laufzeit}}</p>
+<button type="button" style="min-height: 56px; border: none; border-radius: 999px; background: #E06A43; color: #0B2326; font-size: 18px; font-weight: 800">Zahlungspflichtig bestellen</button>
+<p style="margin: 0; font-size: 14px; line-height: 1.55; color: #C9D6D2">Es gelten unsere <a href="Rechtliches.dc.html" style="color: #F4EDE1; text-decoration: underline">AGB</a>. Du kannst innerhalb von 14 Tagen widerrufen, Details in der <a href="Rechtliches.dc.html" style="color: #F4EDE1; text-decoration: underline">Widerrufsbelehrung</a>.</p>
+<p style="margin: 0; padding-top: 14px; border-top: 1px solid #2C4B4F; font-size: 15px; line-height: 1.55; color: #F4EDE1">Lieber noch nicht? Kein Problem: Dein Test endet einfach von selbst.</p>
+</aside>
+
+</div>
+</div>
+</main>
+
+<dc-import name="Footer" hint-size="100%,440px"></dc-import>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2050}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const self = this;
+    const stufe = s.stufe || 'oase';
+    const jahr = s.jahr === true;
+    const zahlart = s.zahlart || 'sepa';
+    const betragRoh = s.betrag === undefined ? '12' : String(s.betrag);
+    const betragZahl = Number(betragRoh.replace(',', '.'));
+    const maezenMonat = (isNaN(betragZahl) || betragZahl < 12) ? 12 : Math.round(betragZahl * 100) / 100;
+    const monatlich = { solidar: 3, oase: 5, maezen: maezenMonat };
+    const namen = { solidar: 'Solidar', oase: 'Oase', maezen: 'Mäzen' };
+    const fmt = function (n) { return n.toFixed(2).replace('.', ',') + ' €'; };
+    const betrag = jahr ? monatlich[stufe] * 10 : monatlich[stufe];
+    const ust = betrag * 19 / 119;
+    const rand = function (k) { return stufe === k ? '#0E2B2F' : '#D6C8B0'; };
+    const grund = function (k) { return stufe === k ? '#FFFDF8' : '#FBF8F2'; };
+    const waehle = function (k) { return function () { self.setState({ stufe: k }); }; };
+    const zahle = function (k) { return function () { self.setState({ zahlart: k }); }; };
+    return {
+      sel: { solidar: stufe === 'solidar', oase: stufe === 'oase', maezen: stufe === 'maezen' },
+      pick: { solidar: waehle('solidar'), oase: waehle('oase'), maezen: waehle('maezen') },
+      rand: { solidar: rand('solidar'), oase: rand('oase'), maezen: rand('maezen') },
+      grund: { solidar: grund('solidar'), oase: grund('oase'), maezen: grund('maezen') },
+      preis: jahr
+        ? { solidar: '30 € / Jahr', oase: '50 € / Jahr', maezen: 'ab 120 € / Jahr' }
+        : { solidar: '3 € / Monat', oase: '5 € / Monat', maezen: 'ab 12 € / Monat' },
+      istMonat: !jahr,
+      istJahr: jahr,
+      setMonat: function () { self.setState({ jahr: false }); },
+      setJahr: function () { self.setState({ jahr: true }); },
+      za: { sepa: zahlart === 'sepa', paypal: zahlart === 'paypal', karte: zahlart === 'karte' },
+      setZa: { sepa: zahle('sepa'), paypal: zahle('paypal'), karte: zahle('karte') },
+      betragRoh: betragRoh,
+      setBetrag: function (e) { self.setState({ betrag: e.target.value, stufe: 'maezen' }); },
+      betragZuNiedrig: !isNaN(betragZahl) && betragRoh !== '' && betragZahl < 12,
+      summe: {
+        stufe: namen[stufe],
+        rhythmus: jahr ? 'jährlich' : 'monatlich',
+        zahlart: zahlart === 'sepa' ? 'SEPA-Lastschrift' : (zahlart === 'paypal' ? 'PayPal' : 'Kreditkarte'),
+        betrag: fmt(betrag),
+        einheit: jahr ? 'pro Jahr' : 'pro Monat',
+        ust: 'darin ' + fmt(ust),
+        laufzeit: jahr
+          ? 'Läuft 12 Monate. Danach kannst du monatlich kündigen oder ein neues Jahr abschließen.'
+          : 'Monatlich kündbar, jederzeit über „Verträge hier kündigen“.'
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

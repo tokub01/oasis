@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Oasis – Kopfzeile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&amp;family=Manrope:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<header style="font-family: Manrope, 'Segoe UI', system-ui, sans-serif; color: #1C2422; background: #F4EDE1; border-bottom: 1px solid #D6C8B0">
+<sc-if value="{{showBar}}" hint-placeholder-val="{{true}}">
+<div style="background: #0E2B2F; color: #F4EDE1">
+<div style="max-width: 1296px; margin: 0 auto; padding: 10px clamp(20px, 4vw, 48px); display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 14px; font-size: 14px; line-height: 1.45; text-align: center">
+<span>Gründungsphase: Die ersten [1.000] Mitglieder bekommen eine Preisgarantie.</span>
+<a href="Gruendung.dc.html" style="color: #F2906B; font-weight: 700; text-decoration: underline; text-underline-offset: 3px">Mehr erfahren</a>
+</div>
+</div>
+</sc-if>
+<div style="max-width: 1296px; margin: 0 auto; padding: 16px clamp(20px, 4vw, 48px); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 32px">
+<a href="Main.dc.html" aria-label="Oasis – zur Startseite" style="display: flex; align-items: center; gap: 10px; min-height: 44px; text-decoration: none; color: #0E2B2F">
+<svg viewBox="0 0 120 120" width="40" height="40" aria-hidden="true"><path d="M26 62 A34 34 0 0 1 94 62 Z" fill="#E06A43"></path><path d="M14 76 q11.5 -9 23 0 t23 0 t23 0 t23 0" fill="none" stroke="#2E9E95" stroke-width="7" stroke-linecap="round"></path><path d="M32 92 q9.5 -8 19 0 t19 0 t19 0" fill="none" stroke="#2E9E95" stroke-width="7" stroke-linecap="round" opacity="0.6"></path></svg>
+<span style="font-family: Fraunces, Georgia, serif; font-variation-settings: 'SOFT' 100; font-size: 30px; font-weight: 600; letter-spacing: -0.5px; line-height: 1">oasis</span>
+</a>
+<sc-if value="{{full}}" hint-placeholder-val="{{true}}">
+<nav aria-label="Hauptnavigation" style="display: flex; flex-wrap: wrap; align-items: center; gap: 0 26px">
+<sc-for list="{{nav}}" as="item" hint-placeholder-count="5">
+<sc-if value="{{item.active}}" hint-placeholder-val="{{false}}">
+<a href="{{item.href}}" aria-current="page" style="display: inline-flex; align-items: center; min-height: 44px; font-size: 16px; font-weight: 700; color: #0E2B2F; text-decoration: underline; text-decoration-color: #E06A43; text-decoration-thickness: 2px; text-underline-offset: 8px">{{item.label}}</a>
+</sc-if>
+<sc-if value="{{item.inactive}}" hint-placeholder-val="{{true}}">
+<a href="{{item.href}}" style="display: inline-flex; align-items: center; min-height: 44px; font-size: 16px; font-weight: 600; color: #3E4A47; text-decoration: none">{{item.label}}</a>
+</sc-if>
+</sc-for>
+</nav>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px">
+<a href="Anmelden.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; font-size: 16px; font-weight: 600; color: #0E2B2F; text-decoration: none">Anmelden</a>
+<a href="Testen.dc.html" style="display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 20px; border-radius: 999px; background: #E06A43; color: #0B2326; font-size: 16px; font-weight: 700; text-decoration: none">30 Tage testen</a>
+</div>
+</sc-if>
+<sc-if value="{{minimal}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px">
+<a href="Hilfe.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; font-size: 16px; font-weight: 600; color: #3E4A47; text-decoration: none">Hilfe</a>
+<a href="Main.dc.html" style="display: inline-flex; align-items: center; min-height: 44px; font-size: 16px; font-weight: 600; color: #0E2B2F; text-decoration: underline; text-underline-offset: 4px">Zur Startseite</a>
+</div>
+</sc-if>
+</div>
+</header>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"active":{"editor":"enum","options":["start","funktionen","preise","transparenz","manifest","gemeinsam","keine"],"default":"start"},"minimal":{"editor":"boolean","default":false},"showBar":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":124}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const active = this.props.active ?? 'start';
+    const minimal = this.props.minimal === true || this.props.minimal === 'true';
+    const barOff = this.props.showBar === false || this.props.showBar === 'false';
+    const links = [
+      { key: 'funktionen', label: 'Funktionen', href: 'Funktionen.dc.html' },
+      { key: 'preise', label: 'Preise', href: 'Preise.dc.html' },
+      { key: 'transparenz', label: 'Transparenz', href: 'Transparenz.dc.html' },
+      { key: 'manifest', label: 'Manifest', href: 'Manifest.dc.html' },
+      { key: 'gemeinsam', label: 'Gemeinsam starten', href: 'Gemeinsam.dc.html' }
+    ];
+    return {
+      showBar: !barOff && !minimal,
+      full: !minimal,
+      minimal: minimal,
+      nav: links.map(function (l) {
+        return { key: l.key, label: l.label, href: l.href, active: l.key === active, inactive: l.key !== active };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

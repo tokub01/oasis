@@ -1,3 +1,9 @@
+{{--
+    Site footer, rebuilt from Footer.dc.html. Rendered by layouts/oasis.blade.php on every page.
+
+    Contains the two buttons "Verträge hier kündigen" and "Vertrag widerrufen" that § 312k BGB and the withdrawal
+    button rule require on every page. Link columns are defined in $columns; contact and operator come from config.
+--}}
 @php
     $columns = [
         'Oasis' => [
@@ -30,7 +36,7 @@
     <div class="o-container flex flex-col gap-12 pt-[72px] pb-9">
         <div class="flex flex-wrap justify-between gap-x-12 gap-y-10">
             <div class="flex max-w-[360px] flex-[1_1_280px] flex-col gap-4">
-                <a href="{{ route('oasis.home') }}" aria-label="Oasis – zur Startseite" class="flex text-on-night no-underline">
+                <a href="{{ route('oasis.home') }}" aria-label="Oasis – zur Startseite" class="flex min-h-11 items-center text-on-night no-underline">
                     <x-oasis.logo />
                 </a>
                 <p class="text-base leading-[1.6] text-on-night-2">Das werbefreie soziale Netzwerk. Getragen von Mitgliedern, nicht von Werbekunden.</p>

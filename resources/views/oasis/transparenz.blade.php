@@ -1,3 +1,8 @@
+{{--
+    Transparenz: route oasis.transparenz, template Transparenz.dc.html.
+    All figures come from config('oasis.transparency'). A null value renders "Veröffentlichen wir ab dem Start";
+    coverage is computed from income/costs and hidden while either is missing, so no number is ever invented.
+--}}
 @extends('layouts.oasis', [
     'title' => 'Transparenz',
     'description' => 'Oasis lebt nur von Mitgliedsbeiträgen. Hier siehst du jeden Monat, was hereinkommt, was hinausgeht und wofür.',

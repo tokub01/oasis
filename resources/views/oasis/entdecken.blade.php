@@ -1,3 +1,7 @@
+{{--
+    Entdecken (guest preview): route oasis.entdecken via PageController::discover(), template Entdecken.dc.html.
+    Shows invented sample posts, therefore labelled "Beispielansicht" and noindex; disabled by oasis.demo_pages.
+--}}
 @extends('layouts.oasis', [
     'title' => 'Entdecken',
     'description' => 'Öffentliche Tropfen aus den Oasen, ohne Konto lesbar. Beispielansicht bis zum Start von Oasis.',

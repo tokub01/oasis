@@ -1,3 +1,8 @@
+{{--
+    Preise: route oasis.preise, template Preise.dc.html.
+    The monthly/yearly toggle is the JS module "pricing" (resources/js/oasis.js); without JS the monthly prices show
+    and the toggle stays hidden. Price values are computed in <x-oasis.price-card>.
+--}}
 @extends('layouts.oasis', [
     'title' => 'Preise',
     'description' => 'Dieselbe Oase für alle: Solidar, Oase oder Mäzen. Jede Mitgliedschaft enthält alle Funktionen. Erst '.config('oasis.trial_days').' Tage kostenlos testen, ohne Zahlungsdaten.',

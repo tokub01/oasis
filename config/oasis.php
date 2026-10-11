@@ -1,84 +1,135 @@
 <?php
 
 /*
- * Oasis website: placeholders, numbers and switches.
- *
- * Views never hard-code these values. A null value means "not published yet"
- * and is rendered as "Veröffentlichen wir ab dem Start" (or hidden).
- * Open values are listed in docs/oasis-design/PLATZHALTER.md.
- */
+|--------------------------------------------------------------------------
+| Oasis website configuration
+|--------------------------------------------------------------------------
+|
+| Every number, contact, price, placeholder and switch the public website shows.
+| Views never hard-code these values; change them here (or via .env where an env()
+| call exists) and every page follows.
+|
+| Conventions:
+| - Values in [BRACKETS] are open placeholders from docs/oasis-design/PLATZHALTER.md
+|   and must be filled before launch.
+| - A null figure means "not published yet": views render "Veröffentlichen wir ab
+|   dem Start" or hide the element. Never put invented numbers here.
+| - Amounts are in euro and include VAT unless a comment says otherwise.
+|
+*/
 
 return [
 
+    // Public domain, shown in texts such as "get-oasis.com/@name".
     'domain' => env('OASIS_DOMAIN', 'get-oasis.com'),
 
+    /*
+     * Operator details for the Impressum (§ 5 DDG), the footer © line and the SEPA mandate.
+     */
     'operator' => [
+        // Short name in the footer and the SEPA mandate.
         'name' => env('OASIS_OPERATOR_NAME', '[BETREIBER]'),
+        // Full legal name, street and city for the Impressum.
         'legal_name' => env('OASIS_OPERATOR_LEGAL_NAME', '[NAME ODER FIRMA]'),
         'street' => env('OASIS_OPERATOR_STREET', '[STRASSE HAUSNUMMER]'),
         'city' => env('OASIS_OPERATOR_CITY', '[PLZ ORT]'),
         'phone' => env('OASIS_OPERATOR_PHONE', '[TELEFON]'),
+        // VAT identification number (§ 27a UStG).
         'vat_id' => env('OASIS_OPERATOR_VAT_ID', '[USt-IdNr.]'),
+        // Consumer dispute resolution notice (§ 36 VSBG), full sentence as shown in the Impressum.
         'vsbg_notice' => '[Hinweis nach § 36 VSBG]',
     ],
 
+    /*
+     * Mail addresses. The first four are shown on pages; the last two receive form notifications.
+     */
     'mail' => [
+        // General contact: footer, Hilfe, Manifest, Impressum.
         'contact' => env('OASIS_MAIL_CONTACT', '[KONTAKT-E-MAIL]'),
+        // Press contact on the Manifest page.
         'press' => env('OASIS_MAIL_PRESS', '[PRESSE-E-MAIL]'),
+        // Data protection contact on the Hilfe page and in the privacy policy.
         'privacy' => env('OASIS_MAIL_PRIVACY', '[DATENSCHUTZ-E-MAIL]'),
+        // Single point of contact under DSA Art. 11 and 12 (Impressum).
         'dsa' => env('OASIS_MAIL_DSA', '[DSA-KONTAKT-E-MAIL]'),
         // Receives copies of cancellations, withdrawals and organisation requests.
         'operator' => env('OASIS_MAIL_OPERATOR', 'betreiber@example.tld'),
-        // Receives content reports.
+        // Receives content reports (DSA Art. 16).
         'moderation' => env('OASIS_MAIL_MODERATION', 'moderation@example.tld'),
     ],
 
+    /*
+     * "Wer dahinter steht" on the Manifest page.
+     */
     'founder' => [
         'name' => '[DEIN NAME]',
+        // Public URL or asset path of a photo; null shows a dashed photo placeholder.
         'photo' => null,
         'text' => '[Gründer-Text]',
     ],
 
+    // Launch date as Y-m-d (e.g. "2027-03-01"); null = not announced yet, pages say "bald".
     'launch_date' => env('OASIS_LAUNCH_DATE'),
 
     'founding' => [
+        // Number of founding seats with a price guarantee (banner, Preise, Gründung).
         'seats' => 1000,
-        // null = live count from waitlist_entries is not shown yet.
-        'show_counter' => false,
     ],
 
+    // Free trial length in days. Used in every "30 Tage testen" text.
     'trial_days' => 30,
+    // Days in which posts can still be downloaded after a trial ends or a membership is cancelled.
     'retention_days' => 30,
+    // Invitations a member can send per month (Gemeinsam starten).
     'invites_per_month' => 3,
+    // Days a group has to get everyone on board before a group trial starts (Gemeinsam starten).
     'group_start_days' => 7,
+    // Promised support reply time in working days (Hilfe).
     'support_reply_days' => 2,
+    // Native apps as display text (Funktionen).
     'apps' => '[iOS und Android]',
+    // Name of the document that contains the promises, e.g. "AGB" or "Satzung" (Manifest, Transparenz).
     'statutes' => '[AGB / Satzung]',
     // Set to true only once the promises (no ads, no ad profile, no data sale, changes only with member
-    // consent) are actually written into the AGB/statutes. Until then the site says "Wird festgeschrieben".
+    // consent) are actually written into that document. Until then the site says "Wird festgeschrieben" (UWG).
     'promises_codified' => (bool) env('OASIS_PROMISES_CODIFIED', false),
+    // Hosting and service providers incl. region, as one sentence (Hilfe, Datenschutz).
     'server_location' => '[SERVERSTANDORT UND DIENSTLEISTER]',
 
-    // Prices in euro per month, including 19 % VAT. A year costs ten months.
+    /*
+     * Membership prices. Monthly amounts in euro incl. VAT; format them with App\Support\OasisFormat.
+     */
+    // VAT rate in percent, used to show the VAT included in a price (amount × rate / (100 + rate)).
     'vat_rate' => 19,
+    // A yearly membership costs this many monthly amounts ("2 Monate geschenkt" = 12 - year_months).
     'year_months' => 10,
+    // Tiers in display order. `min` = the amount is a minimum ("ab 12 €"); exactly one tier has `default`.
     'tiers' => [
         'solidar' => ['name' => 'Solidar', 'monthly' => 3, 'min' => false],
         'oase' => ['name' => 'Oase', 'monthly' => 5, 'min' => false, 'default' => true],
         'maezen' => ['name' => 'Mäzen', 'monthly' => 12, 'min' => true],
     ],
 
+    /*
+     * Payment details shown on the checkout page (only reachable when checkout_enabled is true).
+     */
     'payment' => [
+        // Card payment provider named in the checkout hint.
         'provider' => '[ZAHLUNGSANBIETER]',
+        // SEPA creditor identifier for the mandate text.
         'sepa_creditor_id' => '[GLÄUBIGER-ID]',
     ],
 
-    // /mitglied-werden returns 404 until a payment provider is connected.
+    // /mitglied-werden returns 404 until a payment provider is connected: no order button without a real checkout.
     'checkout_enabled' => (bool) env('OASIS_CHECKOUT_ENABLED', false),
 
-    // Sample pages (Entdecken, Profil) with demo content. Marked as sample and noindex.
+    // Guest preview pages (Entdecken, Profil) with sample content, labelled "Beispielansicht" and noindex.
+    // Set to false in production if the samples should not be public.
     'demo_pages' => (bool) env('OASIS_DEMO_PAGES', true),
 
+    /*
+     * Transparenz page. Every null value renders "Veröffentlichen wir ab dem Start".
+     */
     'transparency' => [
         // Month the numbers refer to, as display text, e.g. 'Oktober 2026'.
         'as_of' => null,
@@ -105,8 +156,12 @@ return [
         'votes' => [],
     ],
 
-    // Oasis forms: draft legal text, pending legal review.
+    /*
+     * Draft building blocks of the legal pages (Datenschutz, AGB, Widerrufsbelehrung).
+     * Placeholders only: the final texts must be written or reviewed by a lawyer before launch.
+     */
     'legal' => [
+        // Generic placeholder for paragraphs that still need a text.
         'text' => '[Text]',
         'privacy_rights' => '[Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit, Widerspruch, Beschwerde bei einer Aufsichtsbehörde]',
         'privacy_data' => '[Kontodaten, Inhalte, Zahlungsdaten, technische Daten]',

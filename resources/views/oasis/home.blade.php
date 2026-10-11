@@ -1,3 +1,4 @@
+{{-- Startseite: route oasis.home (/), template Main.dc.html. Prices and trial days from config/oasis.php. --}}
 @extends('layouts.oasis', [
     'description' => 'Oasis zeigt dir, was deine Leute teilen: in Ruhe, der Reihe nach und mit einem Ende. Keine Werbung, kein Algorithmus, der dich festhält.',
 ])

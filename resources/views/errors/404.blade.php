@@ -1,3 +1,4 @@
+{{-- Laravel's 404 page for the whole site ("Fata Morgana"), template Fehler404.dc.html. --}}
 @extends('layouts.oasis', [
     'title' => 'Seite nicht gefunden',
     'description' => 'Diese Seite gibt es leider nicht.',

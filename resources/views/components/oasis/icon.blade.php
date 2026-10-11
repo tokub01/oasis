@@ -1,3 +1,13 @@
+{{--
+    Stroke icon as inline SVG (24x24 grid, paths taken from the design templates).
+
+    Props:
+      name    string  key of $paths below, e.g. "check", "arrow-right" (unknown names throw an error on purpose)
+      size    int     width/height in px, default 24
+      stroke  float   stroke width, default 1.8
+    Further attributes (e.g. class) are merged onto the <svg>. Always decorative: aria-hidden, not focusable.
+    Add a new icon by adding its path markup to $paths.
+--}}
 @props(['name', 'size' => 24, 'stroke' => 1.8])
 
 @php

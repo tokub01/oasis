@@ -1,6 +1,14 @@
+{{--
+    Oasis logo: half sun over two waves, optionally with the wordmark "oasis" (Fraunces 600).
+
+    Props:
+      size       int   size of the sign in px, default 40
+      wordmark   bool  show the wordmark next to the sign, default true
+      waveWidth  int   stroke width of the waves in the 120x120 viewBox, default 7 (thicker for small sizes)
+    Decorative: the surrounding link carries the accessible name ("Oasis – zur Startseite").
+--}}
 @props(['size' => 40, 'wordmark' => true, 'waveWidth' => 7])
 
-{{-- Half sun over two waves; the wordmark is "oasis" in Fraunces 600. --}}
 <span {{ $attributes->merge(['class' => 'flex items-center gap-2.5']) }}>
     <svg viewBox="0 0 120 120" width="{{ $size }}" height="{{ $size }}" aria-hidden="true" focusable="false" class="flex-none">
         <path d="M26 62 A34 34 0 0 1 94 62 Z" fill="#E06A43"/>

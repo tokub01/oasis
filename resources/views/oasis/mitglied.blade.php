@@ -1,3 +1,9 @@
+{{--
+    Mitglied werden (checkout): route oasis.mitglied via PageController::membership(), template Mitglied.dc.html.
+    404 while oasis.checkout_enabled is false. The order summary is the JS module "membership"; without JS the
+    default tier (Oase, monthly, SEPA) is preselected and its summary is rendered server-side.
+    Optional variables from a future checkout controller: $trialDaysLeft (int), $trialEndDate (string).
+--}}
 @extends('layouts.oasis', [
     'title' => 'Mitglied werden',
     'description' => 'Mitglied bei Oasis werden: Stufe, Zahlweise und Zahlungsart wählen. Alle Mitglieder bekommen dasselbe.',

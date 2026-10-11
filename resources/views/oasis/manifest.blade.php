@@ -1,3 +1,4 @@
+{{-- Manifest: route oasis.manifest, template Manifest.dc.html. Founder, contacts and statutes from config. --}}
 @extends('layouts.oasis', [
     'title' => 'Manifest',
     'description' => 'Ein Ort im Netz, der seinen Mitgliedern gehört. Wofür Oasis steht, was wir versprechen und wer dahinter steht.',

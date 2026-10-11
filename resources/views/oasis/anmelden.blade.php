@@ -1,3 +1,7 @@
+{{--
+    Anmelden: route oasis.anmelden (and /login redirects here), template Anmelden.dc.html, minimal header.
+    Like Testen: shown for the design, not submittable until an auth system exists.
+--}}
 @extends('layouts.oasis', [
     'title' => 'Anmelden',
     'description' => 'Bei Oasis anmelden.',

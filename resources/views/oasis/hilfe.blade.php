@@ -1,3 +1,8 @@
+{{--
+    Hilfe & FAQ: route oasis.hilfe, template Hilfe.dc.html.
+    Questions are grouped in $faqs by topic. The search field is the JS module "help-search"; without JS it is
+    not rendered at all, so there is no field that does nothing.
+--}}
 @extends('layouts.oasis', [
     'title' => 'Hilfe & FAQ',
     'description' => 'Antworten zu Test und Mitgliedschaft, Konto und Sicherheit, Moderation und Datenschutz bei Oasis.',

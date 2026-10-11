@@ -1,3 +1,8 @@
+{{--
+    30 Tage testen: route oasis.testen, template Testen.dc.html, minimal header.
+    There is no auth system yet, so the form is shown but cannot be submitted (fields have no name, button is
+    disabled) and a notice points to the waitlist. Wire it to the real registration once auth exists.
+--}}
 @extends('layouts.oasis', [
     'title' => config('oasis.trial_days').' Tage testen',
     'description' => config('oasis.trial_days').' Tage Oasis kostenlos testen. Keine Zahlungsdaten, der Test endet von selbst.',

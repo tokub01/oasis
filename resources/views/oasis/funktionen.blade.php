@@ -1,3 +1,4 @@
+{{-- Funktionen: route oasis.funktionen, template Funktionen.dc.html. --}}
 @extends('layouts.oasis', [
     'title' => 'Funktionen',
     'description' => 'Alles, was ein Netzwerk braucht. Nichts, was dich festhält: ein Feed, der aufhört, Tropfen und Weitertragen, Oasen, leise Zahlen und verlässliche Moderation.',

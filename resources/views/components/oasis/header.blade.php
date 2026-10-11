@@ -1,3 +1,12 @@
+{{--
+    Site header, rebuilt from Header.dc.html. Rendered by layouts/oasis.blade.php.
+
+    Props:
+      active    string|null  key of the current main navigation item (funktionen|preise|transparenz|manifest|
+                             gemeinsam); that link gets aria-current="page"
+      minimal   bool         slim header for sign-up/sign-in/checkout: only "Hilfe" and "Zur Startseite"
+      announce  bool         show the founding-phase banner above the header (never in minimal mode)
+--}}
 @props(['active' => null, 'minimal' => false, 'announce' => true])
 
 @php

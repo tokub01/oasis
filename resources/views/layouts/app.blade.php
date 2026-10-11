@@ -20,6 +20,10 @@
         'oasen' => ['Oasen', 'users', null],
         'einstellungen' => ['Einstellungen', 'shield', route('app.settings')],
     ];
+    // Staff (moderators, admins) get a link to the moderation area; the `staff` middleware still checks 2FA.
+    if ($user?->role?->isStaff()) {
+        $nav['moderation'] = ['Moderation', 'flag', route('moderation.index')];
+    }
     $trialDaysLeft = $user?->trial_ends_at?->isFuture()
         ? (int) ceil(now()->diffInDays($user->trial_ends_at))
         : null;

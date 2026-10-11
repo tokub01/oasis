@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @property array<string, mixed> $locked_identity
  * @property array<string, string> $public_keys
- * @property \Carbon\CarbonImmutable|null $key_changed_at
+ * @property CarbonImmutable|null $key_changed_at
  */
 class ChatIdentity extends Model
 {

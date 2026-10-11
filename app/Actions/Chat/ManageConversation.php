@@ -16,7 +16,7 @@ class ManageConversation
     /**
      * Require real, verified, chat-ready accounts; never accept merely an existing user ID.
      *
-     * @param list<int> $ids
+     * @param  list<int>  $ids
      */
     private function requireReady(array $ids): void
     {
@@ -30,7 +30,7 @@ class ManageConversation
     /**
      * The caller becomes owner; initial messages remain blocked until key distribution is activated.
      *
-     * @param array{type: string, title?: string|null, member_ids: list<int|string>, lifetime_days: int} $input
+     * @param  array{type: string, title?: string|null, member_ids: list<int|string>, lifetime_days: int}  $input
      */
     public function create(User $owner, array $input): Conversation
     {
@@ -58,7 +58,7 @@ class ManageConversation
     /**
      * Changing expiry affects future messages only; existing signed expiry is immutable.
      *
-     * @param array<string, mixed> $input
+     * @param  array<string, mixed>  $input
      */
     public function settings(Conversation $conversation, User $owner, array $input): Conversation
     {

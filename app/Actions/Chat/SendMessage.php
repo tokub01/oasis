@@ -19,7 +19,7 @@ class SendMessage
     /**
      * Lock identity before conversation; a pending rotation or stale version cannot send ciphertext.
      *
-     * @param array<string, mixed> $envelope
+     * @param  array<string, mixed>  $envelope
      */
     public function handle(Conversation $conversation, User $sender, array $envelope): Message
     {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChatIdentity;
 use App\Models\Conversation;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -34,10 +35,10 @@ class PublicKeysController extends Controller
     /**
      * Public profile allowlist excludes encrypted private blobs, email, birth date and account roles.
      *
-     * @param \Illuminate\Database\Eloquent\Collection<int, User> $users
+     * @param  Collection<int, User>  $users
      * @return list<array<string, mixed>>
      */
-    private function data(\Illuminate\Database\Eloquent\Collection $users): array
+    private function data(Collection $users): array
     {
         $identities = ChatIdentity::whereIn('user_id', $users->pluck('id'))->get()->keyBy('user_id');
 

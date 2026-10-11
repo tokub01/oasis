@@ -18,7 +18,7 @@ class ConversationKeys
     /**
      * Lock account rows in a stable order before conversation locks, including during identity replacement.
      *
-     * @param list<int|string> $ids
+     * @param  list<int|string>  $ids
      */
     public static function lockUsers(array $ids): void
     {
@@ -36,7 +36,7 @@ class ConversationKeys
     /**
      * Store all current-version grants atomically; no recipient can receive an incomplete new key set.
      *
-     * @param array{key_version: int, grants: list<array<string, mixed>>} $input
+     * @param  array{key_version: int, grants: list<array<string, mixed>>}  $input
      */
     public function distribute(Conversation $conversation, User $owner, array $input): Conversation
     {

@@ -11,7 +11,7 @@ class MessageSent implements ShouldBroadcastNow
     /**
      * Snapshot the validated envelope so later model changes cannot alter the broadcast.
      *
-     * @param array<string, mixed> $envelope
+     * @param  array<string, mixed>  $envelope
      */
     public function __construct(private readonly array $envelope) {}
 

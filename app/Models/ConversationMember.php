@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Membership history used by chat authorization and current membership rotation.
  *
- * @property \Carbon\CarbonImmutable $joined_at
- * @property \Carbon\CarbonImmutable|null $left_at
+ * @property CarbonImmutable $joined_at
+ * @property CarbonImmutable|null $left_at
  * @property User $user
  */
 class ConversationMember extends Model

@@ -14,7 +14,7 @@ class SaveIdentity
     /**
      * Relocking the same keys preserves trust timestamps and existing conversation keys.
      *
-     * @param array{locked_identity: array<string, mixed>, public_keys: array<string, string>} $input
+     * @param  array{locked_identity: array<string, mixed>, public_keys: array<string, string>}  $input
      */
     public function handle(User $user, array $input): ChatIdentity
     {

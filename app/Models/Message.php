@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
@@ -10,8 +11,8 @@ use Illuminate\Database\Eloquent\Model;
  * Ciphertext-only message history; the daily model:prune schedule deletes expired rows.
  *
  * @property array<string, mixed> $envelope
- * @property \Carbon\CarbonImmutable $created_at
- * @property \Carbon\CarbonImmutable $expires_at
+ * @property CarbonImmutable $created_at
+ * @property CarbonImmutable $expires_at
  */
 class Message extends Model
 {

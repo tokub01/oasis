@@ -29,15 +29,19 @@ return [
     'operator' => [
         // Short name in the footer and the SEPA mandate.
         'name' => env('OASIS_OPERATOR_NAME', 'Tobias Kubina – VelWebSolutions'),
-        // Full legal name, street and city for the Impressum.
-        'legal_name' => env('OASIS_OPERATOR_LEGAL_NAME', 'Tobias Kubina, VelWebSolutions'),
-        'street' => env('OASIS_OPERATOR_STREET', '[STRASSE HAUSNUMMER]'),
-        'city' => env('OASIS_OPERATOR_CITY', '[PLZ ORT]'),
-        'phone' => env('OASIS_OPERATOR_PHONE', '[TELEFON]'),
+        // Full legal name, legal form, address and phone for the Impressum.
+        'legal_name' => env('OASIS_OPERATOR_LEGAL_NAME', 'Tobias Kubina, B.Sc. – VelWebSolutions'),
+        'legal_form' => 'Einzelunternehmen',
+        'street' => env('OASIS_OPERATOR_STREET', 'Gubener Str. 14'),
+        'city' => env('OASIS_OPERATOR_CITY', '47829 Krefeld'),
+        'country' => 'Deutschland',
+        'phone' => env('OASIS_OPERATOR_PHONE', '0176 32544620'),
         // VAT identification number (§ 27a UStG).
-        'vat_id' => env('OASIS_OPERATOR_VAT_ID', '[USt-IdNr.]'),
+        'vat_id' => env('OASIS_OPERATOR_VAT_ID', 'DE459259380'),
+        // Person responsible for editorial content (§ 18 Abs. 2 MStV).
+        'responsible' => 'Tobias Kubina, B.Sc.',
         // Consumer dispute resolution notice (§ 36 VSBG), full sentence as shown in the Impressum.
-        'vsbg_notice' => '[Hinweis nach § 36 VSBG]',
+        'vsbg_notice' => 'Wir sind zur Teilnahme an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle weder verpflichtet noch bereit (§ 36 VSBG).',
     ],
 
     /*

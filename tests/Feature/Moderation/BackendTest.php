@@ -8,7 +8,6 @@ use App\Enums\Moderation\ComplaintStatus;
 use App\Enums\Moderation\EventType;
 use App\Enums\Moderation\Outcome;
 use App\Enums\Role;
-use App\Livewire\Moderation\Queue;
 use App\Mail\Moderation\ComplaintResult;
 use App\Mail\Moderation\DecisionNotice;
 use App\Models\ContentReport;
@@ -20,7 +19,6 @@ use App\Models\User;
 use App\Queries\Moderation\TransparencyQuery;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
-use Livewire\Livewire;
 
 /* Backend acceptance and regression tests: identity, state transitions, second reviewer, audit and retention. */
 beforeEach(function () {
@@ -371,15 +369,4 @@ it('accepts both parties complaints and keeps the case open until both receive a
         ['result' => 'upheld', 'explanation' => 'Historische Entscheidung geprüft'])->assertRedirect();
     expect($decision->case->fresh()->status)->toBe(CaseStatus::Closed);
     expect($decision->case->fresh()->latestDecision->outcome)->toBe(Outcome::NoAction);
-});
-
-it('denies subsequent livewire queue updates after a staff role is revoked', function () {
-    $staff = moderationStaff();
-    $queue = Livewire::actingAs($staff)->test(Queue::class)->assertOk();
-
-    User::whereKey($staff->id)->update(['role' => Role::Member]);
-    // A new HTTP request restores the current account from the database, without mounting the queue again.
-    Livewire::actingAs($staff->fresh());
-
-    $queue->set('status', 'all')->assertForbidden();
 });

@@ -8,7 +8,7 @@
             'initials' => 'MS',
             'bio' => 'Fotografiert analog, meistens zu früh am Morgen. Gastgeberin der Oase Korn & Licht.',
             'location' => 'Leipzig',
-            'since' => '[MONAT JAHR]',
+            'since' => 'März 2026',
             'founding_member' => true,
             'oasen' => [
                 ['name' => 'Korn & Licht', 'role' => 'Gastgeberin', 'color' => 'bg-sun'],
@@ -103,7 +103,7 @@
                             <path d="M0 200 q75 -24 150 0 t150 0 t150 0 t150 0 V300 H0 Z" fill="#2E9E95" opacity="0.7"/>
                             <path d="M0 240 q75 -24 150 0 t150 0 t150 0 t150 0 V300 H0 Z" fill="#1F6F69"/>
                         </svg>
-                        <span class="absolute bottom-3 left-3.5 rounded-full bg-sand px-2.5 py-[3px] text-[13px] font-bold text-ink">[FOTO]</span>
+                        <span class="absolute bottom-3 left-3.5 rounded-full bg-sand px-2.5 py-[3px] text-[13px] font-bold text-ink">Beispielfoto</span>
                     </div>
                 </article>
 

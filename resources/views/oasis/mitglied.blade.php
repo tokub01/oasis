@@ -35,8 +35,9 @@
     $defaultVat = $defaultAmount * $vatRate / (100 + $vatRate);
 
     // Trial data comes from the account once the trial logic exists.
-    $trialDaysLeft = $trialDaysLeft ?? '[5]';
-    $trialEndDate = $trialEndDate ?? '[DATUM]';
+    // Passed in by the checkout controller once trial accounts exist; null until then.
+    $trialDaysLeft = $trialDaysLeft ?? null;
+    $trialEndDate = $trialEndDate ?? null;
 
     $choiceClasses = 'flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl border border-dune-line bg-field px-[18px] text-[17px] font-bold';
     $inputClasses = 'min-h-[52px] rounded-xl border border-field-line bg-field px-4 text-[17px] text-ink';
@@ -49,7 +50,7 @@
             <div class="flex flex-col gap-3">
                 <p class="m-0 inline-flex items-center gap-2 self-start rounded-full bg-dune px-3.5 py-1.5 text-[15px] font-bold text-night">
                     <x-oasis.icon name="clock" :size="16" :stroke="2.2" />
-                    Noch {{ $trialDaysLeft }} Tage in deinem Test
+                    @if ($trialDaysLeft !== null)Noch {{ $trialDaysLeft }} Tage in deinem Test@else Du testest gerade@endif
                 </p>
                 <h1 class="o-display m-0 text-[length:clamp(36px,4.2vw,56px)] leading-[1.08] tracking-[-0.015em] text-night">Bleib in der Oase.</h1>
                 <p class="m-0 max-w-[36em] text-lg text-ink-2">Wähle, wie viel du beitragen möchtest. Alle Mitglieder bekommen dasselbe.</p>
@@ -143,7 +144,7 @@
                         <div class="flex justify-between gap-4"><dt class="text-on-night-muted">Stufe</dt><dd class="m-0 font-bold" data-out="stufe">{{ $tiers[$defaultTier]['name'] }}</dd></div>
                         <div class="flex justify-between gap-4"><dt class="text-on-night-muted">Zahlweise</dt><dd class="m-0 font-bold" data-out="rhythmus">{{ $rhythms['monat']['summary'] }}</dd></div>
                         <div class="flex justify-between gap-4"><dt class="text-on-night-muted">Zahlungsart</dt><dd class="m-0 font-bold" data-out="zahlart">{{ $payments['sepa'] }}</dd></div>
-                        <div class="flex justify-between gap-4"><dt class="text-on-night-muted">Erste Zahlung</dt><dd class="m-0 text-right font-bold">am {{ $trialEndDate }}, zum Ende deines Tests</dd></div>
+                        <div class="flex justify-between gap-4"><dt class="text-on-night-muted">Erste Zahlung</dt><dd class="m-0 text-right font-bold">@if ($trialEndDate !== null)am {{ $trialEndDate }}, @endif zum Ende deines Tests</dd></div>
                     </dl>
                     <div aria-live="polite" class="flex flex-col gap-1 border-y border-night-line py-[18px]">
                         <p class="m-0 flex items-baseline gap-2"><span class="o-display text-[44px] leading-[1.1] font-semibold" data-out="betrag">{{ $money($defaultAmount) }}</span><span class="text-base text-on-night-2" data-out="einheit">{{ $rhythms['monat']['unit'] }}</span></p>

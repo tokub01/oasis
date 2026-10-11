@@ -59,7 +59,7 @@
                                 <path d="M0 190 q75 -30 150 0 t150 0 t150 0 t150 0 V280 H0 Z" fill="#0E2B2F" opacity="0.55"/>
                                 <path d="M0 230 q75 -30 150 0 t150 0 t150 0 t150 0 V280 H0 Z" fill="#0E2B2F"/>
                             </svg>
-                            <span class="absolute bottom-3 left-3.5 rounded-full bg-sand px-2.5 py-[3px] text-[13px] font-bold text-ink">[FOTO]</span>
+                            <span class="absolute bottom-3 left-3.5 rounded-full bg-sand px-2.5 py-[3px] text-[13px] font-bold text-ink">Beispielfoto</span>
                         </div>
                     </x-slot:media>
                 </x-oasis.post>

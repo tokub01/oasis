@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
 beforeEach(function () {
+    $this->withoutVite();
     Mail::fake();
     config([
         'oasis.mail.operator' => 'betreiber@example.tld',
@@ -141,6 +142,7 @@ describe('Kündigen (§ 312k BGB)', function () {
 
     it('does not offer anything to keep the person on the cancellation page', function () {
         $this->get(route('oasis.kuendigen'))
+            ->assertOk()
             ->assertDontSee('Rabatt')
             ->assertDontSee('Bleib doch');
     });
@@ -231,6 +233,15 @@ describe('All forms', function () {
         'oasis.bestaetigung.melden',
         'oasis.bestaetigung.gemeinsam',
     ]);
+
+    it('does not let one form use up the limit of another', function () {
+        foreach (range(1, 7) as $i) {
+            $this->post(route('oasis.gruendung.store'), []);
+        }
+
+        $this->post(route('oasis.kuendigen.store'), cancellationPayload())
+            ->assertRedirect(route('oasis.bestaetigung.kuendigen'));
+    });
 
     it('is rate limited', function () {
         foreach (range(1, 6) as $i) {

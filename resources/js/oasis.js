@@ -162,6 +162,24 @@ modules.membership = (root) => {
 };
 // --- /Mitglied werden -------------------------------------------------------
 
+
+// --- Oasis forms: cancellation ---------------------------------------------
+modules.cancellation = (form) => {
+    const reasonField = form.querySelector("[data-reason-field]");
+    const reason = form.querySelector('[name="reason"]');
+    const date = form.querySelector('[name="effective_date"]');
+    const update = () => {
+        const extraordinary = form.querySelector('[name="type"]:checked')?.value === "ausserordentlich";
+        reasonField.hidden = !extraordinary;
+        reason.required = extraordinary;
+        reason.disabled = !extraordinary;
+        date.required = form.querySelector('[name="timing"]:checked')?.value === "datum";
+    };
+    form.addEventListener("change", update);
+    update();
+};
+// --- End Oasis forms -------------------------------------------------------
+
 document.querySelectorAll("[data-oasis]").forEach((root) => {
     modules[root.dataset.oasis]?.(root);
 });

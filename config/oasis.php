@@ -102,4 +102,14 @@ return [
         'votes' => [],
     ],
 
+    // Oasis forms: draft legal text, pending legal review.
+    'legal' => [
+        'text' => '[Text]',
+        'privacy_rights' => '[Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit, Widerspruch, Beschwerde bei einer Aufsichtsbehörde]',
+        'privacy_data' => '[Kontodaten, Inhalte, Zahlungsdaten, technische Daten]',
+        'contract_term' => '[Monatlich kündbar; Jahresbeitrag zum Ende des Jahres, danach monatlich kündbar]',
+        'promises' => '[Keine Werbung, kein Werbeprofil, kein Datenverkauf; Änderung nur mit Zustimmung der Mitglieder]',
+        'prices' => '[Stufen, Abrechnung, Preisgarantie für Gründungsmitglieder]',
+        'withdrawal' => '[Widerrufsbelehrung nach dem gesetzlichen Muster, angepasst auf digitale Dienstleistungen]',
+    ],
 ];

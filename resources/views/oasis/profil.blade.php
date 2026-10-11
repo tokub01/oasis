@@ -20,7 +20,7 @@
                 <x-oasis.icon name="eye" :size="22" class="text-night" />
                 <span><b>Du liest als Gast.</b> Um {{ $profile['first_name'] }} zu folgen oder zu antworten, starte deinen kostenlosen Test.</span>
             </p>
-            <a href="{{ route('oasis.testen') }}" class="o-btn o-btn-md o-btn-primary text-base font-extrabold">{{ config('oasis.trial_days') }} Tage kostenlos testen</a>
+            <a href="{{ route('register') }}" class="o-btn o-btn-md o-btn-primary text-base font-extrabold">{{ config('oasis.trial_days') }} Tage kostenlos testen</a>
         </div>
     </div>
 
@@ -45,7 +45,7 @@
                                     class="inline-flex size-12 cursor-pointer items-center justify-center rounded-full border border-night bg-transparent text-night">
                                 <x-oasis.icon name="link" :size="20" :stroke="1.9" />
                             </button>
-                            <a href="{{ route('oasis.testen') }}" class="o-btn o-btn-md o-btn-dark px-[26px] text-base font-extrabold">Folgen</a>
+                            <a href="{{ route('register') }}" class="o-btn o-btn-md o-btn-dark px-[26px] text-base font-extrabold">Folgen</a>
                         </div>
                     </div>
                     <div class="flex flex-col gap-0.5">
@@ -133,7 +133,7 @@
                 <section aria-labelledby="folgen-cta" class="flex flex-col gap-3 rounded-[24px] bg-night p-6 text-on-night">
                     <h2 id="folgen-cta" class="m-0 text-[19px] font-extrabold">{{ $profile['first_name'] }} folgen?</h2>
                     <p class="m-0 text-base leading-[1.6] text-on-night-2">Starte deinen kostenlosen Test. Dann landen ihre Tropfen in deiner Quelle, der Reihe nach.</p>
-                    <a href="{{ route('oasis.testen') }}" class="o-link self-start text-base text-on-night">{{ config('oasis.trial_days') }} Tage kostenlos testen</a>
+                    <a href="{{ route('register') }}" class="o-link self-start text-base text-on-night">{{ config('oasis.trial_days') }} Tage kostenlos testen</a>
                 </section>
             </aside>
 

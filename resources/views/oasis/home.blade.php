@@ -16,7 +16,7 @@
                 <h1 id="hero-titel" class="o-h1-home text-night">Social Media, das dir <em class="italic text-sun-text">Zeit zurückgibt.</em></h1>
                 <p class="o-lead max-w-[34em] text-ink-2">Oasis zeigt dir, was deine Leute teilen: in Ruhe, der Reihe nach und mit einem Ende. Keine Werbung, kein Algorithmus, der dich festhält. Getragen von Mitgliedern statt von Werbekunden.</p>
                 <div class="flex flex-wrap items-center gap-x-7 gap-y-4">
-                    <a href="{{ route('oasis.testen') }}" class="o-btn o-btn-primary">{{ $trialDays }} Tage kostenlos testen</a>
+                    <a href="{{ route('register') }}" class="o-btn o-btn-primary">{{ $trialDays }} Tage kostenlos testen</a>
                     <a href="{{ route('oasis.entdecken') }}" class="o-link text-[17px] text-night">Erst mal reinlesen <x-oasis.icon name="arrow-right" :size="18" :stroke="2" /></a>
                 </div>
                 <p class="flex items-center gap-2 text-[15px] text-ink-2">
@@ -211,7 +211,7 @@
         <div class="o-container flex flex-col items-center gap-[22px] text-center">
             <h2 id="cta-titel" class="o-h1 leading-[1.05]">Komm in die Oase.</h2>
             <p class="max-w-[30em] text-[19px] leading-[1.55]">{{ $trialDays }} Tage voller Zugang. Keine Zahlungsdaten, und aus dem Test wird nie von selbst ein Abo.</p>
-            <a href="{{ route('oasis.testen') }}" class="o-btn o-btn-dark px-[30px]">{{ $trialDays }} Tage kostenlos testen</a>
+            <a href="{{ route('register') }}" class="o-btn o-btn-dark px-[30px]">{{ $trialDays }} Tage kostenlos testen</a>
         </div>
     </section>
 @endsection

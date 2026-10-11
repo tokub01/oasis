@@ -101,7 +101,7 @@
                 <h2 id="m-cta" class="o-h2">Teil der Oase werden.</h2>
                 <p class="text-lg leading-[1.6]">{{ config('oasis.trial_days') }} Tage kostenlos, ohne Zahlungsdaten.</p>
             </div>
-            <a href="{{ route('oasis.testen') }}" class="o-btn o-btn-dark px-[30px]">{{ config('oasis.trial_days') }} Tage kostenlos testen</a>
+            <a href="{{ route('register') }}" class="o-btn o-btn-dark px-[30px]">{{ config('oasis.trial_days') }} Tage kostenlos testen</a>
         </div>
     </section>
 @endsection

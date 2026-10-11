@@ -13,11 +13,11 @@
             ['Manifest', route('oasis.manifest')],
         ],
         'Mitmachen' => [
-            [config('oasis.trial_days').' Tage testen', route('oasis.testen')],
+            [config('oasis.trial_days').' Tage testen', route('register')],
             ['Gemeinsam starten', route('oasis.gemeinsam')],
             ['Gründungsmitglied', route('oasis.gruendung')],
             ['Als Gast reinlesen', route('oasis.entdecken')],
-            ['Anmelden', route('oasis.anmelden')],
+            ['Anmelden', route('login')],
         ],
         'Hilfe' => [
             ['Hilfe & FAQ', route('oasis.hilfe')],

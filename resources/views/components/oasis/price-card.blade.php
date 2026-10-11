@@ -44,7 +44,7 @@
         <span data-month="{{ $values['note'][0] }}" data-year="{{ $values['note'][1] }}">{{ $values['note'][0] }}</span>
     </p>
     <p @class(['text-[17px] leading-[1.6]', 'text-on-night-2' => $featured, 'text-ink-2' => ! $featured])>{{ $slot }}</p>
-    <a href="{{ route('oasis.testen') }}" @class([
+    <a href="{{ route('register') }}" @class([
         'o-btn mt-auto min-h-[52px] px-[22px] text-[17px]',
         'o-btn-primary' => $featured,
         'o-btn-outline' => ! $featured,

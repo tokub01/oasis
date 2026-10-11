@@ -32,7 +32,7 @@
         'konto' => [
             ['q' => 'Ab welchem Alter kann ich mitmachen?', 'a' => 'Testen ab 16. Mitglied werden ab 18, mit 16 und 17 mit Zustimmung der Eltern oder über eine Geschenk-Mitgliedschaft. Lesen als Gast geht ohne Konto.'],
             ['q' => 'Wer kann meine Tropfen sehen?', 'a' => 'Das entscheidest du: öffentlich, also auch für Gäste lesbar, oder nur für Mitglieder.'],
-            ['q' => 'Ich habe mein Passwort vergessen.', 'a' => 'Ab dem Start klickst du bei der Anmeldung auf „Passwort vergessen?“ und bekommst einen Link per E-Mail. Bis dahin gibt es noch keine Konten. Fragen beantworten wir unter '.$contactMail.'.'],
+            ['q' => 'Ich habe mein Passwort vergessen.', 'a' => 'Klick bei der Anmeldung auf „Passwort vergessen?“. Wir schicken dir einen Link per E-Mail, mit dem du ein neues Passwort setzt.'],
             ['q' => 'Wie lösche ich mein Konto?', 'a' => 'In den Einstellungen unter „Konto löschen“. Eine laufende Mitgliedschaft kündigst du vorher über „Verträge hier kündigen“.'],
         ],
         'moderation' => [

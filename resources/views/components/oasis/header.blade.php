@@ -52,8 +52,8 @@
                 @endforeach
             </nav>
             <div class="flex flex-wrap items-center gap-x-[18px] gap-y-2">
-                <a href="{{ route('oasis.anmelden') }}" class="inline-flex min-h-11 items-center text-base font-semibold text-night no-underline">Anmelden</a>
-                <a href="{{ route('oasis.testen') }}" class="o-btn o-btn-sm o-btn-primary">{{ config('oasis.trial_days') }} Tage testen</a>
+                <a href="{{ route('login') }}" class="inline-flex min-h-11 items-center text-base font-semibold text-night no-underline">Anmelden</a>
+                <a href="{{ route('register') }}" class="o-btn o-btn-sm o-btn-primary">{{ config('oasis.trial_days') }} Tage testen</a>
             </div>
         @endif
     </div>

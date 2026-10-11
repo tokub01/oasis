@@ -27,7 +27,7 @@
                 <x-oasis.icon name="eye" :size="22" class="text-night" />
                 <span><b>Du liest als Gast.</b> Antworten, folgen und eigene Tropfen schreiben kannst du im kostenlosen Test.</span>
             </p>
-            <a href="{{ route('oasis.testen') }}" class="o-btn o-btn-md o-btn-primary text-base font-extrabold">{{ config('oasis.trial_days') }} Tage kostenlos testen</a>
+            <a href="{{ route('register') }}" class="o-btn o-btn-md o-btn-primary text-base font-extrabold">{{ config('oasis.trial_days') }} Tage kostenlos testen</a>
         </div>
     </div>
 
@@ -83,7 +83,7 @@
                 <div class="flex flex-col items-center gap-3 rounded-[24px] border-2 border-dashed border-spring px-6 py-8 text-center">
                     <p class="m-0 text-[19px] font-extrabold text-spring-text">Das war's fürs Erste.</p>
                     <p class="m-0 max-w-[30em] text-base leading-[1.55] text-ink-2">Als Mitglied siehst du die Tropfen der Menschen und Oasen, denen du folgst. Der Reihe nach, mit Ende.</p>
-                    <a href="{{ route('oasis.testen') }}" class="o-link text-base font-extrabold text-night">{{ config('oasis.trial_days') }} Tage kostenlos testen</a>
+                    <a href="{{ route('register') }}" class="o-link text-base font-extrabold text-night">{{ config('oasis.trial_days') }} Tage kostenlos testen</a>
                 </div>
             </div>
 

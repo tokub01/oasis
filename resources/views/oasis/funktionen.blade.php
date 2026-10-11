@@ -178,7 +178,7 @@
                 <h2 id="f-cta" class="o-h2">Probier es selbst aus.</h2>
                 <p class="text-lg leading-[1.6] text-on-night-2">{{ config('oasis.trial_days') }} Tage voller Zugang, ohne Zahlungsdaten. Der Test endet von selbst.</p>
             </div>
-            <a href="{{ route('oasis.testen') }}" class="o-btn o-btn-primary">{{ config('oasis.trial_days') }} Tage kostenlos testen</a>
+            <a href="{{ route('register') }}" class="o-btn o-btn-primary">{{ config('oasis.trial_days') }} Tage kostenlos testen</a>
         </div>
     </section>
 @endsection

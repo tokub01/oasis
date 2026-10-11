@@ -44,6 +44,13 @@
     <x-oasis.header :active="$active ?? null" :minimal="$minimal ?? false" :announce="$announce ?? true" />
 
     <main id="inhalt" tabindex="-1" class="outline-none">
+        {{-- Flash messages that land on a public page, e.g. after deleting the account. The auth pages show
+             their own status inside <x-oasis.auth-card>, so they are skipped here. --}}
+        @if (session('status') && ! ($minimal ?? false))
+            <div class="o-container pt-6">
+                <p role="status" class="m-0 rounded-2xl bg-dune px-[18px] py-3.5">{{ session('status') }}</p>
+            </div>
+        @endif
         @yield('content')
     </main>
 

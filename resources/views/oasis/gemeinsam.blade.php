@@ -12,7 +12,7 @@
                 <p class="o-eyebrow">Gemeinsam starten</p>
                 <h1 id="g-titel" class="m-0 o-display font-medium [font-size:clamp(44px,_6vw,_84px)] [line-height:1.02] [letter-spacing:-0.02em] text-night">Zieh nicht allein um.</h1>
                 <p class="m-0 [max-width:32em] [font-size:clamp(18px,_1.5vw,_20px)] [line-height:1.6] text-ink-2">Ein Netzwerk ist nur so gut wie die Menschen darin. Darum könnt ihr bei Oasis als Gruppe starten: Euer Test beginnt erst, wenn alle da sind.</p>
-                <a href="{{ route('oasis.testen') }}" class="[align-self:flex-start] inline-flex items-center justify-center [min-height:56px] [padding:0_28px] rounded-[999px] bg-sun text-sun-ink text-[18px] font-extrabold no-underline">Gruppe anlegen</a>
+                <a href="{{ route('register') }}" class="[align-self:flex-start] inline-flex items-center justify-center [min-height:56px] [padding:0_28px] rounded-[999px] bg-sun text-sun-ink text-[18px] font-extrabold no-underline">Gruppe anlegen</a>
             </div>
             <figure aria-label="Beispiel: Fachschaft startet gemeinsam" class="m-0 [justify-self:center] w-full [max-width:460px] [box-sizing:border-box] [padding:30px] bg-paper rounded-[28px] flex flex-col gap-[20px] [box-shadow:0_24px_50px_-28px_rgba(14,_43,_47,_0.45)]">
                 <div class="flex flex-col [line-height:1.3] gap-[4px]">

@@ -184,7 +184,7 @@
                                 @endforeach
                             </fieldset>
                             <p class="flex flex-wrap items-center gap-x-4 gap-y-2 text-base text-ink-2">Abstimmen können Mitglieder nach der Anmeldung.
-                                <a href="{{ route('oasis.anmelden') }}" class="inline-flex min-h-11 items-center font-bold text-night underline underline-offset-[5px]">Anmelden</a>
+                                <a href="{{ route('login') }}" class="inline-flex min-h-11 items-center font-bold text-night underline underline-offset-[5px]">Anmelden</a>
                             </p>
                         </div>
                     @else

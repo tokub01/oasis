@@ -3,9 +3,9 @@
 
 
 <section aria-labelledby="gr-titel" class="[padding:clamp(56px,_6vw,_88px)_0] bg-night text-on-night">
-<div class="[max-width:1296px] [margin:0_auto] [padding:0_clamp(20px,_4vw,_48px)] grid [grid-template-columns:repeat(auto-fit,_minmax(min(420px,_100%),_1fr))] [gap:clamp(40px,_5vw,_72px)] items-center">
+<div class="o-container o-auto-grid [--min:420px] [gap:clamp(40px,_5vw,_72px)] items-center">
 <div class="flex flex-col gap-[22px]">
-<p class="m-0 text-[14px] font-bold [letter-spacing:2.5px] uppercase text-sun-on-night">Gründungsphase</p>
+<p class="o-eyebrow o-eyebrow-night">Gründungsphase</p>
 <h1 id="gr-titel" class="m-0 o-display font-medium [font-size:clamp(44px,_6vw,_84px)] [line-height:1.02] [letter-spacing:-0.02em] [text-wrap:balance]">Sei von Anfang an dabei.</h1>
 <p class="m-0 [max-width:32em] [font-size:clamp(18px,_1.5vw,_20px)] [line-height:1.6] text-on-night-2">@if (config('oasis.launch_date'))Oasis startet am {{ \Illuminate\Support\Carbon::parse(config('oasis.launch_date'))->format('d.m.Y') }}.@else Oasis startet bald, den Termin geben wir hier bekannt.@endif Die ersten {{ number_format(config('oasis.founding.seats'), 0, ',', '.') }} Mitglieder werden Gründungsmitglieder: mit Preisgarantie und einer Stimme in der allerersten Abstimmung.</p>
 <p class="text-on-night-muted">Veröffentlichen wir ab dem Start</p>
@@ -16,16 +16,16 @@
 <h2 id="liste-titel" class="m-0 text-[26px] [line-height:1.25] font-extrabold text-night">Auf die Startliste</h2>
 <div class="flex flex-col gap-[6px]">
 <label for="gr-mail" class="text-[15px] font-bold">E-Mail-Adresse</label>
-<input id="gr-mail" type="email" autocomplete="email" placeholder="name@beispiel.tld" class="o-input min-w-0 [min-height:52px] [padding:0_16px] [border:1px_solid_#9C8E77] rounded-[12px] bg-field font-sans text-[17px] text-ink" name="email" aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}" aria-describedby="gr-mail-error" required value="{{ old('email') }}">
+<input id="gr-mail" type="email" autocomplete="email" placeholder="name@beispiel.tld" class="o-input min-w-0" name="email" aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}" aria-describedby="gr-mail-error" required value="{{ old('email') }}">
 <p id="gr-mail-error" class="o-error">@error('email'){{ $message }}@enderror</p>
 </div>
 <div class="flex flex-col gap-[6px]">
 <label for="gr-gruppe" class="text-[15px] font-bold">Mit wem willst du starten? <span class="font-medium text-muted">(optional)</span></label>
-<input id="gr-gruppe" type="text" placeholder="z. B. meine WG, meine Fachschaft" class="o-input min-w-0 [min-height:52px] [padding:0_16px] [border:1px_solid_#9C8E77] rounded-[12px] bg-field font-sans text-[17px] text-ink" name="group" aria-invalid="{{ $errors->has('group') ? 'true' : 'false' }}" aria-describedby="gr-gruppe-error" value="{{ old('group') }}">
+<input id="gr-gruppe" type="text" placeholder="z. B. meine WG, meine Fachschaft" class="o-input min-w-0" name="group" aria-invalid="{{ $errors->has('group') ? 'true' : 'false' }}" aria-describedby="gr-gruppe-error" value="{{ old('group') }}">
 <p id="gr-gruppe-error" class="o-error">@error('group'){{ $message }}@enderror</p>
 </div>
 <label class="flex gap-[12px] items-start text-[15px] [line-height:1.5] text-ink">
-<input type="checkbox" name="consent" value="1" required @checked(old('consent')) class="flex-none [width:20px] [height:20px] [margin:2px_0_0] [accent-color:#0E2B2F]">
+<input type="checkbox" name="consent" value="1" required @checked(old('consent')) class="flex-none [width:20px] [height:20px] [margin:2px_0_0] accent-night">
 <span>Ich möchte per E-Mail erfahren, wann ich reinkomme. Abmelden geht jederzeit.</span>
 </label>
 <button type="submit" class="[min-height:56px] border-0 rounded-[999px] bg-sun text-sun-ink text-[18px] font-extrabold">Platz auf der Startliste sichern</button>
@@ -35,9 +35,9 @@
 </section>
 
 <section aria-labelledby="vorteile-titel" class="[padding:clamp(64px,_7vw,_104px)_0]">
-<div class="[max-width:1296px] [margin:0_auto] [padding:0_clamp(20px,_4vw,_48px)] flex flex-col gap-[40px]">
+<div class="o-container flex flex-col gap-[40px]">
 <h2 id="vorteile-titel" class="m-0 o-display font-medium [font-size:clamp(30px,_3.2vw,_46px)] [line-height:1.12] [letter-spacing:-0.015em] text-night">Was Gründungsmitglieder bekommen</h2>
-<div class="grid [grid-template-columns:repeat(auto-fit,_minmax(min(240px,_100%),_1fr))] gap-[24px]">
+<div class="o-auto-grid [--min:240px] gap-[24px]">
 <div class="flex flex-col gap-[14px] [padding:28px] bg-paper rounded-[24px]">
 <div aria-hidden="true" class="[width:48px] [height:48px] rounded-[24px] bg-dune text-night flex items-center justify-center"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>
 <h3 class="m-0 text-[21px] [line-height:1.3] font-extrabold text-night">Preisgarantie</h3>
@@ -54,7 +54,7 @@
 <p class="m-0 text-[16px] [line-height:1.6] text-ink-2">Du entscheidest mit, welche Funktion als Erstes nach dem Start kommt.</p>
 </div>
 <div class="flex flex-col gap-[14px] [padding:28px] bg-paper rounded-[24px]">
-<div aria-hidden="true" class="[width:48px] [height:48px] rounded-[24px] bg-dune flex items-center justify-center"><svg viewBox="0 0 120 120" width="30" height="30"><path d="M26 62 A34 34 0 0 1 94 62 Z" fill="#E06A43"></path><path d="M14 76 q11.5 -9 23 0 t23 0 t23 0 t23 0" fill="none" stroke="#2E9E95" stroke-width="9" stroke-linecap="round"></path><path d="M32 92 q9.5 -8 19 0 t19 0 t19 0" fill="none" stroke="#2E9E95" stroke-width="9" stroke-linecap="round"></path></svg></div>
+<div aria-hidden="true" class="[width:48px] [height:48px] rounded-[24px] bg-dune flex items-center justify-center"><svg viewBox="0 0 120 120" width="30" height="30"><path d="M26 62 A34 34 0 0 1 94 62 Z" fill="var(--color-sun)"></path><path d="M14 76 q11.5 -9 23 0 t23 0 t23 0 t23 0" fill="none" stroke="var(--color-spring)" stroke-width="9" stroke-linecap="round"></path><path d="M32 92 q9.5 -8 19 0 t19 0 t19 0" fill="none" stroke="var(--color-spring)" stroke-width="9" stroke-linecap="round"></path></svg></div>
 <h3 class="m-0 text-[21px] [line-height:1.3] font-extrabold text-night">Gründungsabzeichen</h3>
 <p class="m-0 text-[16px] [line-height:1.6] text-ink-2">Freiwillig an deinem Profil und jederzeit ausblendbar.</p>
 </div>
@@ -63,36 +63,36 @@
 </section>
 
 <section aria-labelledby="maezene-titel" class="[padding:clamp(64px,_7vw,_104px)_0] bg-dune">
-<div class="[max-width:1296px] [margin:0_auto] [padding:0_clamp(20px,_4vw,_48px)] grid [grid-template-columns:repeat(auto-fit,_minmax(min(420px,_100%),_1fr))] [gap:32px_72px] items-center">
+<div class="o-container o-auto-grid [--min:420px] [gap:32px_72px] items-center">
 <div class="flex flex-col gap-[16px]">
 <h2 id="maezene-titel" class="m-0 o-display font-medium [font-size:clamp(30px,_3.2vw,_46px)] [line-height:1.12] [letter-spacing:-0.015em] text-night">Gründungs-Mäzen:innen</h2>
 <p class="m-0 [max-width:32em] text-[18px] [line-height:1.6] text-ink-2">Wer als Mäzen startet, kann auf Wunsch auf unserer Dankesliste stehen. Ein sichtbares Zeichen, dass Oasis von Anfang an getragen wird und niemand wegen Geld draußen bleiben muss.</p>
 </div>
 <div class="flex flex-col gap-[14px] [padding:32px] bg-paper rounded-[28px]">
 <p class="m-0 text-[14px] font-bold [letter-spacing:2px] uppercase text-muted">Dankesliste</p>
-<p class="m-0 [padding:22px] [border:2px_dashed_#B9A88C] rounded-[16px] text-[17px] [line-height:1.6] text-ink-2">Die Dankesliste veröffentlichen wir ab dem Start.</p>
+<p class="m-0 [padding:22px] border-2 border-dashed border-field-line rounded-[16px] text-[17px] [line-height:1.6] text-ink-2">Die Dankesliste veröffentlichen wir ab dem Start.</p>
 <p class="m-0 text-[15px] text-ink-2">Die Nennung ist freiwillig und lässt sich jederzeit zurücknehmen.</p>
 </div>
 </div>
 </section>
 
 <section aria-labelledby="gfaq-titel" class="[padding:clamp(64px,_7vw,_104px)_0]">
-<div class="[max-width:1296px] [margin:0_auto] [padding:0_clamp(20px,_4vw,_48px)] grid [grid-template-columns:repeat(auto-fit,_minmax(min(360px,_100%),_1fr))] [gap:32px_72px] items-start">
+<div class="o-container o-auto-grid [--min:360px] [gap:32px_72px] items-start">
 <h2 id="gfaq-titel" class="m-0 o-display font-medium [font-size:clamp(30px,_3.2vw,_46px)] [line-height:1.12] [letter-spacing:-0.015em] text-night">Fragen zur Gründungsphase</h2>
-<div class="flex flex-col [border-top:1px_solid_#D6C8B0]">
-<details open="open" class="[border-bottom:1px_solid_#D6C8B0]">
+<div class="flex flex-col border-t border-dune-line">
+<details open="open" class="border-b border-dune-line">
 <summary class="flex justify-between items-center gap-[16px] [min-height:44px] [padding:20px_0] text-[19px] font-bold text-night">Was kostet die Gründungsmitgliedschaft?
 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" class="flex-none"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
 </summary>
 <p class="[margin:0_0_22px] [max-width:38em] text-[17px] [line-height:1.6] text-ink-2">Dasselbe wie jede Mitgliedschaft: Solidar {{ \App\Support\OasisFormat::euro(config('oasis.tiers.solidar.monthly')) }}, Oase {{ \App\Support\OasisFormat::euro(config('oasis.tiers.oase.monthly')) }} oder Mäzen ab {{ \App\Support\OasisFormat::euro(config('oasis.tiers.maezen.monthly')) }} im Monat. Der Unterschied: Dein Preis bleibt, solange du dabei bist.</p>
 </details>
-<details class="[border-bottom:1px_solid_#D6C8B0]">
+<details class="border-b border-dune-line">
 <summary class="flex justify-between items-center gap-[16px] [min-height:44px] [padding:20px_0] text-[19px] font-bold text-night">Muss ich mich jetzt festlegen?
 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" class="flex-none"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
 </summary>
 <p class="[margin:0_0_22px] [max-width:38em] text-[17px] [line-height:1.6] text-ink-2">Nein. Die Startliste ist kostenlos und unverbindlich. Du startest wie alle mit {{ config('oasis.trial_days') }} Tagen Test und entscheidest danach.</p>
 </details>
-<details class="[border-bottom:1px_solid_#D6C8B0]">
+<details class="border-b border-dune-line">
 <summary class="flex justify-between items-center gap-[16px] [min-height:44px] [padding:20px_0] text-[19px] font-bold text-night">Was passiert, wenn alle Plätze vergeben sind?
 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" class="flex-none"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
 </summary>

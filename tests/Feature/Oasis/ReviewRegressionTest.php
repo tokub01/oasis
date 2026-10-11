@@ -9,6 +9,7 @@ use App\Mail\Oasis\CancellationReceipt;
 use App\Mail\Oasis\ContentReportNotice;
 use App\Mail\Oasis\WaitlistConfirmation;
 use App\Mail\Oasis\WithdrawalReceipt;
+use App\Models\ContentReport;
 use App\Models\WaitlistEntry;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
@@ -25,7 +26,7 @@ it('keeps a confirmed waitlist entry unchanged and gives the same response witho
         'consented_at' => now()->subDays(2), 'confirmed_at' => now()->subDay(),
         'token' => str_repeat('c', 64),
     ]);
-    $attributes = $entry->getAttributes();
+    $attributes = $entry->fresh()->getAttributes();
 
     $this->post(route('oasis.gruendung.store'), [
         'email' => 'MEMBER@example.tld', 'consent' => '1', 'group' => 'Another group',
@@ -40,7 +41,7 @@ it('resends an unconfirmed opt-in without changing its original consent or token
     $entry = WaitlistEntry::create([
         'email' => 'member@example.tld', 'consented_at' => now()->subDays(2), 'token' => str_repeat('d', 64),
     ]);
-    $attributes = $entry->getAttributes();
+    $attributes = $entry->fresh()->getAttributes();
 
     $this->post(route('oasis.gruendung.store'), ['email' => $entry->email, 'consent' => '1'])
         ->assertSessionHasNoErrors()->assertRedirect(route('oasis.bestaetigung.gruendung'));
@@ -114,7 +115,7 @@ it('records good-faith consent and sends a moderation notice requesting review',
         'email' => 'person@example.tld', 'truthful' => '1',
     ])->assertSessionHasNoErrors();
 
-    expect(\App\Models\ContentReport::sole()->truthful_confirmed_at)->not->toBeNull();
+    expect(ContentReport::sole()->truthful_confirmed_at)->not->toBeNull();
     Mail::assertSent(ContentReportNotice::class, function ($mail) {
         expect($mail->render())->toContain('Neue Inhaltsmeldung von Test Person', 'Bitte prüft')
             ->not->toContain('Eingangsbestätigung deiner Meldung');

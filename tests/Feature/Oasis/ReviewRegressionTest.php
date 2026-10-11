@@ -117,3 +117,56 @@ it('records good-faith consent and sends a moderation notice requesting review',
         return $mail->hasTo('moderation@example.tld');
     });
 });
+
+it('uses the Berlin calendar day for cancellation dates just after midnight', function ($instant, $yesterday, $today) {
+    $this->travelTo(Carbon::parse($instant, 'UTC'));
+    $payload = [
+        'name' => 'Test Person', 'email' => 'person@example.tld', 'contract' => 'Oasis-Mitgliedschaft',
+        'type' => 'ordentlich', 'timing' => 'datum',
+    ];
+
+    $this->post(route('oasis.kuendigen.store'), [...$payload, 'effective_date' => $yesterday])
+        ->assertSessionHasErrors(['effective_date' => 'Bitte wähle heute oder ein Datum in der Zukunft.']);
+    $this->assertDatabaseCount('cancellation_requests', 0);
+    Mail::assertNothingSent();
+
+    $this->post(route('oasis.kuendigen.store'), [...$payload, 'effective_date' => $today])
+        ->assertSessionHasNoErrors()->assertRedirect(route('oasis.bestaetigung.kuendigen'));
+    $this->assertDatabaseHas('cancellation_requests', ['effective_date' => $today]);
+})->with([
+    'winter 00:30 Berlin' => ['2026-11-03 23:30:00', '2026-11-03', '2026-11-04'],
+    'summer 00:30 Berlin' => ['2026-07-03 22:30:00', '2026-07-03', '2026-07-04'],
+]);
+
+it('shows the complete cancellation declaration with Berlin time after submission', function () {
+    $this->travelTo(Carbon::parse('2026-11-03 13:07:00', 'UTC'));
+    $this->post(route('oasis.kuendigen.store'), [
+        'name' => 'Test Person', 'email' => 'person@example.tld', 'username' => '@person',
+        'contract' => 'Oasis-Mitgliedschaft', 'type' => 'ausserordentlich',
+        'reason' => 'Important reason <script>alert(1)</script>',
+        'timing' => 'datum', 'effective_date' => '2026-11-04',
+    ])->assertSessionHasNoErrors()->assertRedirect(route('oasis.bestaetigung.kuendigen'));
+
+    $this->get(route('oasis.bestaetigung.kuendigen'))->assertOk()
+        ->assertSee('03.11.2026 14:07:00 CET')
+        ->assertSee('Test Person')->assertSee('person@example.tld')->assertSee('@person')
+        ->assertSee('Oasis-Mitgliedschaft')->assertSee('Außerordentlich')
+        ->assertSee('Important reason <script>alert(1)</script>')
+        ->assertDontSee('<script>alert(1)</script>', false)
+        ->assertSee('Zu einem bestimmten Datum')->assertSee('04.11.2026')
+        ->assertSee('Du kannst diese Seite speichern oder drucken.');
+});
+
+it('shows the withdrawal declaration with Berlin time after submission', function () {
+    $this->travelTo(Carbon::parse('2026-11-03 13:07:00', 'UTC'));
+    $this->post(route('oasis.widerrufen.store'), [
+        'name' => 'Test Person', 'email' => 'person@example.tld', 'contract' => 'Oasis-Mitgliedschaft',
+        'contracted_on' => '2026-10-01',
+    ])->assertSessionHasNoErrors()->assertRedirect(route('oasis.bestaetigung.widerrufen'));
+
+    $this->get(route('oasis.bestaetigung.widerrufen'))->assertOk()
+        ->assertSee('03.11.2026 14:07:00 CET')
+        ->assertSee('Test Person')->assertSee('person@example.tld')
+        ->assertSee('Oasis-Mitgliedschaft')->assertSee('01.10.2026')
+        ->assertSee('Du kannst diese Seite speichern oder drucken.');
+});

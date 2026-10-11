@@ -102,6 +102,27 @@ return [
     'server_location' => '[SERVERSTANDORT UND DIENSTLEISTER]',
 
     /*
+     * Facts for the privacy policy (Datenschutzerklärung). A null value renders "[noch festzulegen]" so an open
+     * point is visible instead of an invented claim. Check every value against the real setup before launch.
+     */
+    'privacy' => [
+        // Hosting provider incl. address and server location (taken over from velwebsolutions.de; verify for Oasis).
+        'hosting' => 'IONOS SE, Elgendorfer Str. 57, 56410 Montabaur, Server in Deutschland',
+        // Provider that sends the confirmation mails, incl. region. Planned: Amazon SES via SMTP (see PROMPT.md).
+        'mail_provider' => null,
+        // Days after which web server log files (IP address, time, URL, browser) are deleted.
+        'server_log_days' => null,
+        // Days after which unconfirmed waitlist entries are deleted.
+        'unconfirmed_waitlist_days' => null,
+        // Years for which cancellations, withdrawals and content reports are kept as proof.
+        'records_years' => null,
+        // Competent data protection supervisory authority for the operator (Krefeld, NRW).
+        'authority' => 'Landesbeauftragte für Datenschutz und Informationsfreiheit Nordrhein-Westfalen, Kavalleriestraße 2–4, 40213 Düsseldorf',
+        // Date of the current version, shown as "Stand".
+        'as_of' => 'Oktober 2026',
+    ],
+
+    /*
      * Membership prices. Monthly amounts in euro incl. VAT; format them with App\Support\OasisFormat.
      */
     // VAT rate in percent, used to show the VAT included in a price (amount × rate / (100 + rate)).

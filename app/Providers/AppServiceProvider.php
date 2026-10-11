@@ -43,14 +43,9 @@ class AppServiceProvider extends ServiceProvider
             app()->isProduction(),
         );
 
-        Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
-                ->mixedCase()
-                ->letters()
-                ->numbers()
-                ->symbols()
-                ->uncompromised()
-            : null,
-        );
+        // Oasis rule (PLATZHALTER.md): at least 10 characters, the same in every environment, so the hint on the
+        // sign-up page is true. No "uncompromised" check: it would send hash prefixes to an external service
+        // (Have I Been Pwned), which the privacy policy does not cover.
+        Password::defaults(fn (): Password => Password::min(10));
     }
 }

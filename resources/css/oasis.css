@@ -1,0 +1,299 @@
+/*
+ * Oasis design system. Values come from docs/oasis-design/assets/tokens.css
+ * and the templates in docs/oasis-design/design/.
+ */
+
+@font-face {
+    font-family: 'Fraunces';
+    src: url('/fonts/fraunces-latin-full-normal.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Fraunces';
+    src: url('/fonts/fraunces-latin-full-italic.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Manrope';
+    src: url('/fonts/manrope-latin-wght-normal.woff2') format('woff2');
+    font-weight: 200 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+@theme {
+    --font-sans: 'Manrope', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+
+    --color-night: #0E2B2F;
+    --color-night-2: #12353A;
+    --color-night-line: #2C4B4F;
+    --color-sand: #F4EDE1;
+    --color-paper: #FBF8F2;
+    --color-field: #FFFDF8;
+    --color-dune: #EADFCC;
+    --color-dune-line: #D6C8B0;
+    --color-paper-line: #E5DBC9;
+    --color-field-line: #9C8E77;
+    --color-ink: #1C2422;
+    --color-ink-2: #3E4A47;
+    --color-muted: #5E6B67;
+    --color-sun: #E06A43;
+    --color-sun-ink: #0B2326;
+    --color-sun-text: #A3441F;
+    --color-sun-on-night: #F2906B;
+    --color-spring: #2E9E95;
+    --color-spring-text: #1F6F69;
+    --color-on-night: #F4EDE1;
+    --color-on-night-2: #C9D6D2;
+    --color-on-night-muted: #A9BDB8;
+
+    --shadow-float: 0 30px 60px -24px rgba(14, 43, 47, 0.5);
+    --shadow-card: 0 24px 50px -28px rgba(14, 43, 47, 0.45);
+}
+
+@layer base {
+    body {
+        background: var(--color-sand);
+        color: var(--color-ink);
+        font-family: var(--font-sans);
+        font-size: 17px;
+        line-height: 1.6;
+    }
+
+    a {
+        transition: opacity 0.15s ease;
+    }
+
+    a:hover {
+        opacity: 0.82;
+    }
+
+    :is(a, button, input, select, textarea, summary):focus-visible {
+        outline: 3px solid var(--color-spring);
+        outline-offset: 3px;
+    }
+
+    summary {
+        list-style: none;
+        cursor: pointer;
+    }
+
+    summary::-webkit-details-marker {
+        display: none;
+    }
+
+    summary .o-faq-icon {
+        transition: transform 0.2s ease;
+    }
+
+    details[open] summary .o-faq-icon {
+        transform: rotate(45deg);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            transition-duration: 0.01ms !important;
+            animation-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
+    }
+}
+
+@layer components {
+    .o-container {
+        max-width: 1296px;
+        margin-inline: auto;
+        padding-inline: clamp(20px, 4vw, 48px);
+    }
+
+    .o-section {
+        padding-block: clamp(72px, 8vw, 120px);
+    }
+
+    .o-section-s {
+        padding-block: clamp(56px, 6vw, 88px);
+    }
+
+    /* Columns wrap on small screens without media queries; set --min per grid. */
+    .o-auto-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(var(--min, 240px), 100%), 1fr));
+    }
+
+    .o-display {
+        font-family: var(--font-display);
+        font-variation-settings: 'SOFT' 100;
+        font-weight: 500;
+    }
+
+    .o-h1-home {
+        font-family: var(--font-display);
+        font-variation-settings: 'SOFT' 100;
+        font-weight: 500;
+        font-size: clamp(44px, 6.2vw, 88px);
+        line-height: 1.02;
+        letter-spacing: -0.02em;
+        text-wrap: balance;
+    }
+
+    .o-h1 {
+        font-family: var(--font-display);
+        font-variation-settings: 'SOFT' 100;
+        font-weight: 500;
+        font-size: clamp(40px, 5vw, 72px);
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+        text-wrap: balance;
+    }
+
+    .o-h2 {
+        font-family: var(--font-display);
+        font-variation-settings: 'SOFT' 100;
+        font-weight: 500;
+        font-size: clamp(32px, 3.6vw, 52px);
+        line-height: 1.1;
+        letter-spacing: -0.015em;
+        text-wrap: balance;
+    }
+
+    .o-h2-s {
+        font-family: var(--font-display);
+        font-variation-settings: 'SOFT' 100;
+        font-weight: 500;
+        font-size: clamp(30px, 3.2vw, 46px);
+        line-height: 1.12;
+        letter-spacing: -0.015em;
+        text-wrap: balance;
+    }
+
+    .o-lead {
+        font-size: clamp(18px, 1.6vw, 21px);
+        line-height: 1.6;
+    }
+
+    .o-eyebrow {
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        color: var(--color-sun-text);
+    }
+
+    .o-eyebrow-night {
+        color: var(--color-sun-on-night);
+    }
+
+    .o-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 56px;
+        padding-inline: 28px;
+        border-radius: 999px;
+        font-size: 18px;
+        font-weight: 800;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .o-btn-sm {
+        min-height: 44px;
+        padding-inline: 20px;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    .o-btn-md {
+        min-height: 48px;
+        padding-inline: 22px;
+        font-size: 17px;
+        font-weight: 700;
+    }
+
+    .o-btn-primary {
+        background: var(--color-sun);
+        color: var(--color-sun-ink);
+    }
+
+    .o-btn-dark {
+        background: var(--color-night);
+        color: var(--color-on-night);
+    }
+
+    .o-btn-outline {
+        border: 2px solid var(--color-night);
+        color: var(--color-night);
+    }
+
+    .o-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 44px;
+        font-weight: 700;
+        text-decoration: underline;
+        text-underline-offset: 5px;
+        text-decoration-thickness: 1.5px;
+    }
+
+    .o-label {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--color-night);
+    }
+
+    .o-input {
+        width: 100%;
+        min-height: 52px;
+        padding: 12px 16px;
+        border: 1.5px solid var(--color-field-line);
+        border-radius: 14px;
+        background: var(--color-field);
+        color: var(--color-ink);
+        font: inherit;
+        font-size: 17px;
+    }
+
+    .o-input[aria-invalid='true'] {
+        border-color: var(--color-sun-text);
+    }
+
+    .o-error {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--color-sun-text);
+    }
+
+    /* Honeypot field: hidden from people, visible to naive bots. */
+    .o-hp {
+        position: absolute !important;
+        left: -10000px;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+    }
+
+    .o-skip-link {
+        position: absolute;
+        left: 16px;
+        top: -100px;
+        z-index: 100;
+        padding: 12px 18px;
+        border-radius: 999px;
+        background: var(--color-night);
+        color: var(--color-on-night);
+        font-weight: 700;
+    }
+
+    .o-skip-link:focus {
+        top: 16px;
+    }
+}

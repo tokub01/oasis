@@ -17,7 +17,7 @@ class CancellationFormRequest extends OasisFormRequest
             'type' => ['required', 'in:ordentlich,ausserordentlich'],
             'reason' => ['exclude_unless:type,ausserordentlich', 'required_if:type,ausserordentlich', 'string', 'max:10000'],
             'timing' => ['required', 'in:naechst,datum'],
-            'effective_date' => ['exclude_unless:timing,datum', 'required_if:timing,datum', 'date_format:Y-m-d', 'after_or_equal:today'],
+            'effective_date' => ['exclude_unless:timing,datum', 'required_if:timing,datum', 'date_format:Y-m-d', 'after_or_equal:'.now('Europe/Berlin')->toDateString()],
         ] + $this->spamRules();
     }
 }

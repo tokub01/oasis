@@ -15,15 +15,14 @@ class WaitlistController extends Controller
 {
     public function store(WaitlistFormRequest $request): RedirectResponse
     {
-        $entry = WaitlistEntry::firstOrNew(['email' => $request->validated('email')]);
-
-        if (! $entry->exists) {
-            $entry->fill([
+        $entry = WaitlistEntry::firstOrCreate(
+            ['email' => $request->validated('email')],
+            [
                 ...$request->safe()->only(['group']),
                 'consented_at' => now(),
                 'token' => Str::random(64),
-            ])->save();
-        }
+            ],
+        );
 
         if ($entry->confirmed_at === null) {
             Mail::to($entry->email)->send(new WaitlistConfirmation($entry));

@@ -86,7 +86,7 @@ Einladungslink kopieren</span>
 <div class="flex flex-col gap-[14px] [padding:36px] [border:1px_solid_#D6C8B0] rounded-[28px]">
 <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#0E2B2F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12v10H4V12"></path><path d="M2 7h20v5H2z"></path><path d="M12 22V7"></path><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
 <h2 class="m-0 text-[24px] [line-height:1.3] font-extrabold text-night">Patenplätze</h2>
-<p class="m-0 text-[17px] [line-height:1.6] text-ink-2">Mäzen-Mitglieder und Partnerorganisationen verschenken Patenplätze an Menschen, denen auch {{ number_format(config('oasis.tiers.solidar.monthly'), 0, ',', '.') }} € im Monat gerade zu viel sind. Ohne Nachweis.</p>
+<p class="m-0 text-[17px] [line-height:1.6] text-ink-2">Mäzen-Mitglieder und Partnerorganisationen verschenken Patenplätze an Menschen, denen auch {{ \App\Support\OasisFormat::euro(config('oasis.tiers.solidar.monthly')) }} im Monat gerade zu viel sind. Ohne Nachweis.</p>
 </div>
 </div>
 </section>

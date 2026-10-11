@@ -7,7 +7,7 @@
 <div class="flex flex-col gap-[22px]">
 <p class="m-0 text-[14px] font-bold [letter-spacing:2.5px] uppercase text-sun-on-night">Gründungsphase</p>
 <h1 id="gr-titel" class="m-0 o-display font-medium [font-size:clamp(44px,_6vw,_84px)] [line-height:1.02] [letter-spacing:-0.02em] [text-wrap:balance]">Sei von Anfang an dabei.</h1>
-<p class="m-0 [max-width:32em] [font-size:clamp(18px,_1.5vw,_20px)] [line-height:1.6] text-on-night-2">Oasis startet am {{ config('oasis.launch_date') ?? 'Veröffentlichen wir ab dem Start' }}. Die ersten {{ number_format(config('oasis.founding.seats'), 0, ',', '.') }} Mitglieder werden Gründungsmitglieder: mit Preisgarantie und einer Stimme in der allerersten Abstimmung.</p>
+<p class="m-0 [max-width:32em] [font-size:clamp(18px,_1.5vw,_20px)] [line-height:1.6] text-on-night-2">@if (config('oasis.launch_date'))Oasis startet am {{ \Illuminate\Support\Carbon::parse(config('oasis.launch_date'))->format('d.m.Y') }}.@else Oasis startet bald, den Termin geben wir hier bekannt.@endif Die ersten {{ number_format(config('oasis.founding.seats'), 0, ',', '.') }} Mitglieder werden Gründungsmitglieder: mit Preisgarantie und einer Stimme in der allerersten Abstimmung.</p>
 <p class="text-on-night-muted">Veröffentlichen wir ab dem Start</p>
 </div>
 <form method="POST" action="{{ route('oasis.gruendung.store') }}" aria-labelledby="liste-titel" class="flex flex-col gap-[18px] [padding:clamp(28px,_3vw,_40px)] bg-sand text-ink rounded-[28px]">
@@ -84,7 +84,7 @@
 <summary class="flex justify-between items-center gap-[16px] [min-height:44px] [padding:20px_0] text-[19px] font-bold text-night">Was kostet die Gründungsmitgliedschaft?
 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" class="flex-none"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
 </summary>
-<p class="[margin:0_0_22px] [max-width:38em] text-[17px] [line-height:1.6] text-ink-2">Dasselbe wie jede Mitgliedschaft: Solidar {{ number_format(config('oasis.tiers.solidar.monthly'), 0, ',', '.') }} €, Oase {{ number_format(config('oasis.tiers.oase.monthly'), 0, ',', '.') }} € oder Mäzen ab {{ number_format(config('oasis.tiers.maezen.monthly'), 0, ',', '.') }} € im Monat. Der Unterschied: Dein Preis bleibt, solange du dabei bist.</p>
+<p class="[margin:0_0_22px] [max-width:38em] text-[17px] [line-height:1.6] text-ink-2">Dasselbe wie jede Mitgliedschaft: Solidar {{ \App\Support\OasisFormat::euro(config('oasis.tiers.solidar.monthly')) }}, Oase {{ \App\Support\OasisFormat::euro(config('oasis.tiers.oase.monthly')) }} oder Mäzen ab {{ \App\Support\OasisFormat::euro(config('oasis.tiers.maezen.monthly')) }} im Monat. Der Unterschied: Dein Preis bleibt, solange du dabei bist.</p>
 </details>
 <details class="[border-bottom:1px_solid_#D6C8B0]">
 <summary class="flex justify-between items-center gap-[16px] [min-height:44px] [padding:20px_0] text-[19px] font-bold text-night">Muss ich mich jetzt festlegen?

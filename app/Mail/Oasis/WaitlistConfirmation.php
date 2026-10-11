@@ -17,9 +17,7 @@ class WaitlistConfirmation extends Mailable
     /**
      * Bind the saved, unconfirmed waitlist entry to the double-opt-in request.
      */
-    public function __construct(public WaitlistEntry $entry)
-    {
-    }
+    public function __construct(public WaitlistEntry $entry) {}
 
     /**
      * Use a fixed subject that requests verification without claiming membership.

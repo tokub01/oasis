@@ -16,9 +16,7 @@ class OrganisationNotice extends Mailable
     /**
      * Bind the saved organisation enquiry for operator follow-up.
      */
-    public function __construct(public OrganisationRequest $submission)
-    {
-    }
+    public function __construct(public OrganisationRequest $submission) {}
 
     /**
      * Identify the mail as a new organisation enquiry.

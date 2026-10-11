@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Oasis\WaitlistFormRequest;
 use App\Mail\Oasis\WaitlistConfirmation;
 use App\Models\WaitlistEntry;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -43,7 +44,8 @@ class WaitlistController extends Controller
      * Confirm a signed waitlist entry without replacing its original confirmation time.
      *
      * @param  string  $token  Opaque entry token authenticated by the signed route middleware.
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException When the token has no entry.
+     *
+     * @throws ModelNotFoundException When the token has no entry.
      */
     public function confirm(string $token): View
     {
@@ -59,7 +61,8 @@ class WaitlistController extends Controller
      * Show an explicit unsubscribe step so mail-scanner GET requests cannot delete entries.
      *
      * @param  string  $token  Opaque entry token authenticated by the signed route middleware.
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException When the token has no entry.
+     *
+     * @throws ModelNotFoundException When the token has no entry.
      */
     public function unsubscribe(string $token): View
     {

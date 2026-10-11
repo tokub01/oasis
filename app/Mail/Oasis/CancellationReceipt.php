@@ -18,9 +18,7 @@ class CancellationReceipt extends Mailable
      *
      * @param  bool  $operatorCopy  True for the internal operator copy, false for the person submitting.
      */
-    public function __construct(public CancellationRequest $submission, public bool $operatorCopy = false)
-    {
-    }
+    public function __construct(public CancellationRequest $submission, public bool $operatorCopy = false) {}
 
     /**
      * Distinguish the operator copy from the personal cancellation receipt.

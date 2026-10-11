@@ -16,9 +16,7 @@ class ContentReportNotice extends Mailable
     /**
      * Bind the saved notice that moderation must review.
      */
-    public function __construct(public ContentReport $submission)
-    {
-    }
+    public function __construct(public ContentReport $submission) {}
 
     /**
      * Identify the mail as a request for content review.

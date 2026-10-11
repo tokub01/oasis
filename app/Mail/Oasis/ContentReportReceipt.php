@@ -16,9 +16,7 @@ class ContentReportReceipt extends Mailable
     /**
      * Bind the saved notice to the reporter acknowledgement.
      */
-    public function __construct(public ContentReport $submission)
-    {
-    }
+    public function __construct(public ContentReport $submission) {}
 
     /**
      * Identify the mail as the personal notice acknowledgement.

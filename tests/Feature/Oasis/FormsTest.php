@@ -150,6 +150,7 @@ it('accepts an optional withdrawal date and renders the receipt', function () {
     ])->assertSessionHasNoErrors();
     Mail::assertSent(WithdrawalReceipt::class, function ($mail) {
         expect($mail->render())->toContain('01.10.2026', 'Oasis-Mitgliedschaft');
+
         return true;
     });
 });
@@ -201,6 +202,7 @@ it('sends signed confirmation and unsubscribe URLs in the waitlist mail', functi
         $this->get($urls['unsubscribeUrl'])->assertOk();
         $this->assertDatabaseCount('waitlist_entries', 1);
         $this->post(URL::signedRoute('oasis.waitlist.destroy', ['token' => $mail->entry->token]))->assertOk();
+
         return true;
     });
     $this->assertDatabaseCount('waitlist_entries', 0);

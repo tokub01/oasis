@@ -34,8 +34,9 @@ Nothing is pushed or deployed without approval.
 - Membership changes in group chats rotate the conversation key (removed members cannot read new messages).
 - **Self-deleting**: `expires_at` per message; a scheduled job deletes expired rows; the client drops them from memory.
   Pusher does not store messages.
-- **Key verification**: every conversation shows a safety number (fingerprint of both identity keys) so people can
-  check in person that the server did not swap a key. A changed key is shown as a warning.
+- **Key verification**: safety numbers are pairwise: for every other member the conversation shows the fingerprint of
+  both people's signing keys (the encryption key is bound to the signing key), so they can check in person that the
+  server did not swap a key. In a group each member verifies the members they care about. A changed key is a warning.
 
 **Honest limits (must be stated in the privacy policy and marketing, UWG)**
 - Metadata stays visible to the server: who chats with whom, when, message size.

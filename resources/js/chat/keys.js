@@ -163,12 +163,19 @@ export async function unlockIdentity(locked, passphrase) {
 
     const salt = fromBase64(sodium, kdf.salt, sodium.crypto_pwhash_SALTBYTES);
     const nonce = fromBase64(sodium, locked.nonce, sodium.crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
-    const ciphertext = fromBase64(sodium, locked.ciphertext);
+    const ciphertext = fromBase64(
+        sodium,
+        locked.ciphertext,
+        SERIALISED_SECRET_BYTES + sodium.crypto_aead_xchacha20poly1305_ietf_ABYTES,
+    );
     const encryptionPublicKey = fromBase64(sodium, locked.publicKeys?.encryption, X25519_PUBLIC_BYTES);
     const signingPublicKey = fromBase64(sodium, locked.publicKeys?.signing, ED25519_PUBLIC_BYTES);
 
     const key = deriveKey(sodium, passphrase, salt, kdf.opslimit, kdf.memlimit);
     let secret = null;
+    let encryptionPrivateKey = null;
+    let signingPrivateKey = null;
+    let unlocked = false;
     try {
         try {
             secret = sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
@@ -185,19 +192,18 @@ export async function unlockIdentity(locked, passphrase) {
             throw new WrongPassphraseError();
         }
 
-        const encryptionPrivateKey = secret.slice(0, X25519_SECRET_BYTES);
-        const signingPrivateKey = secret.slice(X25519_SECRET_BYTES);
+        encryptionPrivateKey = secret.slice(0, X25519_SECRET_BYTES);
+        signingPrivateKey = secret.slice(X25519_SECRET_BYTES);
         const derivedEncryptionPublic = sodium.crypto_scalarmult_base(encryptionPrivateKey);
         const derivedSigningPublic = sodium.crypto_sign_ed25519_sk_to_pk(signingPrivateKey);
         if (
             !sodium.memcmp(derivedEncryptionPublic, encryptionPublicKey) ||
             !sodium.memcmp(derivedSigningPublic, signingPublicKey)
         ) {
-            wipe(encryptionPrivateKey);
-            wipe(signingPrivateKey);
             throw new WrongPassphraseError();
         }
 
+        unlocked = true;
         return {
             encryptionKeyPair: { publicKey: encryptionPublicKey, privateKey: encryptionPrivateKey },
             signingKeyPair: { publicKey: signingPublicKey, privateKey: signingPrivateKey },
@@ -205,6 +211,11 @@ export async function unlockIdentity(locked, passphrase) {
     } finally {
         wipe(key);
         wipe(secret);
+        // On any failure the copied private keys never leave this function, so zero them here.
+        if (!unlocked) {
+            wipe(encryptionPrivateKey);
+            wipe(signingPrivateKey);
+        }
     }
 }
 
@@ -360,8 +371,10 @@ function identityAssociatedData(header, salt, encryptionPublicKey, signingPublic
 function assertKdfLimits(sodium, opslimit, memlimit) {
     const inRange = (value, min, max) => Number.isSafeInteger(value) && value >= min && value <= max;
     if (
-        !inRange(opslimit, sodium.crypto_pwhash_OPSLIMIT_MIN, sodium.crypto_pwhash_OPSLIMIT_SENSITIVE) ||
-        !inRange(memlimit, sodium.crypto_pwhash_MEMLIMIT_MIN, sodium.crypto_pwhash_MEMLIMIT_SENSITIVE)
+        // Upper bound MODERATE (what lockIdentity uses in production): a manipulated server cannot make a phone tab
+        // allocate 1 GiB (SENSITIVE) and crash before the AEAD check fails (Antigravity crypto review, finding 2).
+        !inRange(opslimit, sodium.crypto_pwhash_OPSLIMIT_MIN, sodium.crypto_pwhash_OPSLIMIT_MODERATE) ||
+        !inRange(memlimit, sodium.crypto_pwhash_MEMLIMIT_MIN, sodium.crypto_pwhash_MEMLIMIT_MODERATE)
     ) {
         throw new InvalidInputError('Key derivation parameters are out of the accepted range.');
     }

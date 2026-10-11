@@ -63,7 +63,14 @@ export const MESSAGE_VERSION = 1;
 export const KEY_GRANT_VERSION = 1;
 
 /** Maximum plaintext length in Unicode code points (e.g. a single emoji like 🌴 counts as 1; composed emoji count once per code point). */
-export const MAX_MESSAGE_LENGTH = 10000;
+export const MAX_MESSAGE_LENGTH = 4000;
+
+/**
+ * Maximum plaintext size in UTF-8 bytes. The envelope travels as one Pusher event (10 KiB limit); with the AEAD tag,
+ * Base64 and the JSON fields, 5984 plaintext bytes keep it below that limit (docs/oasis-chat.md). Emoji-heavy text
+ * hits this byte limit before the character limit.
+ */
+export const MAX_MESSAGE_BYTES = 5984;
 
 const KEY_BYTES = 32;
 const X25519_PUBLIC_BYTES = 32;
@@ -115,7 +122,7 @@ export async function unwrapKey(wrapped, identity) {
     let key;
     try {
         key = sodium.crypto_box_seal_open(
-            fromBase64(sodium, wrapped),
+            fromBase64(sodium, wrapped, sodium.crypto_box_SEALBYTES + KEY_BYTES),
             identity.encryptionKeyPair.publicKey,
             identity.encryptionKeyPair.privateKey,
         );
@@ -204,7 +211,7 @@ export async function openKeyGrant({ grant, identity, granterSigningPublicKey })
             recipient_id: normaliseId(grant.recipient_id, 'recipient_id'),
             granter_id: normaliseId(grant.granter_id, 'granter_id'),
         };
-        const sealed = fromBase64(sodium, grant.wrapped_key);
+        const sealed = fromBase64(sodium, grant.wrapped_key, sodium.crypto_box_SEALBYTES + KEY_BYTES);
         const signature = fromBase64(sodium, grant.signature, sodium.crypto_sign_BYTES);
         const signed = keyGrantSignedBytes(verified, identity.encryptionKeyPair.publicKey, sealed);
         if (!sodium.crypto_sign_verify_detached(signature, signed, granterSigningPublicKey)) {
@@ -232,12 +239,14 @@ export async function openKeyGrant({ grant, identity, granterSigningPublicKey })
  * @param {number} params.keyVersion version of `conversationKey`
  * @param {string|number} params.senderId the caller's user id
  * @param {object} params.identity the sender's unlocked identity (signs the message)
- * @param {string} params.plaintext UTF-8 text, at most MAX_MESSAGE_LENGTH code points
- * @param {Date|string|number|null} [params.expiresAt] when the message self-deletes (Date, ISO string or epoch ms);
- *        rounded down to whole seconds; `null`/omitted = no expiry. Must lie in the future.
+ * @param {string} params.plaintext UTF-8 text, at most MAX_MESSAGE_LENGTH code points and MAX_MESSAGE_BYTES bytes
+ * @param {Date|string|number} params.expiresAt when the message self-deletes (Date, ISO string or epoch ms); rounded
+ *        down to whole seconds. Required: every Oasis message self-deletes, and the API rejects envelopes without it.
+ * @param {Date|number} [params.now] current time (Date or epoch ms), e.g. the server time to compensate client clock
+ *        skew; defaults to `Date.now()`
  * @returns {Promise<object>} the envelope (see module header)
  * @throws {MessageTooLongError} if the plaintext is too long
- * @throws {InvalidInputError} on invalid arguments or an expiry that is not in the future
+ * @throws {InvalidInputError} on invalid arguments, a missing expiry, or an expiry that is not in the future
  */
 export async function encryptMessage({
     conversationKey,
@@ -246,7 +255,8 @@ export async function encryptMessage({
     senderId,
     identity,
     plaintext,
-    expiresAt = null,
+    expiresAt,
+    now = Date.now(),
 }) {
     const sodium = await getSodium();
     requireBytes(conversationKey, KEY_BYTES, 'conversationKey');
@@ -254,11 +264,15 @@ export async function encryptMessage({
     if (typeof plaintext !== 'string') {
         throw new InvalidInputError('plaintext must be a string.');
     }
-    if (countCharacters(plaintext) > MAX_MESSAGE_LENGTH) {
+    if (countCharacters(plaintext) > MAX_MESSAGE_LENGTH || utf8Encode(plaintext).length > MAX_MESSAGE_BYTES) {
         throw new MessageTooLongError(MAX_MESSAGE_LENGTH);
     }
+    if (expiresAt === null || expiresAt === undefined) {
+        throw new InvalidInputError('expiresAt is required: every message self-deletes.');
+    }
     const expirySeconds = normaliseExpiry(expiresAt);
-    if (expirySeconds !== null && expirySeconds * 1000 <= Date.now()) {
+    const nowMs = now instanceof Date ? now.getTime() : now;
+    if (expirySeconds * 1000 <= nowMs) {
         throw new InvalidInputError('expiresAt must lie in the future.');
     }
 
@@ -311,11 +325,24 @@ export async function encryptMessage({
  * @param {Uint8Array} params.conversationKey 32-byte key matching `envelope.key_version`
  * @param {Uint8Array} params.senderSigningPublicKey Ed25519 public key of `envelope.sender_id`
  * @param {Date|number} [params.now] current time (Date or epoch ms); injectable for tests, defaults to `Date.now()`
- * @returns {Promise<string>} the plaintext
- * @throws {TamperedMessageError} on any verification or decoding failure (incl. wrong key / wrong sender key)
+ * @param {string|number} [params.expectedConversationId] the conversation the caller is showing; an authentic
+ *        envelope of another conversation (e.g. replayed by the server into this one) is rejected. Pass it always
+ *        when rendering a conversation.
+ * @param {boolean} [params.withMetadata] return `{ plaintext, conversationId, keyVersion, senderId, expiresAt }`
+ *        (all verified) instead of the plain string
+ * @returns {Promise<string|object>} the plaintext, or the verified message with metadata
+ * @throws {TamperedMessageError} on any verification or decoding failure (incl. wrong key / wrong sender key, or a
+ *         conversation other than `expectedConversationId`)
  * @throws {ExpiredMessageError} if the authentic `expires_at` is not in the future
  */
-export async function decryptMessage({ envelope, conversationKey, senderSigningPublicKey, now = Date.now() }) {
+export async function decryptMessage({
+    envelope,
+    conversationKey,
+    senderSigningPublicKey,
+    now = Date.now(),
+    expectedConversationId,
+    withMetadata = false,
+}) {
     const sodium = await getSodium();
     requireBytes(conversationKey, KEY_BYTES, 'conversationKey');
     requireBytes(senderSigningPublicKey, ED25519_PUBLIC_BYTES, 'senderSigningPublicKey');
@@ -328,6 +355,20 @@ export async function decryptMessage({ envelope, conversationKey, senderSigningP
     }
     const signedBytes = canonicalBytes(MESSAGE_SIGNATURE_LABEL, [parsed.nonce, parsed.ciphertext, parsed.associatedData]);
     if (!sodium.crypto_sign_verify_detached(parsed.signature, signedBytes, senderSigningPublicKey)) {
+        throw new TamperedMessageError();
+    }
+
+    // The ids below are covered by the signature and the AEAD associated data, so they are authentic from here on.
+    const verified = {
+        conversationId: normaliseId(envelope.conversation_id, 'conversation_id'),
+        keyVersion: normaliseKeyVersion(envelope.key_version),
+        senderId: normaliseId(envelope.sender_id, 'sender_id'),
+        expiresAt: envelope.expires_at ?? null,
+    };
+    if (
+        expectedConversationId !== undefined &&
+        verified.conversationId !== normaliseId(expectedConversationId, 'expectedConversationId')
+    ) {
         throw new TamperedMessageError();
     }
 
@@ -345,7 +386,8 @@ export async function decryptMessage({ envelope, conversationKey, senderSigningP
             parsed.nonce,
             conversationKey,
         );
-        return utf8Decode(plaintextBytes);
+        const plaintext = utf8Decode(plaintextBytes);
+        return withMetadata ? { plaintext, ...verified } : plaintext;
     } catch {
         throw new TamperedMessageError();
     } finally {

@@ -27,6 +27,7 @@ export {
     MESSAGE_VERSION,
     KEY_GRANT_VERSION,
     MAX_MESSAGE_LENGTH,
+    MAX_MESSAGE_BYTES,
     createConversationKey,
     wrapKeyFor,
     unwrapKey,

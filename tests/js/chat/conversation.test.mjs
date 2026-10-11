@@ -17,6 +17,7 @@ import {
     InvalidInputError,
     InvalidKeyGrantError,
     MAX_MESSAGE_LENGTH,
+    MAX_MESSAGE_BYTES,
     MessageTooLongError,
     openKeyGrant,
     TamperedMessageError,
@@ -129,15 +130,39 @@ test('encrypt/decrypt round-trip preserves UTF-8 text and binds metadata in the 
     assert.equal(plaintext, 'Hallo aus der Oase 🌴');
 });
 
-test('messages without expiry round-trip and expires_at is null', async () => {
-    const { sender, conversationKey, envelope } = await fixture({ expiresAt: null });
-    assert.equal(envelope.expires_at, null);
-    const plaintext = await decryptMessage({
+test('messages without expiry are refused: every Oasis message self-deletes', async () => {
+    await assert.rejects(fixture({ expiresAt: null }), InvalidInputError);
+    // Omitted entirely (the fixture would fill in its default, so call encryptMessage directly).
+    await assert.rejects(
+        encryptMessage({
+            conversationKey: await createConversationKey(),
+            conversationId: 42,
+            keyVersion: 1,
+            senderId: 'user-7',
+            identity: await createIdentity(),
+            plaintext: 'ohne Ablauf',
+        }),
+        InvalidInputError,
+    );
+});
+
+test('decryptMessage rejects an authentic envelope shown in another conversation', async () => {
+    const { sender, conversationKey, envelope } = await fixture();
+    await assert.rejects(
+        decryptMessage({ envelope, conversationKey, senderSigningPublicKey: sender.signingKeyPair.publicKey, expectedConversationId: 43 }),
+        TamperedMessageError,
+    );
+    const verified = await decryptMessage({
         envelope,
         conversationKey,
         senderSigningPublicKey: sender.signingKeyPair.publicKey,
+        expectedConversationId: 42,
+        withMetadata: true,
     });
-    assert.equal(plaintext, 'Hallo aus der Oase 🌴');
+    assert.equal(verified.plaintext, 'Hallo aus der Oase 🌴');
+    assert.equal(verified.conversationId, '42');
+    assert.equal(verified.keyVersion, 3);
+    assert.equal(verified.senderId, 'user-7');
 });
 
 test('server re-formatting expires_at to the same instant (Laravel microseconds) is accepted', async () => {
@@ -213,11 +238,13 @@ test('encrypting with an expiry in the past is refused', async () => {
     await assert.rejects(fixture({ expiresAt: new Date(Date.now() - 1000) }), InvalidInputError);
 });
 
-test('messages longer than 10000 characters are rejected; exactly 10000 is fine', async () => {
-    assert.equal(MAX_MESSAGE_LENGTH, 10000);
-    await fixture({ plaintext: 'a'.repeat(10000) });
-    await fixture({ plaintext: '🌴'.repeat(10000) }); // 10000 code points, 20000 UTF-16 units
-    await assert.rejects(fixture({ plaintext: 'a'.repeat(10001) }), MessageTooLongError);
+test('messages are limited by characters and by UTF-8 bytes (one Pusher event)', async () => {
+    assert.equal(MAX_MESSAGE_LENGTH, 4000);
+    assert.equal(MAX_MESSAGE_BYTES, 5984);
+    await fixture({ plaintext: 'a'.repeat(4000) });
+    await assert.rejects(fixture({ plaintext: 'a'.repeat(4001) }), MessageTooLongError);
+    await fixture({ plaintext: '🌴'.repeat(1496) }); // 1496 x 4 bytes = 5984 bytes
+    await assert.rejects(fixture({ plaintext: '🌴'.repeat(1497) }), MessageTooLongError); // 5988 bytes
 });
 
 test('wipe zeroes a buffer', async () => {

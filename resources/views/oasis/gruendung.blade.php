@@ -81,7 +81,7 @@
                 </div>
                 <div class="flex flex-col gap-[14px] [padding:28px] bg-paper rounded-[24px]">
                     <div aria-hidden="true" class="[width:48px] [height:48px] rounded-[24px] bg-dune flex items-center justify-center">
-                        <svg viewBox="0 0 120 120" width="30" height="30">
+                        <svg viewBox="0 0 120 120" width="30" height="30" aria-hidden="true" focusable="false">
                             <path d="M26 62 A34 34 0 0 1 94 62 Z" fill="var(--color-sun)">
                             </path>
                             <path d="M14 76 q11.5 -9 23 0 t23 0 t23 0 t23 0" fill="none" stroke="var(--color-spring)" stroke-width="9" stroke-linecap="round">
@@ -115,39 +115,15 @@
         <div class="o-container o-auto-grid [--min:360px] [gap:32px_72px] items-start">
             <h2 id="gfaq-titel" class="m-0 o-display font-medium [font-size:clamp(30px,_3.2vw,_46px)] [line-height:1.12] [letter-spacing:-0.015em] text-night">Fragen zur Gründungsphase</h2>
             <div class="flex flex-col border-t border-dune-line">
-                <details open="open" class="border-b border-dune-line">
-                    <summary class="flex justify-between items-center gap-[16px] [min-height:44px] [padding:20px_0] text-[19px] font-bold text-night">Was kostet die Gründungsmitgliedschaft?
-                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" class="flex-none">
-                            <path d="M12 5v14">
-                            </path>
-                            <path d="M5 12h14">
-                            </path>
-                        </svg>
-                    </summary>
-                    <p class="[margin:0_0_22px] [max-width:38em] text-[17px] [line-height:1.6] text-ink-2">Dasselbe wie jede Mitgliedschaft: Solidar {{ \App\Support\OasisFormat::euro(config('oasis.tiers.solidar.monthly')) }}, Oase {{ \App\Support\OasisFormat::euro(config('oasis.tiers.oase.monthly')) }} oder Mäzen ab {{ \App\Support\OasisFormat::euro(config('oasis.tiers.maezen.monthly')) }} im Monat. Der Unterschied: Dein Preis bleibt, solange du dabei bist.</p>
-                </details>
-                <details class="border-b border-dune-line">
-                    <summary class="flex justify-between items-center gap-[16px] [min-height:44px] [padding:20px_0] text-[19px] font-bold text-night">Muss ich mich jetzt festlegen?
-                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" class="flex-none">
-                            <path d="M12 5v14">
-                            </path>
-                            <path d="M5 12h14">
-                            </path>
-                        </svg>
-                    </summary>
-                    <p class="[margin:0_0_22px] [max-width:38em] text-[17px] [line-height:1.6] text-ink-2">Nein. Die Startliste ist kostenlos und unverbindlich. Du startest wie alle mit {{ config('oasis.trial_days') }} Tagen Test und entscheidest danach.</p>
-                </details>
-                <details class="border-b border-dune-line">
-                    <summary class="flex justify-between items-center gap-[16px] [min-height:44px] [padding:20px_0] text-[19px] font-bold text-night">Was passiert, wenn alle Plätze vergeben sind?
-                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" class="flex-none">
-                            <path d="M12 5v14">
-                            </path>
-                            <path d="M5 12h14">
-                            </path>
-                        </svg>
-                    </summary>
-                    <p class="[margin:0_0_22px] [max-width:38em] text-[17px] [line-height:1.6] text-ink-2">Dann kannst du trotzdem mitmachen, zu den normalen Preisen, nur ohne Preisgarantie.</p>
-                </details>
+                <x-oasis.faq-item question="Was kostet die Gründungsmitgliedschaft?" :open="true">
+                    <p>Dasselbe wie jede Mitgliedschaft: Solidar {{ \App\Support\OasisFormat::euro(config('oasis.tiers.solidar.monthly')) }}, Oase {{ \App\Support\OasisFormat::euro(config('oasis.tiers.oase.monthly')) }} oder Mäzen ab {{ \App\Support\OasisFormat::euro(config('oasis.tiers.maezen.monthly')) }} im Monat. Der Unterschied: Dein Preis bleibt, solange du dabei bist.</p>
+                </x-oasis.faq-item>
+                <x-oasis.faq-item question="Muss ich mich jetzt festlegen?">
+                    <p>Nein. Die Startliste ist kostenlos und unverbindlich. Du startest wie alle mit {{ config('oasis.trial_days') }} Tagen Test und entscheidest danach.</p>
+                </x-oasis.faq-item>
+                <x-oasis.faq-item question="Was passiert, wenn alle Plätze vergeben sind?">
+                    <p>Dann kannst du trotzdem mitmachen, zu den normalen Preisen, nur ohne Preisgarantie.</p>
+                </x-oasis.faq-item>
             </div>
         </div>
     </section>

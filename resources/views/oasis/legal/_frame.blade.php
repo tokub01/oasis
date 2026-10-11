@@ -11,7 +11,7 @@
             <h1 class="o-h1">{{ $legalTitle }}</h1>
             <div class="flex flex-wrap items-start gap-10">
                 <nav aria-label="Rechtliche Dokumente" class="flex flex-[1_1_240px] flex-col gap-1 rounded-[24px] border border-paper-line bg-paper p-3">
-                    @foreach (['impressum' => 'Impressum', 'datenschutz' => 'Datenschutzerklärung', 'agb' => 'AGB', 'widerrufsbelehrung' => 'Widerrufsbelehrung', 'regeln' => 'Community-Regeln', 'melden' => 'Inhalte melden'] as $key => $label)
+                    @foreach (['impressum' => 'Impressum', 'datenschutz' => 'Datenschutz', 'agb' => 'AGB', 'widerrufsbelehrung' => 'Widerrufsbelehrung', 'regeln' => 'Community-Regeln', 'melden' => 'Inhalte melden'] as $key => $label)
                         <a href="{{ route('oasis.'.$key) }}" @if($legalKey === $key) aria-current="page" @endif
                         class="flex min-h-12 items-center rounded-[14px] px-4 font-bold {{ $legalKey === $key ? 'bg-night text-on-night' : 'text-night' }}">{{ $label }}</a>
                 @endforeach

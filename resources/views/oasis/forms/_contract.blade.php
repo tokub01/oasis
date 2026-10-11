@@ -44,7 +44,7 @@
             <div data-reason-field>
                 <div class="flex flex-col gap-[6px]">
                     <label for="k-grund" class="text-[15px] font-bold">Grund für die außerordentliche Kündigung</label>
-                    <textarea id="k-grund" rows="4" class="o-input min-w-0 resize-y" name="reason" @required(old('type') === 'ausserordentlich') aria-invalid="{{ $errors->has('reason') ? 'true' : 'false' }}" aria-describedby="k-grund-error">{{ old('reason') }}</textarea>
+                    <textarea id="k-grund" rows="4" class="o-input min-w-0 resize-y" name="reason" @required(old('type') === 'ausserordentlich') aria-invalid="{{ $errors->has('reason') ? 'true' : 'false' }}" @if ($errors->has('reason')) aria-describedby="k-grund-error" @endif>{{ old('reason') }}</textarea>
                     <p id="k-grund-error" class="o-error">@error('reason'){{ $message }}@enderror</p>
                 </div>
             </div>
@@ -55,20 +55,20 @@
                 <div class="flex flex-wrap items-center [gap:10px_14px] [min-height:52px] [padding:6px_16px] border border-dune-line rounded-[14px] bg-field">
                     <label class="flex items-center gap-[12px] text-[17px] cursor-pointer">
                         <input type="radio" name="timing" value="datum" @checked(old('timing') === 'datum') class="[width:20px] [height:20px] m-0 accent-night">Zu einem bestimmten Datum:</label>
-                    <label for="k-datum" class="[position:absolute] [width:1px] [height:1px] [overflow:hidden] [clip:rect(0_0_0_0)]">Datum</label>
-                    <input id="k-datum" type="date" class="o-input min-w-0" name="effective_date" @required(old('timing') === 'datum') aria-invalid="{{ $errors->has('effective_date') ? 'true' : 'false' }}" aria-describedby="k-datum-error" value="{{ old('effective_date') }}">
+                    <label for="k-datum" class="[position:absolute] [width:1px] [height:1px] [overflow:hidden] [clip:rect(0_0_0_0)]">Gewünschtes Kündigungsdatum</label>
+                    <input id="k-datum" type="date" class="o-input min-w-0" name="effective_date" @required(old('timing') === 'datum') aria-invalid="{{ $errors->has('effective_date') ? 'true' : 'false' }}" @if ($errors->has('effective_date')) aria-describedby="k-datum-error" @endif value="{{ old('effective_date') }}">
                     <p id="k-datum-error" class="o-error">@error('effective_date'){{ $message }}@enderror</p>
                 </div>
             </fieldset>
             <div class="o-auto-grid [--min:240px] [gap:18px_20px]">
                 <div class="flex flex-col gap-[6px]">
                     <label for="k-name" class="text-[15px] font-bold">Vor- und Nachname</label>
-                    <input id="k-name" type="text" autocomplete="name" class="o-input min-w-0" name="name" aria-invalid="{{ $errors->has('name') ? 'true' : 'false' }}" aria-describedby="k-name-error" required value="{{ old('name') }}">
+                    <input id="k-name" type="text" autocomplete="name" class="o-input min-w-0" name="name" aria-invalid="{{ $errors->has('name') ? 'true' : 'false' }}" @if ($errors->has('name')) aria-describedby="k-name-error" @endif required value="{{ old('name') }}">
                     <p id="k-name-error" class="o-error">@error('name'){{ $message }}@enderror</p>
                 </div>
                 <div class="flex flex-col gap-[6px]">
                     <label for="k-mail" class="text-[15px] font-bold">E-Mail-Adresse deines Kontos</label>
-                    <input id="k-mail" type="email" autocomplete="email" aria-describedby="k-mail-hinweis k-mail-error" class="o-input min-w-0" name="email" aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}" required value="{{ old('email') }}">
+                    <input id="k-mail" type="email" autocomplete="email" aria-describedby="k-mail-hinweis{{ $errors->has('email') ? ' k-mail-error' : '' }}" class="o-input min-w-0" name="email" aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}" required value="{{ old('email') }}">
                     <p id="k-mail-error" class="o-error">@error('email'){{ $message }}@enderror</p>
                     <span id="k-mail-hinweis" class="text-[14px] text-muted">Hierhin schicken wir sofort die Bestätigung.</span>
                 </div>
@@ -77,7 +77,7 @@
                 <div class="flex flex-col gap-[6px]">
                     <label for="k-user" class="text-[15px] font-bold">Benutzername <span class="font-medium text-muted">(optional)</span>
                     </label>
-                    <input id="k-user" type="text" placeholder="@" class="o-input min-w-0" name="username" aria-invalid="{{ $errors->has('username') ? 'true' : 'false' }}" aria-describedby="k-user-error" value="{{ old('username') }}">
+                    <input id="k-user" type="text" placeholder="@" class="o-input min-w-0" name="username" aria-invalid="{{ $errors->has('username') ? 'true' : 'false' }}" @if ($errors->has('username')) aria-describedby="k-user-error" @endif value="{{ old('username') }}">
                     <p id="k-user-error" class="o-error">@error('username'){{ $message }}@enderror</p>
                 </div>
                 <div class="flex flex-col gap-[6px]">
@@ -100,12 +100,12 @@
             <div class="o-auto-grid [--min:240px] [gap:18px_20px]">
                 <div class="flex flex-col gap-[6px]">
                     <label for="w-name" class="text-[15px] font-bold">Vor- und Nachname</label>
-                    <input id="w-name" type="text" autocomplete="name" class="o-input min-w-0" name="name" aria-invalid="{{ $errors->has('name') ? 'true' : 'false' }}" aria-describedby="w-name-error" required value="{{ old('name') }}">
+                    <input id="w-name" type="text" autocomplete="name" class="o-input min-w-0" name="name" aria-invalid="{{ $errors->has('name') ? 'true' : 'false' }}" @if ($errors->has('name')) aria-describedby="w-name-error" @endif required value="{{ old('name') }}">
                     <p id="w-name-error" class="o-error">@error('name'){{ $message }}@enderror</p>
                 </div>
                 <div class="flex flex-col gap-[6px]">
                     <label for="w-mail" class="text-[15px] font-bold">E-Mail-Adresse deines Kontos</label>
-                    <input id="w-mail" type="email" autocomplete="email" class="o-input min-w-0" name="email" aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}" aria-describedby="w-mail-error" required value="{{ old('email') }}">
+                    <input id="w-mail" type="email" autocomplete="email" class="o-input min-w-0" name="email" aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}" @if ($errors->has('email')) aria-describedby="w-mail-error" @endif required value="{{ old('email') }}">
                     <p id="w-mail-error" class="o-error">@error('email'){{ $message }}@enderror</p>
                 </div>
             </div>
@@ -113,7 +113,7 @@
                 <div class="flex flex-col gap-[6px]">
                     <label for="w-datum" class="text-[15px] font-bold">Abgeschlossen am <span class="font-medium text-muted">(optional)</span>
                     </label>
-                    <input id="w-datum" type="date" class="o-input min-w-0" name="contracted_on" aria-invalid="{{ $errors->has('contracted_on') ? 'true' : 'false' }}" aria-describedby="w-datum-error" value="{{ old('contracted_on') }}">
+                    <input id="w-datum" type="date" class="o-input min-w-0" name="contracted_on" aria-invalid="{{ $errors->has('contracted_on') ? 'true' : 'false' }}" @if ($errors->has('contracted_on')) aria-describedby="w-datum-error" @endif value="{{ old('contracted_on') }}">
                     <p id="w-datum-error" class="o-error">@error('contracted_on'){{ $message }}@enderror</p>
                 </div>
                 <div class="flex flex-col gap-[6px]">

@@ -28,6 +28,29 @@ modules.pricing = (root) => {
     toggle.hidden = false;
 };
 
+// --- Profil: share the profile link ------------------------------------------
+// The button is rendered `hidden` and only shown when sharing or copying works.
+modules.share = (button) => {
+    const url = button.dataset.url;
+    if (!navigator.share && !navigator.clipboard) {
+        return;
+    }
+
+    button.addEventListener("click", async () => {
+        try {
+            if (navigator.share) {
+                await navigator.share({ url });
+            } else {
+                await navigator.clipboard.writeText(url);
+                button.setAttribute("aria-label", "Link kopiert");
+            }
+        } catch {
+            // The person cancelled the share sheet; nothing to do.
+        }
+    });
+    button.hidden = false;
+};
+
 // --- Hilfe: filter the FAQ on the page ---------------------------------------
 // The search form is rendered with `hidden` and only shown here, so there is
 // no non-functional field without JavaScript.

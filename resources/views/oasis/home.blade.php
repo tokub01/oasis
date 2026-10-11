@@ -96,7 +96,7 @@
                 <div class="flex flex-col gap-[18px] rounded-[24px] bg-sand p-8 text-ink">
                     <p class="text-sm font-bold tracking-[2px] text-sun-text uppercase">Oasis</p>
                     <x-oasis.check-list class="text-lg leading-[1.5]" :items="[
-                        'lebt von Mitgliedsbeiträgen ab '.$tiers['solidar']['monthly'].' € im Monat',
+                        'lebt von Mitgliedsbeiträgen ab '.\App\Support\OasisFormat::euro($tiers['solidar']['monthly']).' im Monat',
                         'zeigt dir alles der Reihe nach, mit einem Ende',
                         'braucht kein Werbeprofil und verkauft keine Daten',
                     ]" />
@@ -125,7 +125,7 @@
                 @foreach ([
                     ['Reinlesen', 'Öffentliche Tropfen und Profile kannst du ohne Konto lesen. So siehst du, wer schon da ist.'],
                     [$trialDays.' Tage mitmachen', 'Voller Zugang, ohne Zahlungsdaten. Der Test endet von selbst, und wir erinnern dich vorher.'],
-                    ['Mitglied werden', 'Ab '.$tiers['solidar']['monthly'].' € im Monat. Alle bekommen dasselbe, du wählst nur, wie viel du beiträgst.'],
+                    ['Mitglied werden', 'Ab '.\App\Support\OasisFormat::euro($tiers['solidar']['monthly']).' im Monat. Alle bekommen dasselbe, du wählst nur, wie viel du beiträgst.'],
                 ] as $i => [$heading, $text])
                     <li class="flex flex-col gap-3 rounded-[24px] border border-dune-line px-7 py-8">
                         <span aria-hidden="true" class="o-display text-[56px] leading-none text-sun-text">{{ $i + 1 }}</span>
@@ -141,7 +141,7 @@
                             'rounded-full px-4 py-2 text-base font-bold',
                             'bg-night text-on-night' => $tier['default'] ?? false,
                             'bg-paper' => ! ($tier['default'] ?? false),
-                        ])>{{ $tier['name'] }} {{ $tier['min'] ? 'ab ' : '' }}{{ $tier['monthly'] }} €</span>
+                        ])>{{ $tier['name'] }} {{ $tier['min'] ? 'ab ' : '' }}{{ \App\Support\OasisFormat::euro($tier['monthly']) }}</span>
                     @endforeach
                     <span class="text-base text-ink-2">pro Monat · alle Funktionen in jeder Stufe · monatlich kündbar</span>
                 </div>
@@ -199,8 +199,8 @@
                 <x-oasis.faq-item question="Warum ist Oasis nicht kostenlos?">
                     <p>Weil wir sonst Werbung verkaufen müssten, und dann wäre deine Aufmerksamkeit das Produkt. Mit Mitgliedsbeiträgen bleibt Oasis werbefrei und unabhängig.</p>
                 </x-oasis.faq-item>
-                <x-oasis.faq-item question="Was, wenn ich mir {{ $tiers['oase']['monthly'] }} € nicht leisten kann?">
-                    <p>Dann wähl {{ $tiers['solidar']['name'] }} für {{ $tiers['solidar']['monthly'] }} €, ohne Nachweis und für andere unsichtbar. Und wenn auch das gerade nicht geht, schreib uns: Mitglieder verschenken Patenplätze.</p>
+                <x-oasis.faq-item question="Was, wenn ich mir {{ \App\Support\OasisFormat::euro($tiers['oase']['monthly']) }} nicht leisten kann?">
+                    <p>Dann wähl {{ $tiers['solidar']['name'] }} für {{ \App\Support\OasisFormat::euro($tiers['solidar']['monthly']) }}, ohne Nachweis und für andere unsichtbar. Und wenn auch das gerade nicht geht, schreib uns: Mitglieder verschenken Patenplätze.</p>
                 </x-oasis.faq-item>
             </div>
         </div>

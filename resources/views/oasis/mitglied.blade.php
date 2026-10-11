@@ -12,8 +12,8 @@
     $minMaezen = $tiers['maezen']['monthly'];
     $defaultTier = collect($tiers)->search(fn ($tier) => $tier['default'] ?? false) ?: 'oase';
 
-    $euro = fn ($amount) => number_format($amount, 0, ',', '.').' €';
-    $money = fn ($amount) => number_format($amount, 2, ',', '.').' €';
+    $euro = fn ($amount) => \App\Support\OasisFormat::euro($amount);
+    $money = fn ($amount) => \App\Support\OasisFormat::money($amount);
 
     $tierTexts = [
         'solidar' => 'Für alle, denen '.$euro($tiers['oase']['monthly']).' gerade zu viel sind. Ohne Nachweis.',

@@ -62,7 +62,13 @@
             </ol>
             <div class="flex flex-wrap items-center gap-x-5 gap-y-3.5 rounded-[20px] bg-dune px-7 py-6">
                 <x-oasis.icon name="lock" :size="26" :stroke="1.8" class="text-night" />
-                <p class="flex-[1_1_480px] text-lg leading-[1.55] text-ink"><b>Festgeschrieben:</b> Diese Versprechen stehen in unseren {{ config('oasis.statutes') }}. Ändern ließen sie sich nur, wenn die Mitglieder zustimmen.</p>
+                <p class="flex-[1_1_480px] text-lg leading-[1.55] text-ink">
+                    @if (config('oasis.promises_codified'))
+                        <b>Festgeschrieben:</b> Diese Versprechen stehen in unseren {{ config('oasis.statutes') }}. Ändern ließen sie sich nur, wenn die Mitglieder zustimmen.
+                    @else
+                        <b>Wird festgeschrieben:</b> Vor dem Start schreiben wir diese Versprechen in unsere {{ config('oasis.statutes') }}. Ändern ließen sie sich dann nur, wenn die Mitglieder zustimmen.
+                    @endif
+                </p>
             </div>
         </div>
     </section>

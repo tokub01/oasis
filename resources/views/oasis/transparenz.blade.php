@@ -9,7 +9,7 @@
     $notYet = 'Veröffentlichen wir ab dem Start';
 
     // German number formats. Whole euro amounts without cents, otherwise two decimals.
-    $euro = fn ($value) => number_format((float) $value, floor((float) $value) == (float) $value ? 0 : 2, ',', '.').' €';
+    $euro = fn ($value) => \App\Support\OasisFormat::euro((float) $value);
     $count = fn ($value) => number_format((int) $value, 0, ',', '.');
 
     $costItems = $t['cost_items'] ?? [];
@@ -143,7 +143,13 @@
                         </li>
                     @endforeach
                 </ul>
-                <p class="text-[15px] leading-[1.55] text-on-night-2">Diese Punkte stehen in unseren Regeln. Ändern ließen sie sich nur mit Zustimmung der Mitglieder.</p>
+                <p class="text-[15px] leading-[1.55] text-on-night-2">
+                    @if (config('oasis.promises_codified'))
+                        Diese Punkte stehen in unseren Regeln. Ändern ließen sie sich nur mit Zustimmung der Mitglieder.
+                    @else
+                        Diese Punkte schreiben wir vor dem Start in unsere Regeln. Ändern ließen sie sich dann nur mit Zustimmung der Mitglieder.
+                    @endif
+                </p>
             </div>
         </div>
     </section>

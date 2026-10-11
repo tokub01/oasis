@@ -10,7 +10,7 @@
     $monthly = $t['monthly'];
     $yearly = $monthly * $yearMonths;
     $from = $t['min'] ? 'ab ' : '';
-    $euro = fn (float $v) => (floor($v) == $v ? number_format($v, 0, ',', '.') : number_format($v, 2, ',', '.')).' €';
+    $euro = fn (float $v) => \App\Support\OasisFormat::euro($v);
     $cents = fn (float $v) => $from.'rund '.round($v * 100).' Cent am Tag';
 
     $values = [

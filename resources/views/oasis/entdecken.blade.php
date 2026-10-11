@@ -44,8 +44,8 @@
                 <nav aria-label="Ansicht" class="flex flex-wrap gap-2">
                     <a href="{{ route('oasis.entdecken') }}" aria-current="page"
                        class="inline-flex min-h-11 items-center rounded-full bg-night px-[18px] text-[15px] font-bold text-on-night no-underline">Aus den Oasen</a>
-                    <a href="{{ route('oasis.entdecken') }}"
-                       class="inline-flex min-h-11 items-center rounded-full border border-dune-line px-[18px] text-[15px] font-bold text-night no-underline">Neu</a>
+                    <span aria-disabled="true" title="In der Beispielansicht nicht verfügbar"
+                       class="inline-flex min-h-11 items-center rounded-full border border-dune-line px-[18px] text-[15px] font-bold text-muted">Neu</span>
                 </nav>
 
                 <x-oasis.post variant="card" name="Mira Sol" handle="mira" initials="MS" avatar="night"

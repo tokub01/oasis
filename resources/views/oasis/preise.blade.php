@@ -1,6 +1,6 @@
 @extends('layouts.oasis', [
     'title' => 'Preise',
-    'description' => 'Dieselbe Oase für alle: Solidar, Oase oder Mäzen. Jede Mitgliedschaft enthält alle Funktionen. Erst 30 Tage kostenlos testen, ohne Zahlungsdaten.',
+    'description' => 'Dieselbe Oase für alle: Solidar, Oase oder Mäzen. Jede Mitgliedschaft enthält alle Funktionen. Erst '.config('oasis.trial_days').' Tage kostenlos testen, ohne Zahlungsdaten.',
     'active' => 'preise',
 ])
 
@@ -28,7 +28,7 @@
         <section aria-label="Preisstufen" class="pb-[clamp(56px,6vw,88px)]">
             <div class="o-container flex flex-col gap-6">
                 <div class="o-auto-grid items-stretch gap-6 [--min:320px]">
-                    <x-oasis.price-card tier="solidar" subtitle="Für alle, denen {{ $tiers['oase']['monthly'] }} € gerade zu viel sind">
+                    <x-oasis.price-card tier="solidar" subtitle="Für alle, denen {{ \App\Support\OasisFormat::euro($tiers['oase']['monthly']) }} gerade zu viel sind">
                         Fester Betrag, ohne Nachweis. Welche Stufe du gewählt hast, sieht niemand außer dir.
                     </x-oasis.price-card>
                     <x-oasis.price-card tier="oase" subtitle="Der faire Standard" :featured="true">
@@ -61,7 +61,7 @@
         <div class="o-container o-auto-grid gap-6 [--min:420px]">
             <div class="flex flex-col gap-3.5 rounded-[28px] bg-dune p-9">
                 <x-oasis.icon name="gift" :size="30" class="text-night" />
-                <h2 class="text-2xl leading-[1.3] font-extrabold text-night">Auch {{ $tiers['solidar']['monthly'] }} € sind gerade zu viel?</h2>
+                <h2 class="text-2xl leading-[1.3] font-extrabold text-night">Auch {{ \App\Support\OasisFormat::euro($tiers['solidar']['monthly']) }} sind gerade zu viel?</h2>
                 <p class="text-[17px] leading-[1.6] text-ink-2">Mitglieder und Partnerorganisationen verschenken Patenplätze. Schreib uns einfach, wir fragen nicht nach Nachweisen.</p>
                 <a href="{{ route('oasis.hilfe') }}" class="o-link self-start text-[17px] text-night">Patenplatz anfragen</a>
             </div>

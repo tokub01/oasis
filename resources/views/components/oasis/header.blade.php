@@ -15,7 +15,7 @@
         <div class="bg-night text-on-night">
             <div class="o-container flex flex-wrap items-center justify-center gap-x-3.5 gap-y-1 py-2.5 text-center text-sm leading-[1.45]">
                 <span>Gründungsphase: Die ersten {{ number_format(config('oasis.founding.seats'), 0, ',', '.') }} Mitglieder bekommen eine Preisgarantie.</span>
-                <a href="{{ route('oasis.gruendung') }}" class="font-bold text-sun-on-night underline underline-offset-[3px]">Mehr erfahren</a>
+                <a href="{{ route('oasis.gruendung') }}" class="inline-flex min-h-11 items-center font-bold text-sun-on-night underline underline-offset-[3px]">Mehr erfahren</a>
             </div>
         </div>
     @endif
@@ -44,7 +44,7 @@
             </nav>
             <div class="flex flex-wrap items-center gap-x-[18px] gap-y-2">
                 <a href="{{ route('oasis.anmelden') }}" class="inline-flex min-h-11 items-center text-base font-semibold text-night no-underline">Anmelden</a>
-                <a href="{{ route('oasis.testen') }}" class="o-btn o-btn-sm o-btn-primary">30 Tage testen</a>
+                <a href="{{ route('oasis.testen') }}" class="o-btn o-btn-sm o-btn-primary">{{ config('oasis.trial_days') }} Tage testen</a>
             </div>
         @endif
     </div>

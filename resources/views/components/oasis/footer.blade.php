@@ -7,7 +7,7 @@
             ['Manifest', route('oasis.manifest')],
         ],
         'Mitmachen' => [
-            ['30 Tage testen', route('oasis.testen')],
+            [config('oasis.trial_days').' Tage testen', route('oasis.testen')],
             ['Gemeinsam starten', route('oasis.gemeinsam')],
             ['Gründungsmitglied', route('oasis.gruendung')],
             ['Als Gast reinlesen', route('oasis.entdecken')],
@@ -40,10 +40,10 @@
                     <nav aria-label="{{ $title }}" class="flex flex-[1_1_140px] flex-col gap-1">
                         <p class="mb-2 text-sm font-bold uppercase tracking-[1.5px] text-on-night-muted">{{ $title }}</p>
                         @foreach ($links as [$label, $href])
-                            <a href="{{ $href }}" class="py-1.5 text-base text-on-night no-underline">{{ $label }}</a>
+                            <a href="{{ $href }}" class="inline-flex min-h-11 items-center text-base text-on-night no-underline">{{ $label }}</a>
                         @endforeach
                         @if ($title === 'Hilfe')
-                            <span class="py-1.5 text-base text-on-night-2">{{ config('oasis.mail.contact') }}</span>
+                            <span class="inline-flex min-h-11 items-center text-base text-on-night-2">{{ config('oasis.mail.contact') }}</span>
                         @endif
                     </nav>
                 @endforeach

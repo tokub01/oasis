@@ -55,10 +55,10 @@
                     <div class="flex flex-wrap items-end justify-between gap-4">
                         <span aria-hidden="true" class="o-display flex size-28 items-center justify-center rounded-full border-[6px] border-sand bg-night text-[40px] font-semibold text-on-night">{{ $profile['initials'] }}</span>
                         <div class="flex items-center gap-2.5">
-                            <a href="{{ route('oasis.testen') }}" aria-label="Profil teilen"
-                               class="inline-flex size-12 items-center justify-center rounded-full border border-night text-night">
+                            <button type="button" data-oasis="share" data-url="{{ route('oasis.profil', $handle) }}" aria-label="Profil teilen" hidden
+                                    class="inline-flex size-12 cursor-pointer items-center justify-center rounded-full border border-night bg-transparent text-night">
                                 <x-oasis.icon name="link" :size="20" :stroke="1.9" />
-                            </a>
+                            </button>
                             <a href="{{ route('oasis.testen') }}" class="o-btn o-btn-md o-btn-dark px-[26px] text-base font-extrabold">Folgen</a>
                         </div>
                     </div>
@@ -85,10 +85,10 @@
                 <nav aria-label="Profilbereiche" class="flex gap-1.5 border-b border-dune-line">
                     <a href="{{ route('oasis.profil', $handle) }}" aria-current="page"
                        class="inline-flex min-h-12 items-center border-b-[3px] border-sun px-4 text-base font-extrabold text-night no-underline">Tropfen</a>
-                    <a href="{{ route('oasis.profil', $handle) }}"
-                       class="inline-flex min-h-12 items-center px-4 text-base font-semibold text-ink-2 no-underline">Antworten</a>
-                    <a href="{{ route('oasis.profil', $handle) }}"
-                       class="inline-flex min-h-12 items-center px-4 text-base font-semibold text-ink-2 no-underline">Oasen</a>
+                    <span aria-disabled="true" title="In der Beispielansicht nicht verfügbar"
+                       class="inline-flex min-h-12 items-center px-4 text-base font-semibold text-muted">Antworten</span>
+                    <span aria-disabled="true" title="In der Beispielansicht nicht verfügbar"
+                       class="inline-flex min-h-12 items-center px-4 text-base font-semibold text-muted">Oasen</span>
                 </nav>
 
                 {{-- Profile posts carry no author header (the profile is the author), so they are

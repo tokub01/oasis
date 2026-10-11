@@ -54,6 +54,9 @@ return [
     'support_reply_days' => 2,
     'apps' => '[iOS und Android]',
     'statutes' => '[AGB / Satzung]',
+    // Set to true only once the promises (no ads, no ad profile, no data sale, changes only with member
+    // consent) are actually written into the AGB/statutes. Until then the site says "Wird festgeschrieben".
+    'promises_codified' => (bool) env('OASIS_PROMISES_CODIFIED', false),
     'server_location' => '[SERVERSTANDORT UND DIENSTLEISTER]',
 
     // Prices in euro per month, including 19 % VAT. A year costs ten months.

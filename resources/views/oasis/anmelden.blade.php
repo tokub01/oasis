@@ -52,7 +52,7 @@
                     <input type="checkbox" class="m-0 size-5 accent-night">
                     <span>Angemeldet bleiben</span>
                 </label>
-                <a href="{{ route('oasis.hilfe') }}" class="inline-flex min-h-11 items-center text-[15px] font-bold text-night underline underline-offset-4">Passwort vergessen?</a>
+                <span aria-disabled="true" class="inline-flex min-h-11 items-center text-[15px] font-bold text-muted">Passwort vergessen?</span>
             </div>
             <button type="submit" disabled aria-describedby="l-start-hinweis"
                     class="min-h-14 cursor-not-allowed rounded-full border-none bg-night text-lg font-extrabold text-on-night opacity-60">Anmelden</button>

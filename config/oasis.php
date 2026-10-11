@@ -114,7 +114,10 @@ return [
         'server_log_days' => null,
         // Days after which unconfirmed waitlist entries are deleted.
         'unconfirmed_waitlist_days' => null,
-        // Years for which cancellations, withdrawals and content reports are kept as proof.
+        // Months after launch after which confirmed waitlist entries are deleted (purpose: launch news).
+        'confirmed_waitlist_months' => null,
+        // Years for which cancellations, withdrawals, content reports and organisation requests are kept as proof.
+        // Enforced automatically: models using PrunedAfterRecordRetention are deleted by the daily model:prune.
         'records_years' => null,
         // Competent data protection supervisory authority for the operator (Krefeld, NRW).
         'authority' => 'Landesbeauftragte für Datenschutz und Informationsfreiheit Nordrhein-Westfalen, Kavalleriestraße 2–4, 40213 Düsseldorf',

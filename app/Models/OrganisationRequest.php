@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use App\Models\Concerns\PrunedAfterRecordRetention;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
@@ -20,6 +21,8 @@ use Illuminate\Support\Carbon;
 #[Fillable(['organisation', 'people', 'email'])]
 class OrganisationRequest extends Model
 {
+    use PrunedAfterRecordRetention;
+
     /**
      * Expose stored dates and counts with the types used by controllers and receipt views.
      *

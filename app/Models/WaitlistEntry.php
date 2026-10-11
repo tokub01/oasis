@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
@@ -22,6 +24,26 @@ use Illuminate\Support\Carbon;
 #[Fillable(['email', 'group', 'consented_at', 'token', 'confirmed_at'])]
 class WaitlistEntry extends Model
 {
+    use MassPrunable;
+
+    /**
+     * Unconfirmed sign-ups older than `oasis.privacy.unconfirmed_waitlist_days` are deleted by the daily
+     * `model:prune` run (double opt-in never completed, so there is no consent to keep the address).
+     * Nothing is deleted while that period is not set (null).
+     */
+    public function prunable(): Builder
+    {
+        $days = config('oasis.privacy.unconfirmed_waitlist_days');
+
+        if ($days === null) {
+            return static::query()->whereRaw('1 = 0');
+        }
+
+        return static::query()
+            ->whereNull('confirmed_at')
+            ->where('created_at', '<', now()->subDays((int) $days));
+    }
+
     /**
      * Expose stored dates and counts with the types used by controllers and receipt views.
      *

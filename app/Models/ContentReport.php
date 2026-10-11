@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use App\Models\Concerns\PrunedAfterRecordRetention;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
@@ -22,6 +23,8 @@ use Illuminate\Support\Carbon;
 #[Fillable(['url', 'reason', 'name', 'email', 'truthful_confirmed_at'])]
 class ContentReport extends Model
 {
+    use PrunedAfterRecordRetention;
+
     /**
      * Expose stored dates and counts with the types used by controllers and receipt views.
      *

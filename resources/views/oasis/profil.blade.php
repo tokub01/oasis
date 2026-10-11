@@ -1,28 +1,14 @@
-@php
-    // Sample profiles until real accounts exist (see config oasis.demo_pages).
-    // Unknown handles get a 404 instead of a made-up profile.
-    $profiles = [
-        'mira' => [
-            'name' => 'Mira Sol',
-            'first_name' => 'Mira',
-            'initials' => 'MS',
-            'bio' => 'Fotografiert analog, meistens zu früh am Morgen. Gastgeberin der Oase Korn & Licht.',
-            'location' => 'Leipzig',
-            'since' => 'März 2026',
-            'founding_member' => true,
-            'oasen' => [
-                ['name' => 'Korn & Licht', 'role' => 'Gastgeberin', 'color' => 'bg-sun'],
-                ['name' => 'Lesekreis', 'role' => 'Mitglied', 'color' => 'bg-night'],
-            ],
-        ],
-    ];
+{{--
+    Public profile in the guest preview: /profil/{handle}, route oasis.profil, template Profil.dc.html.
+    Data comes from PageController::profile() -> App\Support\DemoProfiles (sample profiles only).
 
-    $profile = $profiles[strtolower($handle)] ?? null;
-    abort_if($profile === null, 404);
-@endphp
+    Variables:
+      $handle   string  lowercase handle from the URL
+      $profile  array   sample profile (name, first_name, initials, bio, location, since, founding_member, oasen)
+--}}
 
 @extends('layouts.oasis', [
-    'title' => $profile['name'].' (@'.strtolower($handle).')',
+    'title' => $profile['name'].' (@'.$handle.')',
     'description' => 'Öffentliches Profil auf Oasis. Beispielansicht bis zum Start von Oasis.',
     'noindex' => true,
 ])

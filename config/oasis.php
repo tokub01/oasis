@@ -110,6 +110,9 @@ return [
         'hosting' => 'IONOS SE, Elgendorfer Str. 57, 56410 Montabaur, Server in Deutschland',
         // Provider that sends the confirmation mails, incl. region. Planned: Amazon SES via SMTP (see PROMPT.md).
         'mail_provider' => null,
+        // Realtime delivery of encrypted chat messages (Pusher Channels, cluster "eu"). Verify contract partner and
+        // transfer safeguard against the signed DPA before launch.
+        'realtime_provider' => 'Pusher Ltd, London (Vereinigtes Königreich), Verarbeitung im EU-Cluster; für das Vereinigte Königreich gilt ein Angemessenheitsbeschluss der EU-Kommission (Art. 45 DSGVO)',
         // Days after which web server log files (IP address, time, URL, browser) are deleted.
         'server_log_days' => null,
         // Days after which unconfirmed waitlist entries are deleted.

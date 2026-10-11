@@ -75,3 +75,12 @@ Proposed order: 0 → 3 (the chat is your priority, it only needs accounts) → 
 - Message lifetime: fixed (e.g. 7 days) or selectable per conversation (1 day / 7 days / 30 days)?
 - Image hosting: IONOS S3 or AWS S3 (eu-central-1)? Mail: Amazon SES (eu-central-1)?
 - Payment provider preference?
+
+
+## Stage 4a implemented before core content
+
+The existing Art. 16 public notices now feed a staff moderation workflow: roles and mandatory staff 2FA, assignment,
+Art. 17 reasoned decisions, recipient-specific notices, six-month internal complaints with a second human reviewer,
+audit history, retention and period transparency counts. See [oasis-moderation.md](oasis-moderation.md).
+Stage 4's in-app reporting and enforcement on posts/profiles/chat forwards still depend on stages 2/3; the case source
+is polymorphic so those additions do not require rewriting the moderation schema.

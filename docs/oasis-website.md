@@ -89,3 +89,13 @@ Feature tests use the MySQL `testing` database from `phpunit.xml`.
 Payment integration, trial-expiry and subscription logic (reminder two days before, automatic end), the social network
 features, an admin area, the OG image `public/images/og-oasis.png`. Stage 0 stores the configured trial end on sign-up;
 expiry enforcement belongs to stage 1.
+
+
+## Stage 4a: roles and moderation
+
+Staff roles, confirmed-2FA access and the moderation workflow are implemented independently of future social content.
+Existing public content notices open cases automatically; staff assign them, issue reasoned decisions, and a second
+person reviews internal complaints. Recipient-specific notices, append-only Eloquent audit history, retention and
+aggregate transparency queries are documented in [oasis-moderation.md](oasis-moderation.md). UI routes live under
+`/moderation`; the operator bootstraps roles with `sail artisan oasis:role EMAIL ROLE`. Later stages attach real
+posts/profiles/forwarded messages and enforce the recorded outcomes on those content models.

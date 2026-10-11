@@ -56,7 +56,11 @@
             <div class="flex flex-col gap-3">
                 <p class="m-0 inline-flex items-center gap-2 self-start rounded-full bg-dune px-3.5 py-1.5 text-[15px] font-bold text-night">
                     <x-oasis.icon name="clock" :size="16" :stroke="2.2" />
-                    @if ($trialDaysLeft !== null)Noch {{ $trialDaysLeft }} Tage in deinem Test@else Du testest gerade@endif
+                    @if ($trialDaysLeft !== null)
+                        Noch {{ $trialDaysLeft }} Tage in deinem Test
+                    @else
+                        Du testest gerade
+                    @endif
                 </p>
                 <h1 class="o-display m-0 text-[length:clamp(36px,4.2vw,56px)] leading-[1.08] tracking-[-0.015em] text-night">Bleib in der Oase.</h1>
                 <p class="m-0 max-w-[36em] text-lg text-ink-2">Wähle, wie viel du beitragen möchtest. Alle Mitglieder bekommen dasselbe.</p>

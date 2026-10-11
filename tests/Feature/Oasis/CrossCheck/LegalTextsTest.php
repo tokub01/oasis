@@ -67,6 +67,13 @@ describe('Widerrufsbelehrung', function () {
             ->assertSee('Configured Operator');
     });
 
+    it('contains the current statutory paragraph for the online withdrawal function', function () {
+        $this->get(route('oasis.widerrufsbelehrung'))->assertOk()
+            ->assertSee('(z. B. ein mit der Post versandter Brief oder eine E-Mail)')
+            ->assertSee('Sie können Ihr Widerrufsrecht auch online unter')
+            ->assertSee('mit Informationen zum Inhalt der Widerrufserklärung sowie dem Datum und der Uhrzeit ihres Eingangs');
+    });
+
     it('links to the electronic withdrawal form', function () {
         $this->get(route('oasis.widerrufsbelehrung'))->assertOk()
             ->assertSee(route('oasis.widerrufen'), false)

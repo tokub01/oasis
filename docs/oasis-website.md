@@ -1,7 +1,9 @@
 # Oasis website – how it is built
 
-The public website of get-oasis.com: marketing pages, legal pages and five real forms. The future social network
-app is **not** part of this; it will live next to these routes. The binding design and brief are in
+The public website of get-oasis.com: marketing pages, legal pages and five real forms. Stage 0 adds Fortify accounts
+and an authenticated app shell alongside these routes; see [oasis-accounts.md](oasis-accounts.md) for backend details
+and [oasis-stage0-backend-report.md](oasis-stage0-backend-report.md) for checks and integration findings. The social
+network features remain later stages. The binding design and brief are in
 `docs/oasis-design/` (`PROMPT.md`, templates in `design/*.dc.html`, open values in `PLATZHALTER.md`).
 
 ## Where things are
@@ -84,5 +86,6 @@ Feature tests use the MySQL `testing` database from `phpunit.xml`.
 
 ## Not built yet (next steps)
 
-Payment integration, trial and subscription logic (30 days, reminder two days before, automatic end), sign-up and
-sign-in (an auth system), the social network app itself, an admin area, the OG image `public/images/og-oasis.png`.
+Payment integration, trial-expiry and subscription logic (reminder two days before, automatic end), the social network
+features, an admin area, the OG image `public/images/og-oasis.png`. Stage 0 stores the configured trial end on sign-up;
+expiry enforcement belongs to stage 1.

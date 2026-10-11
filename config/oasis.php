@@ -28,9 +28,9 @@ return [
      */
     'operator' => [
         // Short name in the footer and the SEPA mandate.
-        'name' => env('OASIS_OPERATOR_NAME', '[BETREIBER]'),
+        'name' => env('OASIS_OPERATOR_NAME', 'Tobias Kubina – VelWebSolutions'),
         // Full legal name, street and city for the Impressum.
-        'legal_name' => env('OASIS_OPERATOR_LEGAL_NAME', '[NAME ODER FIRMA]'),
+        'legal_name' => env('OASIS_OPERATOR_LEGAL_NAME', 'Tobias Kubina, VelWebSolutions'),
         'street' => env('OASIS_OPERATOR_STREET', '[STRASSE HAUSNUMMER]'),
         'city' => env('OASIS_OPERATOR_CITY', '[PLZ ORT]'),
         'phone' => env('OASIS_OPERATOR_PHONE', '[TELEFON]'),
@@ -42,20 +42,21 @@ return [
 
     /*
      * Mail addresses. The first four are shown on pages; the last two receive form notifications.
+     * For now all of them go to one inbox; split them per purpose via .env when needed.
      */
     'mail' => [
         // General contact: footer, Hilfe, Manifest, Impressum.
-        'contact' => env('OASIS_MAIL_CONTACT', '[KONTAKT-E-MAIL]'),
+        'contact' => env('OASIS_MAIL_CONTACT', 'info@velwebsolutions.de'),
         // Press contact on the Manifest page.
-        'press' => env('OASIS_MAIL_PRESS', '[PRESSE-E-MAIL]'),
+        'press' => env('OASIS_MAIL_PRESS', 'info@velwebsolutions.de'),
         // Data protection contact on the Hilfe page and in the privacy policy.
-        'privacy' => env('OASIS_MAIL_PRIVACY', '[DATENSCHUTZ-E-MAIL]'),
+        'privacy' => env('OASIS_MAIL_PRIVACY', 'info@velwebsolutions.de'),
         // Single point of contact under DSA Art. 11 and 12 (Impressum).
-        'dsa' => env('OASIS_MAIL_DSA', '[DSA-KONTAKT-E-MAIL]'),
+        'dsa' => env('OASIS_MAIL_DSA', 'info@velwebsolutions.de'),
         // Receives copies of cancellations, withdrawals and organisation requests.
-        'operator' => env('OASIS_MAIL_OPERATOR', 'betreiber@example.tld'),
+        'operator' => env('OASIS_MAIL_OPERATOR', 'info@velwebsolutions.de'),
         // Receives content reports (DSA Art. 16).
-        'moderation' => env('OASIS_MAIL_MODERATION', 'moderation@example.tld'),
+        'moderation' => env('OASIS_MAIL_MODERATION', 'info@velwebsolutions.de'),
     ],
 
     /*

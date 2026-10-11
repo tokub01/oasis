@@ -34,10 +34,6 @@ Route::name('oasis.')->group(function () {
     Route::view('/manifest', 'oasis.manifest')->name('manifest');
     Route::view('/hilfe', 'oasis.hilfe')->name('hilfe');
 
-    // Sign-up and sign-in are views only until an auth system exists; their forms do not submit.
-    Route::view('/testen', 'oasis.testen')->name('testen');
-    Route::view('/anmelden', 'oasis.anmelden')->name('anmelden');
-
     /*
      * Pages behind feature flags (oasis.checkout_enabled, oasis.demo_pages).
      */

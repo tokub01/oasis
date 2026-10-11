@@ -58,14 +58,18 @@ Route::name('oasis.')->group(function () {
 
     // Form submissions (POST) and confirmation pages
 
-    // Oasis forms: public, CSRF protected by the web middleware.
-    Route::middleware('throttle:6,1')->group(function () {
-        Route::post('/gruendung', [\App\Http\Controllers\Oasis\WaitlistController::class, 'store'])->name('gruendung.store');
-        Route::post('/vertraege-kuendigen', [\App\Http\Controllers\Oasis\CancellationController::class, 'store'])->name('kuendigen.store');
-        Route::post('/vertrag-widerrufen', [\App\Http\Controllers\Oasis\WithdrawalController::class, 'store'])->name('widerrufen.store');
-        Route::post('/inhalte-melden', [\App\Http\Controllers\Oasis\ContentReportController::class, 'store'])->name('melden.store');
-        Route::post('/gemeinsam-starten', [\App\Http\Controllers\Oasis\OrganisationController::class, 'store'])->name('gemeinsam.store');
-    });
+    // Oasis forms: public, CSRF protected by the web middleware. Each form has its own throttle key
+    // (third parameter), so using one form can never block another, e.g. a cancellation (§ 312k BGB).
+    Route::post('/gruendung', [\App\Http\Controllers\Oasis\WaitlistController::class, 'store'])
+        ->middleware('throttle:6,1,oasis-gruendung')->name('gruendung.store');
+    Route::post('/vertraege-kuendigen', [\App\Http\Controllers\Oasis\CancellationController::class, 'store'])
+        ->middleware('throttle:6,1,oasis-kuendigen')->name('kuendigen.store');
+    Route::post('/vertrag-widerrufen', [\App\Http\Controllers\Oasis\WithdrawalController::class, 'store'])
+        ->middleware('throttle:6,1,oasis-widerrufen')->name('widerrufen.store');
+    Route::post('/inhalte-melden', [\App\Http\Controllers\Oasis\ContentReportController::class, 'store'])
+        ->middleware('throttle:6,1,oasis-melden')->name('melden.store');
+    Route::post('/gemeinsam-starten', [\App\Http\Controllers\Oasis\OrganisationController::class, 'store'])
+        ->middleware('throttle:6,1,oasis-gemeinsam')->name('gemeinsam.store');
 
     Route::get('/bestaetigung/gruendung', function (): \Illuminate\View\View {
         abort_unless(session('oasis.submitted.gruendung'), 404);
@@ -98,11 +102,11 @@ Route::name('oasis.')->group(function () {
     })->name('bestaetigung.gemeinsam');
 
     Route::get('/startliste/bestaetigen/{token}', [\App\Http\Controllers\Oasis\WaitlistController::class, 'confirm'])
-        ->middleware(['signed', 'throttle:20,1'])->name('waitlist.confirm');
+        ->middleware(['signed', 'throttle:20,1,oasis-waitlist-confirm'])->name('waitlist.confirm');
     Route::get('/startliste/abmelden/{token}', [\App\Http\Controllers\Oasis\WaitlistController::class, 'unsubscribe'])
-        ->middleware(['signed', 'throttle:20,1'])->name('waitlist.unsubscribe');
+        ->middleware(['signed', 'throttle:20,1,oasis-waitlist-unsubscribe'])->name('waitlist.unsubscribe');
     Route::post('/startliste/abmelden/{token}', [\App\Http\Controllers\Oasis\WaitlistController::class, 'destroy'])
-        ->middleware(['signed', 'throttle:6,1'])->name('waitlist.destroy');
+        ->middleware(['signed', 'throttle:6,1,oasis-waitlist-destroy'])->name('waitlist.destroy');
     // End Oasis forms.
 
 });

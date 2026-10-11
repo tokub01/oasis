@@ -259,7 +259,8 @@ it('renders separate legal documents and their active navigation', function ($pa
     $response = $this->get(route('oasis.'.$page))->assertOk();
     $response->assertSee('aria-current="page"', false);
     if ($page !== 'melden') {
-        $response->assertSee('Platzhalter: Diese Seite braucht einen anwaltlich geprüften Text.');
+        // Every legal text is still a draft and must say so until a lawyer has reviewed it.
+        expect($response->getContent())->toMatch('/anwaltlich (geprüften Text|prüfen lassen)/');
     }
 })->with(['impressum', 'datenschutz', 'agb', 'widerrufsbelehrung', 'regeln', 'melden']);
 

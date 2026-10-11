@@ -10,6 +10,16 @@ beforeEach(function () {
     config(['oasis.demo_pages' => true, 'oasis.checkout_enabled' => false]);
 });
 
+/** Resolve the two auth pages through Fortify while preserving public-page dataset labels. */
+function oasisPublicPageUrl(string $page, array $parameters = []): string
+{
+    return route(match ($page) {
+        'testen' => 'register',
+        'anmelden' => 'login',
+        default => 'oasis.'.$page,
+    }, $parameters);
+}
+
 dataset('oasis public pages', [
     'home' => ['home', [], 'Social Media, das dir'],
     'features' => ['funktionen', [], 'Quelle'],
@@ -34,7 +44,7 @@ dataset('oasis public pages', [
 ]);
 
 it('renders every public route with a single h1, German landmarks and direct contract links', function ($page, $parameters, $copy) {
-    $response = $this->get(route('oasis.'.$page, $parameters))->assertOk()->assertSee($copy);
+    $response = $this->get(oasisPublicPageUrl($page, $parameters))->assertOk()->assertSee($copy);
     $html = $response->getContent();
 
     expect(preg_match_all('/<h1\b/i', $html))->toBe(1);
@@ -52,7 +62,7 @@ it('gives each public page a distinct title and description', function () {
     foreach (['home', 'funktionen', 'preise', 'transparenz', 'manifest', 'hilfe', 'testen', 'anmelden',
         'entdecken', 'gemeinsam', 'gruendung', 'kuendigen', 'widerrufen', 'melden', 'impressum',
         'datenschutz', 'agb', 'widerrufsbelehrung', 'regeln'] as $page) {
-        $html = $this->get(route('oasis.'.$page))->assertOk()->getContent();
+        $html = $this->get(oasisPublicPageUrl($page))->assertOk()->getContent();
         preg_match('/<title>(.*?)<\/title>/s', $html, $title);
         preg_match('/<meta name="description" content="([^"]+)"/', $html, $description);
         expect($title[1] ?? '')->not->toBe('');
@@ -70,8 +80,9 @@ it('renders the designed noindex 404 page for a missing URL', function () {
     $response->assertSee('content="noindex, nofollow"', false)->assertSee('Verträge hier kündigen');
 });
 
-it('redirects the existing named login URL to the public sign-in page', function () {
-    $this->get(route('login'))->assertRedirect(route('oasis.anmelden'));
+it('serves the real sign-in form at the German named login URL', function () {
+    expect(route('login', absolute: false))->toBe('/anmelden');
+    $this->get(route('login'))->assertOk()->assertSee('action="'.route('login').'"', false);
 });
 
 it('hides checkout until enabled and renders the exact order label when enabled', function () {
@@ -98,7 +109,7 @@ it('returns 404 for unknown or invalid profile handles', function () {
 
 it('renders changed trial days consistently in the shared navigation and page copy', function ($page) {
     config(['oasis.trial_days' => 47]);
-    $this->get(route('oasis.'.$page))->assertOk()->assertSee('47 Tage')
+    $this->get(oasisPublicPageUrl($page))->assertOk()->assertSee('47 Tage')
         ->assertDontSee('30 Tage testen')->assertDontSee('30 Tage kostenlos testen');
 })->with(['home', 'preise', 'funktionen', 'testen', 'anmelden', 'hilfe']);
 
@@ -127,14 +138,11 @@ it('renders changed membership prices and derives yearly and daily amounts from 
     }
 });
 
-it('explains that password recovery opens at launch without linking back to the help page', function () {
-    config(['oasis.mail.contact' => 'contact@example.tld']);
-    $html = $this->get(route('oasis.anmelden'))->assertOk()->getContent();
-    expect(preg_match('/<a\b[^>]*>\s*Passwort vergessen\?\s*<\/a>/i', $html))->toBe(0);
-    expect($html)->toMatch('/<span\b[^>]*aria-disabled="true"[^>]*>\s*Passwort vergessen\?\s*<\/span>/i');
-    $this->get(route('oasis.hilfe'))->assertOk()->assertSee('Ab dem Start')
-        ->assertSee('Bis dahin gibt es noch keine Konten.')->assertSee('contact@example.tld')
-        ->assertDontSee('Wir schicken dir einen Link per E-Mail.');
+it('links the real password recovery form from the sign-in page', function () {
+    $html = $this->get(route('login'))->assertOk()->getContent();
+    expect($html)->toContain('href="'.route('password.request').'"');
+    expect(preg_match('/<a\b[^>]*>\s*Passwort vergessen\?\s*<\/a>/i', $html))->toBe(1);
+    $this->get(route('password.request'))->assertOk()->assertSee('name="email"', false);
 });
 
 it('provides a hidden progressive share button with the actual profile URL', function () {

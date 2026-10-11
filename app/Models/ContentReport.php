@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use App\Models\Concerns\PrunedAfterRecordRetention;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -20,10 +23,31 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
+#[Hidden(['name', 'email'])]
 #[Fillable(['url', 'reason', 'name', 'email', 'truthful_confirmed_at'])]
 class ContentReport extends Model
 {
-    use PrunedAfterRecordRetention;
+    use PrunedAfterRecordRetention { prunable as retentionQuery; }
+
+    /**
+     * Keep report evidence while a moderation case still needs it; cases prune first.
+     *
+     * @return Builder<static>
+     */
+    public function prunable(): Builder
+    {
+        return $this->retentionQuery()->whereDoesntHave('moderationCase');
+    }
+
+    /**
+     * Link the public notice to its staff case through the stable source morph.
+     *
+     * @return MorphOne<ModerationCase, $this>
+     */
+    public function moderationCase(): MorphOne
+    {
+        return $this->morphOne(ModerationCase::class, 'source');
+    }
 
     /**
      * Expose stored dates and counts with the types used by controllers and receipt views.

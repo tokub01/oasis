@@ -20,7 +20,7 @@
         </div>
     @endauth
     @guest
-        <div class="h-screen w-screen">
+        <div>
             {{ $slot }}
         </div>
     @endguest

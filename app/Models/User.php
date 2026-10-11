@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Role;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -16,6 +17,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 /**
  * Oasis account used by Fortify authentication, app access and account settings.
  *
+ * @property Role $role
  * @property int $id
  * @property string $display_name
  * @property string|null $username
@@ -38,6 +40,9 @@ class User extends Authenticatable implements MustVerifyEmail
 
     use TwoFactorAuthenticatable;
 
+    /** New account objects use the same least-privilege default as the database. */
+    protected $attributes = ['role' => 'member'];
+
     /**
      * Get the attributes that should be cast.
      *
@@ -46,6 +51,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected function casts(): array
     {
         return [
+            'role' => Role::class,
             'email_verified_at' => 'datetime',
             'birth_date' => 'date:Y-m-d',
             'terms_accepted_at' => 'datetime',

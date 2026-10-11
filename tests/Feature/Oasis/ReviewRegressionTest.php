@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * Regression coverage for privacy-preserving opt-in, Berlin receipt/calendar time and retainable declarations.
+ * Guards § 312k BGB cancellation content, withdrawal receipts and DSA Art. 16 good-faith declarations.
+ */
+
 use App\Mail\Oasis\CancellationReceipt;
 use App\Mail\Oasis\ContentReportNotice;
 use App\Mail\Oasis\WaitlistConfirmation;

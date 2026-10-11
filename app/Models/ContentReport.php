@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 /**
+ * A public content notice received by ContentReportController under DSA Art. 16.
+ * truthful_confirmed_at records the good-faith declaration, not a moderation decision.
+ *
  * @property int $id
  * @property string $name
  * @property string $email
@@ -20,6 +23,8 @@ use Illuminate\Support\Carbon;
 class ContentReport extends Model
 {
     /**
+     * Expose stored dates and counts with the types used by controllers and receipt views.
+     *
      * @return array<string, string>
      */
     protected function casts(): array

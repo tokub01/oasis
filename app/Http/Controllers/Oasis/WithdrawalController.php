@@ -9,11 +9,21 @@ use App\Models\WithdrawalRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Mail;
 
+/**
+ * Receives public withdrawal declarations through oasis.widerrufen.store.
+ * Records the exercise of the withdrawal right under §§ 355 ff. BGB without requiring an account.
+ */
 class WithdrawalController extends Controller
 {
+    /**
+     * Persist the validated withdrawal, send both receipts, and flash a retainable copy.
+     * Mail failures propagate before success is flashed; the stored declaration remains for follow-up.
+     */
     public function store(WithdrawalFormRequest $request): RedirectResponse
     {
-        $submission = WithdrawalRequest::create([...$request->safe()->only(['name', 'email', 'contract', 'contracted_on'])]);
+        $submission = WithdrawalRequest::create($request->safe()->only([
+            'name', 'email', 'contract', 'contracted_on',
+        ]));
 
         Mail::to($submission->email)->send(new WithdrawalReceipt($submission));
         Mail::to(config('oasis.mail.operator'))->send(new WithdrawalReceipt($submission, operatorCopy: true));

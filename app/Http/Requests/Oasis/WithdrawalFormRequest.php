@@ -2,9 +2,15 @@
 
 namespace App\Http\Requests\Oasis;
 
+/**
+ * Validates oasis.widerrufen.store for a withdrawal declaration under §§ 355 ff. BGB.
+ * The contract date helps identification but is optional.
+ */
 class WithdrawalFormRequest extends OasisFormRequest
 {
     /**
+     * Require identification and the membership contract, with an optional ISO contract date.
+     *
      * @return array<string, list<string>>
      */
     public function rules(): array

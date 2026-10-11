@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 /**
+ * An organisation enquiry received by OrganisationController.
+ * Stores the approximate group size and reply address for operator follow-up.
+ *
  * @property int $id
  * @property string $organisation
  * @property int $people
@@ -18,6 +21,8 @@ use Illuminate\Support\Carbon;
 class OrganisationRequest extends Model
 {
     /**
+     * Expose stored dates and counts with the types used by controllers and receipt views.
+     *
      * @return array<string, string>
      */
     protected function casts(): array

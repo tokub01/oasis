@@ -1,6 +1,9 @@
 <?php
 
-/* Independent checks against the public website brief and design copy. */
+/*
+ * Independent public-page contract checks against PROMPT.md: routes, accessibility, config and truthful previews.
+ * Vite is disabled so these feature assertions do not depend on a frontend build.
+ */
 
 beforeEach(function () {
     $this->withoutVite();

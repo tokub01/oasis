@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 /**
+ * A retained withdrawal declaration received by WithdrawalController under §§ 355 ff. BGB.
+ * Used by the personal receipt and operator copy; processing or refunds happen separately.
+ *
  * @property int $id
  * @property string $name
  * @property string $email
@@ -19,6 +22,8 @@ use Illuminate\Support\Carbon;
 class WithdrawalRequest extends Model
 {
     /**
+     * Expose stored dates and counts with the types used by controllers and receipt views.
+     *
      * @return array<string, string>
      */
     protected function casts(): array

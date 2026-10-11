@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * Exercises public Oasis forms: validation, storage, German feedback, mail recipients and signed double opt-in.
+ * Covers § 312k BGB cancellation receipts, §§ 355 ff. BGB withdrawals and DSA Art. 16 notices.
+ */
+
 use App\Mail\Oasis\CancellationReceipt;
 use App\Mail\Oasis\ContentReportNotice;
 use App\Mail\Oasis\ContentReportReceipt;

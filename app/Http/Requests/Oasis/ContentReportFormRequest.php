@@ -2,9 +2,15 @@
 
 namespace App\Http\Requests\Oasis;
 
+/**
+ * Validates public content notices at oasis.melden.store under DSA Art. 16.
+ * Accepts HTTP(S) references only and requires the good-faith declaration.
+ */
 class ContentReportFormRequest extends OasisFormRequest
 {
     /**
+     * Require a content reference, explanation, contact details and the good-faith declaration.
+     *
      * @return array<string, list<string>>
      */
     public function rules(): array

@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 /**
+ * A founding waitlist entry managed by WaitlistController.
+ * Stores double-opt-in consent separately from signed confirmation; token identifies both signed link flows.
+ *
  * @property int $id
  * @property string $email
  * @property string|null $group
@@ -20,6 +23,8 @@ use Illuminate\Support\Carbon;
 class WaitlistEntry extends Model
 {
     /**
+     * Expose stored dates and counts with the types used by controllers and receipt views.
+     *
      * @return array<string, string>
      */
     protected function casts(): array

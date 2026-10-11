@@ -5,13 +5,23 @@ namespace App\Http\Requests\Oasis;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 
+/**
+ * Shared validation policy for the five public Oasis forms.
+ * Provides anonymous access, canonical email addresses, German messages and a honeypot.
+ */
 abstract class OasisFormRequest extends FormRequest
 {
+    /**
+     * Allow anonymous submission; public statutory forms must not require an account.
+     */
     public function authorize(): bool
     {
         return true;
     }
 
+    /**
+     * Normalize addresses before lookup so differently cased input cannot create duplicate entries.
+     */
     protected function prepareForValidation(): void
     {
         $email = $this->input('email');
@@ -22,6 +32,8 @@ abstract class OasisFormRequest extends FormRequest
     }
 
     /**
+     * Keep validation feedback understandable on the German public website.
+     *
      * @return array<string, string>
      */
     public function messages(): array
@@ -44,6 +56,8 @@ abstract class OasisFormRequest extends FormRequest
     }
 
     /**
+     * Reject bots that fill the hidden website field while accepting an omitted or empty field.
+     *
      * @return array<string, list<string>>
      */
     protected function spamRules(): array

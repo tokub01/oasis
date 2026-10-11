@@ -1,3 +1,5 @@
+/* Cancellation progressive enhancement: reason/date follow the selected options; server validation remains authoritative. */
+
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");

@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 /**
+ * A retained cancellation declaration received by CancellationController under § 312k BGB.
+ * The requested effective date records the person’s declaration, not a processed subscription change.
+ *
  * @property int $id
  * @property string $name
  * @property string $email
@@ -23,6 +26,8 @@ use Illuminate\Support\Carbon;
 class CancellationRequest extends Model
 {
     /**
+     * Expose stored dates and counts with the types used by controllers and receipt views.
+     *
      * @return array<string, string>
      */
     protected function casts(): array

@@ -57,4 +57,52 @@ Route::name('oasis.')->group(function () {
     Route::view('/community-regeln', 'oasis.legal.regeln')->name('regeln');
 
     // Form submissions (POST) and confirmation pages
+
+    // Oasis forms: public, CSRF protected by the web middleware.
+    Route::middleware('throttle:6,1')->group(function () {
+        Route::post('/gruendung', [\App\Http\Controllers\Oasis\WaitlistController::class, 'store'])->name('gruendung.store');
+        Route::post('/vertraege-kuendigen', [\App\Http\Controllers\Oasis\CancellationController::class, 'store'])->name('kuendigen.store');
+        Route::post('/vertrag-widerrufen', [\App\Http\Controllers\Oasis\WithdrawalController::class, 'store'])->name('widerrufen.store');
+        Route::post('/inhalte-melden', [\App\Http\Controllers\Oasis\ContentReportController::class, 'store'])->name('melden.store');
+        Route::post('/gemeinsam-starten', [\App\Http\Controllers\Oasis\OrganisationController::class, 'store'])->name('gemeinsam.store');
+    });
+
+    Route::get('/bestaetigung/gruendung', function (): \Illuminate\View\View {
+        abort_unless(session('oasis.submitted.gruendung'), 404);
+
+        return view('oasis.bestaetigung.gruendung');
+    })->name('bestaetigung.gruendung');
+
+    Route::get('/bestaetigung/kuendigen', function (): \Illuminate\View\View {
+        abort_unless(session('oasis.submitted.kuendigen'), 404);
+
+        return view('oasis.bestaetigung.kuendigen');
+    })->name('bestaetigung.kuendigen');
+
+    Route::get('/bestaetigung/widerrufen', function (): \Illuminate\View\View {
+        abort_unless(session('oasis.submitted.widerrufen'), 404);
+
+        return view('oasis.bestaetigung.widerrufen');
+    })->name('bestaetigung.widerrufen');
+
+    Route::get('/bestaetigung/melden', function (): \Illuminate\View\View {
+        abort_unless(session('oasis.submitted.melden'), 404);
+
+        return view('oasis.bestaetigung.melden');
+    })->name('bestaetigung.melden');
+
+    Route::get('/bestaetigung/gemeinsam', function (): \Illuminate\View\View {
+        abort_unless(session('oasis.submitted.gemeinsam'), 404);
+
+        return view('oasis.bestaetigung.gemeinsam');
+    })->name('bestaetigung.gemeinsam');
+
+    Route::get('/startliste/bestaetigen/{token}', [\App\Http\Controllers\Oasis\WaitlistController::class, 'confirm'])
+        ->middleware(['signed', 'throttle:20,1'])->name('waitlist.confirm');
+    Route::get('/startliste/abmelden/{token}', [\App\Http\Controllers\Oasis\WaitlistController::class, 'unsubscribe'])
+        ->middleware(['signed', 'throttle:20,1'])->name('waitlist.unsubscribe');
+    Route::post('/startliste/abmelden/{token}', [\App\Http\Controllers\Oasis\WaitlistController::class, 'destroy'])
+        ->middleware(['signed', 'throttle:6,1'])->name('waitlist.destroy');
+    // End Oasis forms.
+
 });

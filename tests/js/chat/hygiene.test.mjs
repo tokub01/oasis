@@ -1,6 +1,7 @@
 /**
- * Static hygiene checks for resources/js/chat/: the crypto core must not touch browser persistence (keys live only in
- * memory) and must not log anything (no risk of secrets ending up in the console).
+ * Static hygiene checks for resources/js/chat/ (crypto core, client/ and ui/): nothing may touch browser persistence
+ * (keys and plaintext live only in memory), log anything (no secrets in the console) or inject HTML (no XSS through
+ * message texts or names).
  */
 
 import test from 'node:test';
@@ -19,10 +20,22 @@ test('chat crypto sources exist', () => {
     }
 });
 
-test('chat crypto sources use no browser storage, cookies or console', () => {
-    for (const name of fs.readdirSync(chatDir).filter((file) => file.endsWith('.js'))) {
+/** All chat sources including the client and UI layers (client/, ui/). */
+const allChatFiles = fs.readdirSync(chatDir, { recursive: true }).filter((file) => file.endsWith('.js'));
+
+test('chat sources (crypto, client, UI) use no browser storage, cookies or console', () => {
+    for (const name of allChatFiles) {
         const source = fs.readFileSync(path.join(chatDir, name), 'utf8');
         for (const token of forbidden) {
+            assert.ok(!source.includes(token), `${name} must not contain "${token}"`);
+        }
+    }
+});
+
+test('chat sources never inject HTML (messages and names are set with textContent)', () => {
+    for (const name of allChatFiles) {
+        const source = fs.readFileSync(path.join(chatDir, name), 'utf8');
+        for (const token of ['innerHTML', 'outerHTML', 'insertAdjacentHTML', 'document.write']) {
             assert.ok(!source.includes(token), `${name} must not contain "${token}"`);
         }
     }

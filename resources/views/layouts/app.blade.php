@@ -6,6 +6,7 @@
     Variables:
       title   string       page title (suffix " · Oasis" is added)
       active  string|null  key of the current navigation item: quelle|entdecken|oasen|nachrichten|profil|einstellungen
+    Stack 'scripts': page-specific Vite entries in <head> (e.g. the chat page).
 
     Layout: navigation as a sidebar from 1024px, as a bottom bar below. All pages are noindex (private area).
     The trial banner shows the remaining days while $user->trial_ends_at lies in the future.
@@ -16,7 +17,7 @@
     $nav = [
         'quelle' => ['Quelle', 'check-circle', route('app.home')],
         'entdecken' => ['Entdecken', 'search', route('oasis.entdecken')],
-        'nachrichten' => ['Nachrichten', 'mail', null],
+        'nachrichten' => ['Nachrichten', 'mail', route('app.chat')],
         'oasen' => ['Oasen', 'users', null],
         'einstellungen' => ['Einstellungen', 'shield', route('app.settings')],
     ];
@@ -39,6 +40,7 @@
     <link rel="preload" href="{{ asset('fonts/manrope-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/oasis.js'])
     @livewireStyles
+    @stack('scripts')
 </head>
 <body class="bg-sand text-ink antialiased">
     <a href="#inhalt" class="o-skip-link">Zum Inhalt springen</a>

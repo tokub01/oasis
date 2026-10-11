@@ -3,11 +3,13 @@
 namespace App\Providers;
 
 use App\Enums\Role;
+use App\Models\ChatReport;
 use App\Models\ContentReport;
 use App\Models\ModerationCase;
 use App\Models\ModerationComplaint;
 use App\Models\ModerationDecision;
 use App\Models\User;
+use App\Observers\ChatReportObserver;
 use App\Observers\ContentReportObserver;
 use App\Policies\ModerationCasePolicy;
 use App\Policies\ModerationComplaintPolicy;
@@ -25,8 +27,12 @@ class ModerationServiceProvider extends ServiceProvider
     /** Bind case policies, role gates, stable report morph names and the complaint limiter. */
     public function boot(): void
     {
-        Relation::morphMap(['content_report' => ContentReport::class]);
+        Relation::morphMap([
+            'content_report' => ContentReport::class,
+            'chat_report' => ChatReport::class,
+        ]);
         ContentReport::observe(ContentReportObserver::class);
+        ChatReport::observe(ChatReportObserver::class);
         Gate::policy(ModerationCase::class, ModerationCasePolicy::class);
         Gate::policy(ModerationComplaint::class, ModerationComplaintPolicy::class);
         Gate::policy(ModerationDecision::class, ModerationDecisionPolicy::class);

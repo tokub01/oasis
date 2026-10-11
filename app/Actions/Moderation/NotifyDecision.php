@@ -4,6 +4,7 @@ namespace App\Actions\Moderation;
 
 use App\Enums\Moderation\EventType;
 use App\Mail\Moderation\DecisionNotice;
+use App\Models\ChatReport;
 use App\Models\ContentReport;
 use App\Models\ModerationDecision;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,9 @@ class NotifyDecision
             return;
         }
         $recipients = [
-            'reporter' => $decision->case->source instanceof ContentReport ? $decision->case->source->email : null,
+            'reporter' => $decision->case->source instanceof ContentReport
+                ? $decision->case->source->email
+                : ($decision->case->source instanceof ChatReport ? $decision->case->source->reporter?->email : null),
             'subject' => $decision->case->subjectUser?->email,
         ];
         foreach ($recipients as $kind => $email) {

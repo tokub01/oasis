@@ -2,11 +2,11 @@
     One moderation case (route moderation.cases.show).
 
     Variables (see docs/oasis-moderation.md):
-      $case      ModerationCase with source (ContentReport today), subjectUser, assignee, decisions.decider,
+      $case      ModerationCase with source (ContentReport or ChatReport), subjectUser, assignee, decisions.decider,
                  complaints.reviewer, events.actor
       $staff     Collection<User>  staff members for the assignment select
       $outcomes  list<Outcome>, $grounds list<Ground>  for the decision form
-    Privacy: the reporter's name and email are never shown to staff. Only the reported URL and the reason are.
+    Privacy: the reporter's name and email are never shown to staff. Only the reported URL/content and the reason are.
 --}}
 @extends('layouts.staff', ['title' => 'Fall #'.$case->id, 'active' => 'queue'])
 
@@ -37,6 +37,12 @@
                     <dl class="m-0 grid gap-3 sm:grid-cols-[160px_1fr]">
                         <dt class="font-bold">Gemeldeter Inhalt</dt>
                         <dd class="m-0 break-all"><a href="{{ $case->subject_url }}" rel="noopener noreferrer nofollow" target="_blank" class="text-night underline underline-offset-4">{{ $case->subject_url }}</a></dd>
+                        @if ($case->source instanceof \App\Models\ChatReport)
+                            <dt class="font-bold">Gemeldeter Klartext</dt>
+                            <dd class="m-0 whitespace-pre-wrap rounded-xl bg-sand p-3 font-mono text-sm">{{ $case->source->plaintext }}</dd>
+                            <dt class="font-bold">Hinweis zur Prüfung</dt>
+                            <dd class="m-0 text-sm text-muted">Vom meldenden Mitglied übermittelt. Absender, Chat und Zeit sind per Signatur geprüft; ob der Text zur verschlüsselten Nachricht passt, kann der Server nicht prüfen.</dd>
+                        @endif
                         <dt class="font-bold">Begründung der Meldung</dt>
                         <dd class="m-0 whitespace-pre-wrap">{{ $case->source?->reason ?? '–' }}</dd>
                         <dt class="font-bold">Betroffenes Konto</dt>

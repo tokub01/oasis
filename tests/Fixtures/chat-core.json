@@ -1,0 +1,77 @@
+{
+  "server_time": "2026-10-11T12:00:00Z",
+  "owner": {
+    "public_keys": {
+      "encryption": "M2yIbftCxhBI5Bojvk4y2x0mi1FAer6JuanOjYQsxjk",
+      "signing": "iBPAx78JQ1zYCa-i3chovsp2YXB_QxGW3cLCeVwiyEQ",
+      "binding": "NC2eik5mcvi82iklATZBLU6zKcMwszTsQ_LxG0xTRuSkx754lZvmrONEG46rcC97sJ4aeOq-aMZ-HxwBOBauBw"
+    },
+    "locked_identity": {
+      "version": 1,
+      "kdf": {
+        "alg": "argon2id13",
+        "opslimit": 3,
+        "memlimit": 268435456,
+        "salt": "bc0xTzjAR_nIaJF7R9baqA"
+      },
+      "nonce": "FaPHJ2sFuxLmMqj8ro6JSC365qYgGHFn",
+      "ciphertext": "UB8Iz-8CX8LxmGtKz4Y6KXY-RgAgtz4S-pdx5L5THOhN4v_MWfe9rZSA7ON-kqBTZW9z2iZTt_PuiiePj6as5BitpzLPwrTcvm7qQIRVRYN1sXA63jigCyc0PblYczTgKBTPgdSkuFkx-HHoNYxfDA",
+      "publicKeys": {
+        "encryption": "M2yIbftCxhBI5Bojvk4y2x0mi1FAer6JuanOjYQsxjk",
+        "signing": "iBPAx78JQ1zYCa-i3chovsp2YXB_QxGW3cLCeVwiyEQ"
+      }
+    }
+  },
+  "member": {
+    "public_keys": {
+      "encryption": "SZ7W-VVj2Urz06pKZwAgNUwTj6C3HZLFWooslMzWlGs",
+      "signing": "UYSms21SS_ESrwifzf37ltxQNHw5V2SGqtXss6fWqa4",
+      "binding": "_cIT5r0EVzKhdV3eXvrxEvHm-q5Tcb_2-q_aDNuXHEs5mSbpegYKrA0lOfh7LoHKFT3odpo-qJdYvS_moWboCg"
+    },
+    "locked_identity": {
+      "version": 1,
+      "kdf": {
+        "alg": "argon2id13",
+        "opslimit": 3,
+        "memlimit": 268435456,
+        "salt": "NYaEWINQg4S2F5sLUaX2KQ"
+      },
+      "nonce": "40jBs5WKGbH77WQFxaoVJV2Dv01DXzds",
+      "ciphertext": "qVKZpNO1wa00R0C91I8Y9Lj335YM5dgZSM_qHSxrX7tTQywW-g5cdh531eOwMznBZ4RNgJqpgtGPxNrD7yOKYNw3ibYUp4skgZEzG8dv7TNxFSF6oOa9g_76v-ETC57Nh3499Vx1groBDnIikD7d1w",
+      "publicKeys": {
+        "encryption": "SZ7W-VVj2Urz06pKZwAgNUwTj6C3HZLFWooslMzWlGs",
+        "signing": "UYSms21SS_ESrwifzf37ltxQNHw5V2SGqtXss6fWqa4"
+      }
+    }
+  },
+  "grants": [
+    {
+      "v": 1,
+      "conversation_id": "4242",
+      "key_version": 1,
+      "recipient_id": "11",
+      "granter_id": "11",
+      "wrapped_key": "Y_DCTdcOx6KWBxb5ywkowVtf8iD3C1zZT--EyD6azBccXVCxBgtbvrwuXWuHk4Eyi-OSi0gmd7gMSaCazhJAHrNTRzHShdl5Nxhx0dZC8HA",
+      "signature": "2VhSu58gZCLHqZx6x-sWFzoSZPs5_cxn0DfqsJr0OPfhzh5wJq9Pwulcmm0ezsfha_sCel_plx5y8T_8bugQCg"
+    },
+    {
+      "v": 1,
+      "conversation_id": "4242",
+      "key_version": 1,
+      "recipient_id": "12",
+      "granter_id": "11",
+      "wrapped_key": "59p_R2wrMB3vppi7Il6eIjHn3ZCNjyHr_0FpqGlDajz5aqnfZi5NXdJILa1qdJsQYXlBR9Wrqioke2zxiE6QTCsXbgsJA2s--yyO-hJ10dQ",
+      "signature": "dqtpcwx82vyfAzNZW-u3E0xjfe-ZuCOmX219YFx1ru_ugp98OsFn5bEMuwH2uI7IMeDpV06hDGcIl736uJLtDg"
+    }
+  ],
+  "envelope": {
+    "v": 1,
+    "conversation_id": "4242",
+    "key_version": 1,
+    "sender_id": "11",
+    "nonce": "Bmo7eRnVEOhpnL7xwXurb6VgNSR9rhJ8",
+    "ciphertext": "BPpDww6Vt58bYjaN5oHh-NGFMcWFymUZ82EO8_o2jNI6jtfka6_Zgd-zWJ_xKe-UJXYg-Vw",
+    "signature": "TYqzWGDqf-KuStG1P3XH0RZ3sgQH2Dw4ktmYEPTnWvBrvZ3mFAWruzBqaoZYG6KdjYGIh2tooThCebQ0B-ZaCw",
+    "expires_at": "2026-10-18T12:00:00Z"
+  }
+}

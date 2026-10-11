@@ -18,6 +18,10 @@ class CancellationController extends Controller
         Mail::to($submission->email)->send(new CancellationReceipt($submission));
         Mail::to(config('oasis.mail.operator'))->send(new CancellationReceipt($submission, operatorCopy: true));
 
-        return redirect()->route('oasis.bestaetigung.kuendigen')->with('oasis.submitted.kuendigen', true);
+        return redirect()->route('oasis.bestaetigung.kuendigen')->with('oasis.submitted.kuendigen', [
+            ...$submission->only(['name', 'email', 'username', 'contract', 'type', 'reason', 'timing']),
+            'received_at' => $submission->created_at->timezone('Europe/Berlin')->format('d.m.Y H:i:s T'),
+            'effective_date' => $submission->effective_date?->format('d.m.Y'),
+        ]);
     }
 }

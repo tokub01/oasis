@@ -18,6 +18,10 @@ class WithdrawalController extends Controller
         Mail::to($submission->email)->send(new WithdrawalReceipt($submission));
         Mail::to(config('oasis.mail.operator'))->send(new WithdrawalReceipt($submission, operatorCopy: true));
 
-        return redirect()->route('oasis.bestaetigung.widerrufen')->with('oasis.submitted.widerrufen', true);
+        return redirect()->route('oasis.bestaetigung.widerrufen')->with('oasis.submitted.widerrufen', [
+            ...$submission->only(['name', 'email', 'contract']),
+            'received_at' => $submission->created_at->timezone('Europe/Berlin')->format('d.m.Y H:i:s T'),
+            'contracted_on' => $submission->contracted_on?->format('d.m.Y'),
+        ]);
     }
 }

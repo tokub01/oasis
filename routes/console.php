@@ -11,3 +11,9 @@ Artisan::command('inspire', function () {
 // Deletes data whose retention period from config('oasis.privacy') has passed (privacy policy promises).
 // Needs the scheduler in production: `* * * * * php artisan schedule:run`.
 Schedule::command('model:prune')->daily();
+
+// Stage 1: Send reminder mail 2 days before trial ends
+Schedule::command('oasis:trial-reminders')->dailyAt('09:00');
+
+// Stage 1: Retention pruning for expired accounts past retention_days (behind config switch)
+Schedule::command('oasis:prune-expired-accounts')->dailyAt('03:00');

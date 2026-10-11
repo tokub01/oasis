@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\EnsureStaff;
+use App\Http\Middleware\EnsureUserCanParticipate;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,7 +15,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->alias(['staff' => EnsureStaff::class]);
+        $middleware->alias([
+            'staff' => EnsureStaff::class,
+            'participate' => EnsureUserCanParticipate::class,
+        ]);
+        $middleware->validateCsrfTokens(except: [
+            'stripe/webhook',
+        ]);
+        // CSP with per-request nonce and the other security headers on every web response (stage 7).
+        $middleware->web(append: [SecurityHeaders::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

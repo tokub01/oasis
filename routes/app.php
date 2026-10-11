@@ -2,10 +2,12 @@
 
 use App\Http\Controllers\Account\DeleteAccountController;
 use App\Http\Controllers\Account\ExportAccountController;
+use App\Http\Controllers\Network\FeedController;
 use Illuminate\Support\Facades\Route;
 
 /* Account routes use web sessions/CSRF via routes/web.php; only verified users enter the app. */
-Route::view('/app', 'app.home')->middleware(['auth', 'verified'])->name('app.home');
+// "Quelle": the chronological feed with an end (stage 2).
+Route::get('/app', [FeedController::class, 'source'])->middleware(['auth', 'verified'])->name('app.home');
 Route::view('/app/einstellungen', 'app.settings')->middleware(['auth', 'verified'])->name('app.settings');
 // Encrypted chat page; all chat data comes from the JSON API in routes/chat.php.
 Route::view('/app/nachrichten', 'app.chat.index')->middleware(['auth', 'verified'])->name('app.chat');

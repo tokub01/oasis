@@ -19,6 +19,7 @@ export class ConversationList {
 
         this.more.addEventListener('click', () => this.load(this.nextPage));
         $(this.screen, '[data-lock]').addEventListener('click', () => ctx.lock());
+        this.screen.querySelector('a[href="#neu"]').hidden = !ctx.canParticipate;
     }
 
     /** Render the first page. */

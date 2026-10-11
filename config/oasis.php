@@ -81,6 +81,10 @@ return [
         'seats' => 1000,
     ],
 
+    // Disk for uploaded media (Tropfen images): 'local' (storage/app/private) or 's3' (private EU bucket, see .env AWS_*).
+    // Files are always served through the app after a visibility check, never via public bucket URLs.
+    'media_disk' => env('OASIS_MEDIA_DISK', 'local'),
+
     // Free trial length in days. Used in every "30 Tage testen" text.
     'trial_days' => 30,
     // Days in which posts can still be downloaded after a trial ends or a membership is cancelled.
@@ -147,9 +151,17 @@ return [
      */
     'payment' => [
         // Card payment provider named in the checkout hint.
-        'provider' => '[ZAHLUNGSANBIETER]',
+        'provider' => 'Stripe',
         // SEPA creditor identifier for the mandate text.
         'sepa_creditor_id' => '[GLÄUBIGER-ID]',
+    ],
+
+    /*
+     * Account retention policies after trial or cancellation.
+     */
+    'retention' => [
+        // Automatically prune and delete content of expired accounts past retention_days.
+        'auto_delete_expired' => (bool) env('OASIS_RETENTION_AUTO_DELETE', false),
     ],
 
     // /mitglied-werden returns 404 until a payment provider is connected: no order button without a real checkout.
@@ -182,10 +194,7 @@ return [
             'Zahlungsgebühren' => null,
             'Rücklage' => null,
         ],
-        // Member votes. The section stays hidden while this is empty. Each entry:
-        // ['title' => '…', 'open' => true|false, 'ends' => '31.10.2026',
-        //  'options' => ['…', '…'] (open votes), 'result' => '…' (closed votes)]
-        'votes' => [],
+        // Member votes are real records now (admin area, App\Models\Vote); see docs/oasis-admin.md.
     ],
 
     /*

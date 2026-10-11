@@ -31,3 +31,9 @@ it('links "Nachrichten" in the app navigation and marks it as current on the cha
     $html = $this->actingAs($user)->get('/app/nachrichten')->getContent();
     expect($html)->toMatch('#href="'.preg_quote(route('app.chat'), '#').'"\s+aria-current="page"#');
 });
+
+it('tells the chat UI whether the account may write', function () {
+    $this->actingAs(User::factory()->create())->get('/app/nachrichten')->assertSee('data-can-participate="1"', false);
+    $this->actingAs(User::factory()->create(['trial_ends_at' => now()->subDay()]))->get('/app/nachrichten')
+        ->assertSee('data-can-participate="0"', false);
+});

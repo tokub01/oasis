@@ -10,7 +10,9 @@ authentication session cookie contains no chat keys/messages. IDs in crypto obje
 Prefix: `/app/chat/api`; name prefix: `chat.api.`. Error JSON is Laravel's `{"message":"…","errors":{…}}` for
 422 validation; 401 unauthenticated, 403 unverified/non-member/non-owner, 404 missing resource, 409 stale
 key version or rotation pending, 429 rate limit. All authenticated API/channel requests share 120/minute/account;
-message writes additionally allow 30/minute/account, identity writes 5/minute/account, report writes 5/minute/account.
+message writes additionally allow 30/minute/account, identity writes 5/minute/account, report writes 5/minute/account. Read-only accounts
+(trial ended, no membership; `participate` middleware) get 403 on creating conversations, adding members and
+sending; reading, key handling, leaving and reporting stay available.
 
 | Method | URL after prefix | Route name suffix | Request | Response |
 |---|---|---|---|---|

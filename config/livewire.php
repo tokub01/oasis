@@ -260,7 +260,8 @@ return [
     |
     */
 
-    'csp_safe' => false,
+    // Oasis sends a strict CSP without 'unsafe-eval' (App\Http\Middleware\SecurityHeaders).
+    'csp_safe' => true,
 
     /*
     |---------------------------------------------------------------------------

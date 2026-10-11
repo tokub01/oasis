@@ -8,6 +8,7 @@
 
     Behaviour without JS: only the notice below; encryption happens in the browser, so the chat needs JavaScript.
     Partials: resources/views/app/chat/partials/*.blade.php (one per screen).
+    data-can-participate="0" (read-only account): the UI reads and reports but offers no new chats or sending.
 --}}
 @extends('layouts.app', ['title' => 'Nachrichten', 'active' => 'nachrichten'])
 
@@ -19,6 +20,7 @@
     <div data-oasis-chat
          data-user-id="{{ auth()->id() }}"
          data-api="{{ url('/app/chat/api') }}"
+         data-can-participate="{{ auth()->user()->can('participate') ? '1' : '0' }}"
          class="flex flex-col gap-6">
         <noscript>
             <p class="m-0 rounded-2xl bg-dune px-[18px] py-3.5">

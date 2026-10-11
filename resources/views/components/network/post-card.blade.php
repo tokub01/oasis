@@ -1,0 +1,130 @@
+{{--
+    A real Tropfen card (stage 2), the counterpart of the sample card x-oasis.post.
+
+    Props:
+      post     App\Models\Post loaded via PostFeed::withCardData (author.profile, oasis, images, carried, counts,
+               `reacted` for the viewer)
+      link     bool  link the time to the Tropfen page (default true; false on the Tropfen page itself)
+
+    Shows "leise Zahlen" (reactions/replies) only to the author. All actions are plain forms/links and work without
+    JavaScript; buttons a viewer may not use are not rendered at all (guests get a sign-up hint instead).
+--}}
+@props(['post', 'link' => true])
+
+@php
+    $viewer = auth()->user();
+    $canInteract = $viewer?->can('interact', $post) ?? false;
+    $carried = $post->carried;
+    $postUrl = route('network.posts.show', $post);
+@endphp
+
+<article id="tropfen-{{ $post->id }}" {{ $attributes->class('flex flex-col gap-3 rounded-[24px] border border-paper-line bg-paper p-[22px]') }}>
+    @if ($post->replyTo)
+        <p class="m-0 text-sm text-muted">Antwort an <a href="{{ route('network.posts.show', $post->replyTo) }}" class="text-night underline underline-offset-4">{{ '@'.$post->replyTo->author->username }}</a></p>
+    @elseif ($post->reply_to_id !== null)
+        <p class="m-0 text-sm text-muted">Antwort auf einen Tropfen, der nicht mehr verfügbar ist</p>
+    @endif
+
+    <header class="flex items-center gap-3">
+        <a href="{{ route('oasis.profil', $post->author->username) }}" class="flex-none no-underline" tabindex="-1">
+            <x-network.avatar :user="$post->author" />
+        </a>
+        <div class="flex min-w-0 flex-col leading-[1.35]">
+            <a href="{{ route('oasis.profil', $post->author->username) }}" class="text-base font-extrabold text-ink no-underline">{{ $post->author->display_name }}</a>
+            <span class="text-sm text-muted">
+                {{ '@'.$post->author->username }}
+                @if ($post->oasis)
+                    · in <a href="{{ route('network.oases.show', $post->oasis) }}" class="text-muted underline underline-offset-4">{{ $post->oasis->name }}</a>
+                @endif
+                ·
+                @if ($link)
+                    <a href="{{ $postUrl }}" class="text-muted underline underline-offset-4"><time datetime="{{ $post->created_at->toIso8601String() }}">{{ $post->created_at->locale('de')->diffForHumans() }}</time></a>
+                @else
+                    <time datetime="{{ $post->created_at->toIso8601String() }}">{{ $post->created_at->locale('de')->isoFormat('D. MMMM YYYY, HH:mm') }}</time>
+                @endif
+                @if ($post->visibility->value === 'members')
+                    · <span title="Nur für Mitglieder">nur Mitglieder</span>
+                @endif
+            </span>
+        </div>
+    </header>
+
+    @if ($post->removed_from_oasis_at)
+        <p class="m-0 rounded-2xl bg-dune px-4 py-3 text-sm">Die Gastgeber:innen haben diesen Tropfen aus der Oase entfernt. Nur du siehst ihn noch.</p>
+    @endif
+
+    <p class="m-0 text-[17px] leading-[1.55] whitespace-pre-line break-words">{{ $post->body }}</p>
+
+    @if ($post->images->isNotEmpty())
+        <div @class(['grid gap-2', 'grid-cols-2' => $post->images->count() > 1])>
+            @foreach ($post->images as $image)
+                <img src="{{ route('network.images.show', [$post, $image->id]) }}" alt="{{ $image->alt }}"
+                     width="{{ $image->width }}" height="{{ $image->height }}" loading="lazy"
+                     class="h-auto w-full rounded-2xl bg-dune object-cover">
+            @endforeach
+        </div>
+    @endif
+
+    @if ($post->carried_post_id !== null)
+        @if ($carried && $carried->isVisibleTo($viewer))
+            <a href="{{ route('network.posts.show', $carried) }}" class="flex flex-col gap-1 rounded-2xl border border-dune-line p-4 text-ink no-underline">
+                <span class="text-sm font-bold text-night">{{ $carried->author->display_name }} <span class="font-medium text-muted">{{ '@'.$carried->author->username }}</span></span>
+                <span class="line-clamp-4 whitespace-pre-line">{{ $carried->body }}</span>
+            </a>
+        @else
+            <p class="m-0 rounded-2xl border border-dashed border-dune-line p-4 text-sm text-muted">Dieser Tropfen ist nicht mehr verfügbar.</p>
+        @endif
+    @endif
+
+    @can('viewStats', $post)
+        <p class="m-0 flex items-center gap-2 rounded-2xl bg-sand px-4 py-2.5 text-[15px]">
+            <x-oasis.icon name="eye-off" :size="18" class="text-night" />
+            <span><b>Nur für dich sichtbar:</b> {{ $post->reactions_count }} {{ $post->reactions_count === 1 ? 'Reaktion' : 'Reaktionen' }}, {{ $post->replies_count }} {{ $post->replies_count === 1 ? 'Antwort' : 'Antworten' }}</span>
+        </p>
+    @endcan
+
+    <footer class="flex flex-wrap items-center gap-1.5 text-muted">
+        @if ($canInteract)
+            <a href="{{ $postUrl }}#antworten" class="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-night no-underline">
+                <x-oasis.icon name="reply" :size="20" /><span>Antworten</span>
+            </a>
+            <a href="{{ route('network.posts.carry', $post) }}" class="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-night no-underline">
+                <x-oasis.icon name="repost" :size="20" /><span>Weitertragen</span>
+            </a>
+            @if ($post->reacted)
+                <form method="POST" action="{{ route('network.reactions.destroy', $post) }}">
+                    @csrf @method('DELETE')
+                    <button type="submit" aria-pressed="true" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-none bg-transparent px-3 text-sun-text">
+                        <x-oasis.icon name="heart" :size="20" /><span>Reagiert</span>
+                    </button>
+                </form>
+            @else
+                <form method="POST" action="{{ route('network.reactions.store', $post) }}">
+                    @csrf
+                    <button type="submit" aria-pressed="false" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-none bg-transparent px-3 text-night">
+                        <x-oasis.icon name="heart" :size="20" /><span>Reagieren</span>
+                    </button>
+                </form>
+            @endif
+        @elseif (! $viewer)
+            <span class="text-sm">Antworten und Reagieren nur für Mitglieder · <a href="{{ route('register') }}" class="text-night underline underline-offset-4">{{ config('oasis.trial_days') }} Tage testen</a></span>
+        @endif
+
+        <span class="ml-auto flex flex-wrap items-center gap-1.5">
+            @can('removeFromOasis', $post)
+                <form method="POST" action="{{ route('network.posts.remove', $post) }}">
+                    @csrf
+                    <button type="submit" class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Aus Oase entfernen</button>
+                </form>
+            @endcan
+            @can('delete', $post)
+                <form method="POST" action="{{ route('network.posts.destroy', $post) }}">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Löschen</button>
+                </form>
+            @elseif ($viewer)
+                <a href="{{ route('oasis.melden', ['url' => $postUrl]) }}" class="o-link px-2 text-sm">Melden</a>
+            @endcan
+        </span>
+    </footer>
+</article>

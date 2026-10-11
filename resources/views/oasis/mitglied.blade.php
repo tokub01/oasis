@@ -71,7 +71,7 @@
 
                 {{-- Payment integration is the next step: until then checkout_enabled is false
                      and this page is not reachable. --}}
-                <form id="mitglied-form" action="#" method="post" aria-label="Mitgliedschaft auswählen"
+                <form id="mitglied-form" action="{{ route('oasis.mitglied.checkout') }}" method="post" aria-label="Mitgliedschaft auswählen"
                       class="flex min-w-0 flex-[999_1_520px] flex-col gap-7 rounded-[32px] border border-paper-line bg-paper p-[clamp(24px,3vw,40px)]">
                     @csrf
 

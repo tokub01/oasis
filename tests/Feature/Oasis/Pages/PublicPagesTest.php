@@ -198,7 +198,7 @@ it('does not invent transparency figures and calculates published coverage from 
     config([
         'oasis.transparency.members' => null, 'oasis.transparency.costs' => null,
         'oasis.transparency.income' => null, 'oasis.transparency.sponsored_seats' => null,
-        'oasis.transparency.cost_items' => ['Hosting' => null], 'oasis.transparency.votes' => [],
+        'oasis.transparency.cost_items' => ['Hosting' => null],
     ]);
     $this->get(route('oasis.transparenz'))->assertOk()->assertSee('Veröffentlichen wir ab dem Start')
         ->assertDontSee('60 %')->assertDontSee('35 %')->assertDontSee('Antwortmöglichkeiten');

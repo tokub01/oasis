@@ -5,7 +5,9 @@
 
     Variables:
       title   string       page title (suffix " · Oasis" is added)
-      active  string|null  key of the current navigation item: quelle|entdecken|oasen|nachrichten|profil|einstellungen
+      active  string|null  key of the current navigation item: quelle|entdecken|oasen|nachrichten|profil, or of an
+                           account page: einstellungen|mitgliedschaft|zahlen|einladen|abstimmungen|moderation
+      wide    bool         wider main column for pages with a side column (Quelle), default false
     Stack 'scripts': page-specific Vite entries in <head> (e.g. the chat page).
 
     Layout: navigation as a sidebar from 1024px, as a bottom bar below. All pages are noindex (private area).
@@ -14,16 +16,25 @@
 @php
     $user = auth()->user();
     $active ??= null;
+    // Main sections: sidebar from 1024px, bottom bar below (at most five so the bar stays usable on phones).
     $nav = [
         'quelle' => ['Quelle', 'check-circle', route('app.home')],
-        'entdecken' => ['Entdecken', 'search', route('oasis.entdecken')],
+        'entdecken' => ['Entdecken', 'search', route('network.discover')],
+        'oasen' => ['Oasen', 'users', route('network.oases.index')],
         'nachrichten' => ['Nachrichten', 'mail', route('app.chat')],
-        'oasen' => ['Oasen', 'users', null],
-        'einstellungen' => ['Einstellungen', 'shield', route('app.settings')],
+        'profil' => ['Profil', 'eye', $user?->username ? route('oasis.profil', $user->username) : route('network.profile.edit')],
+    ];
+    // Account pages: below the main sections on desktop, in the "Mehr" menu on phones.
+    $more = [
+        'einstellungen' => ['Einstellungen', route('app.settings')],
+        'mitgliedschaft' => ['Mitgliedschaft', route('app.membership')],
+        'zahlen' => ['Deine Zahlen', route('network.stats')],
+        'einladen' => ['Menschen einladen', route('network.invitations.index')],
+        'abstimmungen' => ['Abstimmungen', route('app.votes')],
     ];
     // Staff (moderators, admins) get a link to the moderation area; the `staff` middleware still checks 2FA.
     if ($user?->role?->isStaff()) {
-        $nav['moderation'] = ['Moderation', 'flag', route('moderation.index')];
+        $more['moderation'] = ['Moderation', route('moderation.index')];
     }
     $trialDaysLeft = $user?->trial_ends_at?->isFuture()
         ? (int) ceil(now()->diffInDays($user->trial_ends_at))
@@ -57,33 +68,52 @@
                     <ul class="m-0 flex list-none justify-around p-0 lg:flex-col lg:justify-start lg:gap-1">
                         @foreach ($nav as $key => [$label, $icon, $href])
                             <li>
-                                @if ($href)
-                                    <a href="{{ $href }}" @if ($active === $key) aria-current="page" @endif
-                                       @class([
-                                           'flex min-h-12 flex-col items-center justify-center gap-1 rounded-2xl px-3 text-xs font-bold no-underline lg:flex-row lg:justify-start lg:gap-3 lg:px-4 lg:text-base',
-                                           'bg-night text-on-night' => $active === $key,
-                                           'text-ink-2' => $active !== $key,
-                                       ])>
-                                        <x-oasis.icon :name="$icon" :size="22" />
-                                        <span>{{ $label }}</span>
-                                    </a>
-                                @else
-                                    {{-- Sections of later stages: visible so the structure is clear, but not a dead link. --}}
-                                    <span aria-disabled="true" title="Kommt bald"
-                                          class="flex min-h-12 flex-col items-center justify-center gap-1 px-3 text-xs font-bold text-muted lg:flex-row lg:justify-start lg:gap-3 lg:px-4 lg:text-base">
-                                        <x-oasis.icon :name="$icon" :size="22" />
-                                        <span>{{ $label }}</span>
-                                    </span>
-                                @endif
+                                <a href="{{ $href }}" @if ($active === $key) aria-current="page" @endif
+                                   @class([
+                                       'flex min-h-12 flex-col items-center justify-center gap-1 rounded-2xl px-3 text-xs font-bold no-underline lg:flex-row lg:justify-start lg:gap-3 lg:px-4 lg:text-base',
+                                       'bg-night text-on-night' => $active === $key,
+                                       'text-ink-2' => $active !== $key,
+                                   ])>
+                                    <x-oasis.icon :name="$icon" :size="22" />
+                                    <span>{{ $label }}</span>
+                                </a>
                             </li>
                         @endforeach
                     </ul>
                 </nav>
 
-                <form method="POST" action="{{ route('logout') }}" class="lg:mt-auto">
+                {{-- Desktop: account pages as a plain list under the main navigation. --}}
+                <nav aria-label="Konto" class="hidden lg:block">
+                    <ul class="m-0 flex list-none flex-col gap-1 p-0">
+                        @foreach ($more as $key => [$label, $href])
+                            <li><a href="{{ $href }}" @if ($active === $key) aria-current="page" @endif
+                                   @class(['flex min-h-11 items-center rounded-xl px-4 no-underline', 'font-bold text-night bg-dune' => $active === $key, 'text-ink-2' => $active !== $key])>{{ $label }}</a></li>
+                        @endforeach
+                    </ul>
+                </nav>
+
+                <form method="POST" action="{{ route('logout') }}" class="hidden lg:mt-auto lg:block">
                     @csrf
                     <button type="submit" class="o-link cursor-pointer border-none bg-transparent text-base text-night">Abmelden</button>
                 </form>
+
+                {{-- Phones: the same account pages and logout in a "Mehr" disclosure (works without JavaScript). --}}
+                <details class="relative lg:hidden">
+                    <summary class="flex min-h-11 cursor-pointer list-none items-center rounded-full border border-dune-line px-4 font-bold text-night">Mehr</summary>
+                    <div class="absolute right-0 z-30 mt-2 flex w-60 flex-col gap-1 rounded-2xl border border-dune-line bg-paper p-2 shadow-lg">
+                        <nav aria-label="Konto">
+                            <ul class="m-0 flex list-none flex-col gap-1 p-0">
+                                @foreach ($more as $key => [$label, $href])
+                                    <li><a href="{{ $href }}" @if ($active === $key) aria-current="page" @endif class="flex min-h-11 items-center rounded-xl px-3 text-night no-underline">{{ $label }}</a></li>
+                                @endforeach
+                            </ul>
+                        </nav>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="flex min-h-11 w-full cursor-pointer items-center rounded-xl border-none bg-transparent px-3 text-base text-night">Abmelden</button>
+                        </form>
+                    </div>
+                </details>
             </div>
         </header>
 
@@ -94,9 +124,13 @@
                 </p>
             @endif
 
-            <main id="inhalt" tabindex="-1" class="mx-auto w-full max-w-[760px] px-5 py-8 outline-none lg:px-10 lg:py-12">
+            <main id="inhalt" tabindex="-1" @class(["mx-auto w-full px-5 py-8 outline-none lg:px-10 lg:py-12", "max-w-[1180px]" => $wide ?? false, "max-w-[760px]" => ! ($wide ?? false)])>
                 @if (session('status') && ! in_array(session('status'), ['profile-information-updated', 'password-updated', 'two-factor-authentication-enabled', 'two-factor-authentication-confirmed', 'two-factor-authentication-disabled', 'recovery-codes-generated'], true))
                     <p role="status" class="mb-6 rounded-2xl bg-dune px-[18px] py-3.5">{{ session('status') }}</p>
+                @endif
+
+                @if (session('error'))
+                    <p role="alert" class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-[18px] py-3.5 text-sm font-bold text-rose-800">{{ session('error') }}</p>
                 @endif
 
                 {{ $slot ?? '' }}

@@ -126,7 +126,7 @@ export class ConversationView {
         const conversation = this.conversation;
         setText(this.title, conversationTitle(conversation, this.ctx.session.userId));
         setText(this.lifetime, `Ende-zu-Ende verschlüsselt · Nachrichten löschen sich nach ${lifetimeLabel(conversation.lifetime_days)}`);
-        const canSend = !conversation.rotation_required
+        const canSend = this.ctx.canParticipate && !conversation.rotation_required
             && this.ctx.session.conversationKey(conversation.id, conversation.key_version) !== null;
         for (const control of this.composer.elements) {
             control.disabled = !canSend;
@@ -136,6 +136,9 @@ export class ConversationView {
 
     renderNotices() {
         const texts = [...this.warnings];
+        if (!this.ctx.canParticipate) {
+            texts.unshift('Dein Konto ist gerade nur zum Lesen. Mit einer Mitgliedschaft kannst du wieder schreiben.');
+        }
         const conversation = this.conversation;
         if (conversation.rotation_required && !this.isOwner) {
             texts.unshift('Der Chat bekommt einen neuen Schlüssel. Sobald die Person, die ihn gestartet hat, online ist, kannst du schreiben.');

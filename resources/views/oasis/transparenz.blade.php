@@ -1,7 +1,9 @@
 {{--
     Transparenz: route oasis.transparenz, template Transparenz.dc.html.
-    All figures come from config('oasis.transparency'). A null value renders "Veröffentlichen wir ab dem Start";
-    coverage is computed from income/costs and hidden while either is missing, so no number is ever invented.
+    Variables: $transparency from App\Queries\Admin\PublicTransparency::data() – the newest report admins published
+    in the admin area, else config('oasis.transparency'), plus the real member votes. A null value renders
+    "Veröffentlichen wir ab dem Start"; coverage is computed from income/costs and hidden while either is missing, so
+    no number is ever invented.
 --}}
 @extends('layouts.oasis', [
     'title' => 'Transparenz',
@@ -10,7 +12,7 @@
 ])
 
 @php
-    $t = config('oasis.transparency');
+    $t = $transparency;
     $notYet = 'Veröffentlichen wir ab dem Start';
 
     // German number formats. Whole euro amounts without cents, otherwise two decimals.

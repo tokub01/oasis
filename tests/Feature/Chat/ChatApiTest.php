@@ -509,3 +509,16 @@ it('prunes chat reports following records retention only after case is pruned', 
     $this->artisan('model:prune', ['--model' => [ChatReport::class]])->assertSuccessful();
     expect(ChatReport::find($report->id))->toBeNull();
 });
+
+it('keeps read-only accounts reading but stops them from starting chats, adding members and sending', function () {
+    $this->owner->forceFill(['trial_ends_at' => now()->subDay()])->save();
+    [$other] = F::user();
+
+    $this->postJson('/app/chat/api/conversations', ['type' => 'direct', 'title' => null, 'member_ids' => [(string) $other->id], 'lifetime_days' => 7])
+        ->assertForbidden();
+    $this->postJson($this->base.'/members', ['user_id' => $other->id])->assertForbidden();
+    $this->postJson($this->base.'/messages', ['envelope' => F::envelope($this->conversation, $this->owner, $this->ownerIdentity)])
+        ->assertForbidden();
+    $this->getJson($this->base.'/messages')->assertOk();
+    $this->getJson('/app/chat/api/conversations')->assertOk();
+});

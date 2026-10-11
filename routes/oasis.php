@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Network\ProfileController;
 use App\Http\Controllers\Oasis\CancellationController;
 use App\Http\Controllers\Oasis\ConfirmationController;
 use App\Http\Controllers\Oasis\ContentReportController;
@@ -30,7 +31,7 @@ Route::name('oasis.')->group(function () {
     Route::view('/', 'oasis.home')->name('home');
     Route::view('/funktionen', 'oasis.funktionen')->name('funktionen');
     Route::view('/preise', 'oasis.preise')->name('preise');
-    Route::view('/transparenz', 'oasis.transparenz')->name('transparenz');
+    Route::get('/transparenz', [PageController::class, 'transparency'])->name('transparenz');
     Route::view('/manifest', 'oasis.manifest')->name('manifest');
     Route::view('/hilfe', 'oasis.hilfe')->name('hilfe');
 
@@ -39,7 +40,8 @@ Route::name('oasis.')->group(function () {
      */
     Route::get('/mitglied-werden', [PageController::class, 'membership'])->name('mitglied');
     Route::get('/entdecken', [PageController::class, 'discover'])->name('entdecken');
-    Route::get('/profil/{handle}', [PageController::class, 'profile'])
+    // Real member profiles first; sample profiles only for handles no member has (ProfileController::show).
+    Route::get('/profil/{handle}', [ProfileController::class, 'show'])
         ->where('handle', '[A-Za-z0-9_]{1,30}')
         ->name('profil');
 

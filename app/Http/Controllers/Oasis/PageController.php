@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Oasis;
 
 use App\Http\Controllers\Controller;
-use App\Support\DemoProfiles;
+use App\Queries\Admin\PublicTransparency;
 use Illuminate\View\View;
 
 /**
@@ -22,7 +22,22 @@ class PageController extends Controller
     {
         abort_unless(config('oasis.checkout_enabled'), 404);
 
-        return view('oasis.mitglied');
+        $user = auth()->user();
+        $trialDaysLeft = $user?->trial_ends_at?->isFuture()
+            ? (int) ceil(now()->diffInDays($user->trial_ends_at))
+            : null;
+        $trialEndDate = $user?->trial_ends_at?->timezone('Europe/Berlin')->format('d.m.Y');
+
+        return view('oasis.mitglied', [
+            'trialDaysLeft' => $trialDaysLeft,
+            'trialEndDate' => $trialEndDate,
+        ]);
+    }
+
+    /** "Transparenz": published monthly figures and member votes (see PublicTransparency). */
+    public function transparency(PublicTransparency $transparency): View
+    {
+        return view('oasis.transparenz', ['transparency' => $transparency->data()]);
     }
 
     /**
@@ -35,23 +50,5 @@ class PageController extends Controller
         abort_unless(config('oasis.demo_pages'), 404);
 
         return view('oasis.entdecken');
-    }
-
-    /**
-     * Public profile in the guest preview.
-     *
-     * Only sample profiles from {@see DemoProfiles} exist; any other handle is a 404 instead of a made-up profile.
-     */
-    public function profile(string $handle): View
-    {
-        abort_unless(config('oasis.demo_pages'), 404);
-
-        $profile = DemoProfiles::find($handle);
-        abort_if($profile === null, 404);
-
-        return view('oasis.profil', [
-            'handle' => strtolower($handle),
-            'profile' => $profile,
-        ]);
     }
 }

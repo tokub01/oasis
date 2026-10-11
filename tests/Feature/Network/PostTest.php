@@ -1,0 +1,160 @@
+<?php
+
+use App\Models\Post;
+use App\Models\Reaction;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Tests\Support\NetworkFixtures as N;
+
+/* Tropfen: writing, reading by visibility, images, replies, carrying, reactions and deleting. */
+beforeEach(function () {
+    $this->withoutVite();
+    Storage::fake(config('oasis.media_disk'));
+});
+
+it('publishes a Tropfen from the Quelle and shows it there and on the profile', function () {
+    $author = N::member();
+
+    $this->actingAs($author)->post(route('network.posts.store'), ['body' => 'Erster Tropfen', 'visibility' => 'public'])
+        ->assertRedirect(route('app.home'))->assertSessionHas('status', 'Dein Tropfen ist da.');
+
+    $this->get(route('app.home'))->assertOk()->assertSee('Erster Tropfen')->assertSee('Du bist auf dem neuesten Stand.');
+    $this->get(route('oasis.profil', $author->username))->assertOk()->assertSee('Erster Tropfen');
+});
+
+it('validates body length and requires a description for every image', function () {
+    $this->actingAs(N::member());
+
+    $this->post(route('network.posts.store'), ['body' => '', 'visibility' => 'public'])->assertSessionHasErrors('body');
+    $this->post(route('network.posts.store'), ['body' => str_repeat('a', 501), 'visibility' => 'public'])->assertSessionHasErrors('body');
+    $this->post(route('network.posts.store'), ['body' => 'Bild', 'visibility' => 'public', 'images' => [UploadedFile::fake()->image('a.jpg')]])
+        ->assertSessionHasErrors('alts.0');
+    $this->post(route('network.posts.store'), ['body' => 'Bild', 'visibility' => 'public', 'images' => [UploadedFile::fake()->create('a.pdf', 10, 'application/pdf')], 'alts' => ['x']])
+        ->assertSessionHasErrors('images.0');
+    expect(Post::count())->toBe(0);
+});
+
+it('re-encodes images as WebP and serves them with the visibility of the Tropfen', function () {
+    $author = N::member();
+    $this->actingAs($author)->post(route('network.posts.store'), [
+        'body' => 'Mit Bild', 'visibility' => 'members',
+        'images' => [2 => UploadedFile::fake()->image('foto.jpg', 3000, 1500)], 'alts' => [2 => 'Ein Feld im Morgenlicht'],
+    ])->assertRedirect();
+
+    $image = Post::sole()->images()->sole();
+    expect($image->alt)->toBe('Ein Feld im Morgenlicht')
+        ->and([$image->width, $image->height])->toBe([2048, 1024])
+        ->and(str_ends_with($image->path, '.webp'))->toBeTrue()
+        ->and(substr(Storage::disk(config('oasis.media_disk'))->get($image->path), 8, 4))->toBe('WEBP');
+
+    $url = route('network.images.show', [$image->post_id, $image->id]);
+    $this->get($url)->assertOk()->assertHeader('Content-Type', 'image/webp');
+    auth()->logout();
+    $this->get($url)->assertNotFound();
+});
+
+it('rejects files that are not decodable images without leaving a half-published Tropfen', function () {
+    $file = UploadedFile::fake()->createWithContent('kaputt.png', 'not really a png');
+    $this->actingAs(N::member())->post(route('network.posts.store'), [
+        'body' => 'Kaputt', 'visibility' => 'public', 'images' => [$file], 'alts' => ['x'],
+    ])->assertSessionHasErrors('images.0');
+    expect(Post::count())->toBe(0);
+});
+
+it('lets guests read public Tropfen only; members-only and unknown ones are 404', function () {
+    $author = N::member();
+    $public = N::post($author, ['body' => 'Für alle']);
+    $members = N::post($author, ['body' => 'Nur Mitglieder', 'visibility' => 'members']);
+
+    $this->get(route('network.posts.show', $public))->assertOk()->assertSee('Für alle')->assertSee('Du liest als Gast.');
+    $this->get(route('network.posts.show', $members))->assertNotFound();
+    $this->get(route('network.posts.show', 99999))->assertNotFound();
+    $this->actingAs(N::member())->get(route('network.posts.show', $members))->assertOk()->assertSee('Nur Mitglieder');
+});
+
+it('keeps replies and carries of members-only Tropfen members-only', function () {
+    $author = N::member();
+    $original = N::post($author, ['visibility' => 'members']);
+    $this->actingAs(N::member());
+
+    $this->post(route('network.posts.store'), ['body' => 'Antwort', 'visibility' => 'public', 'reply_to' => $original->id])
+        ->assertRedirect(route('network.posts.show', $original).'#tropfen-'.Post::latest('id')->value('id'));
+    $this->post(route('network.posts.store'), ['body' => 'Weiter', 'visibility' => 'public', 'carried' => $original->id]);
+
+    expect(Post::where('reply_to_id', $original->id)->sole()->visibility->value)->toBe('members')
+        ->and(Post::where('carried_post_id', $original->id)->sole()->visibility->value)->toBe('members');
+    $this->get(route('network.posts.show', $original))->assertSee('Antwort');
+    $this->get(route('network.posts.carry', $original))->assertOk()->assertSee('Weitertragen');
+});
+
+it('refuses replying to Tropfen the member cannot read and carrying with a reply at once', function () {
+    $hidden = N::post(N::member(), ['visibility' => 'members']);
+    $hidden->forceFill(['removed_from_oasis_at' => now()])->save();
+    $this->actingAs(N::member());
+
+    $this->post(route('network.posts.store'), ['body' => 'x', 'visibility' => 'public', 'reply_to' => $hidden->id])->assertForbidden();
+    $visible = N::post(N::member());
+    $this->post(route('network.posts.store'), ['body' => 'x', 'visibility' => 'public', 'reply_to' => $visible->id, 'carried' => $visible->id])
+        ->assertSessionHasErrors('carried');
+});
+
+it('shows reaction and reply counts only to the author and lets members react once and take it back', function () {
+    $author = N::member();
+    $post = N::post($author);
+    $reader = N::member();
+
+    $this->actingAs($reader)->post(route('network.reactions.store', $post))->assertRedirect();
+    $this->post(route('network.reactions.store', $post));
+    expect(Reaction::count())->toBe(1);
+    $this->get(route('network.posts.show', $post))->assertDontSee('Nur für dich sichtbar')->assertSee('Reagiert');
+
+    $this->actingAs($author)->get(route('network.posts.show', $post))->assertSee('Nur für dich sichtbar:')->assertSee('1 Reaktion,');
+
+    $this->actingAs($reader)->delete(route('network.reactions.destroy', $post));
+    expect(Reaction::count())->toBe(0);
+});
+
+it('lets authors delete their Tropfen with images; others get 403 and see a report link', function () {
+    $author = N::member();
+    $this->actingAs($author)->post(route('network.posts.store'), [
+        'body' => 'Weg damit', 'visibility' => 'public', 'images' => [UploadedFile::fake()->image('a.png')], 'alts' => ['A'],
+    ]);
+    $post = Post::sole();
+    $other = N::member();
+
+    $this->actingAs($other)->get(route('network.posts.show', $post))
+        ->assertSee(route('oasis.melden', ['url' => route('network.posts.show', $post)]), false);
+    $this->delete(route('network.posts.destroy', $post))->assertForbidden();
+
+    $this->actingAs($author)->delete(route('network.posts.destroy', $post))->assertRedirect(route('app.home'));
+    expect(Post::count())->toBe(0)->and(Storage::disk(config('oasis.media_disk'))->allFiles())->toBe([]);
+});
+
+it('keeps carries of a deleted Tropfen and says the original is gone', function () {
+    $original = N::post(N::member());
+    $carry = N::post(N::member(), ['carried_post_id' => $original->id, 'body' => 'Meine Worte']);
+    $original->delete();
+
+    $this->actingAs(N::member())->get(route('network.posts.show', $carry))
+        ->assertSee('Meine Worte')->assertSee('Dieser Tropfen ist nicht mehr verfügbar.');
+});
+
+it('makes read-only accounts read, delete and unreact – but not write or react', function () {
+    $user = N::readOnlyMember();
+    $own = N::post($user);
+    $other = N::post(N::member());
+    Reaction::create(['post_id' => $other->id, 'user_id' => $user->id]);
+    $this->actingAs($user);
+
+    $this->get(route('app.home'))->assertOk()->assertSee('Dein Konto ist gerade nur zum Lesen.');
+    $this->post(route('network.posts.store'), ['body' => 'x', 'visibility' => 'public'])->assertForbidden();
+    $this->post(route('network.reactions.store', $other))->assertForbidden();
+    $this->delete(route('network.reactions.destroy', $other))->assertRedirect();
+    $this->delete(route('network.posts.destroy', $own))->assertRedirect();
+    expect(Post::whereKey($own->id)->exists())->toBeFalse()->and(Reaction::count())->toBe(0);
+});
+
+it('prefills the report form with the Tropfen link', function () {
+    $this->get(route('oasis.melden', ['url' => 'https://oasis.tld/tropfen/5']))->assertOk()
+        ->assertSee('value="https://oasis.tld/tropfen/5"', false);
+});

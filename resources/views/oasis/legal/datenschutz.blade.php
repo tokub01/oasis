@@ -104,6 +104,7 @@
                 <li>Hosting: {{ $privacy['hosting'] }}</li>
                 <li>E-Mail-Versand und -Empfang: {{ $open($privacy['mail_provider']) }}</li>
                 <li>Zustellung von Chat-Nachrichten in Echtzeit: {{ $privacy['realtime_provider'] }} – erhält nur verschlüsselte Nachrichten, Chat-Nummern und technische Verbindungsdaten wie deine IP-Adresse</li>
+                <li>Zahlungsabwicklung und Abrechnung: Stripe Payments Europe, Ltd., 1 Grand Canal Street Lower, Grand Canal Dock, Dublin, D02 H210, Irland (Muttergesellschaft: Stripe, Inc., USA) – verarbeitet Zahlungs- und Abrechnungsdaten (z. B. Kartendaten, IBAN, Rechnungsadresse) zur Abwicklung der Mitgliedsbeiträge (Art. 6 Abs. 1 lit. b DSGVO) sowie zur Erfüllung gesetzlicher steuer- und handelsrechtlicher Aufbewahrungspflichten (Art. 6 Abs. 1 lit. c DSGVO). Für eventuelle Datenübermittlungen an die US-Muttergesellschaft gelten EU-Standardvertragsklauseln (Art. 46 Abs. 2 lit. c DSGVO) und der Angemessenheitsbeschluss zum EU-US Data Privacy Framework (Art. 45 DSGVO).</li>
             </ul>
             <p class="m-0">Wenn ein Dienstleister Daten außerhalb der EU verarbeitet, nennen wir hier die Garantie, auf der das beruht. Kopien deiner Kündigung, deines Widerrufs oder deiner Meldung erhält nur unser eigenes Team. Auch diese Kopien im Postfach und Sicherungskopien löschen wir nach denselben Fristen.</p>
         </section>

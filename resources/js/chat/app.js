@@ -53,6 +53,8 @@ function start(root) {
             cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
             csrfToken,
         }),
+        /** False for read-only accounts (trial ended, no membership): reading only, no new chats or sending. */
+        canParticipate: root.dataset.canParticipate === '1',
         /** Identity from GET /identity: null until the chat is set up. */
         storedIdentity: null,
 

@@ -56,7 +56,8 @@ return [
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
-            'throw' => false,
+            // Oasis: upload errors must surface (PublishPost then removes the half-published Tropfen).
+            'throw' => true,
             'report' => false,
         ],
 

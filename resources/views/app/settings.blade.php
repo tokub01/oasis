@@ -10,7 +10,7 @@
       Konto löschen          DELETE account.destroy  (requires a recent password confirmation)
     Fortify reports success through session('status') values, which are translated here.
 --}}
-@extends('layouts.app', ['title' => 'Einstellungen', 'active' => 'einstellungen'])
+@extends('layouts.app', ['title' => 'Einstellungen', 'active' => 'einstellungen', 'wide' => true])
 
 @php
     $user = auth()->user();
@@ -37,6 +37,9 @@
             <p role="status" class="m-0 rounded-2xl bg-dune px-[18px] py-3.5">{{ $messages[$status] }}</p>
         @endif
 
+        {{-- Two columns of cards from 1280px: account data left, security and data rights right. --}}
+        <div class="grid gap-6 xl:grid-cols-2 xl:items-start">
+        <div class="flex flex-col gap-6">
         <section aria-labelledby="profil-titel" class="{{ $card }}">
             <h2 id="profil-titel" class="{{ $h2 }}">Profil</h2>
             <form method="POST" action="{{ route('user-profile-information.update') }}" class="flex flex-col gap-4" novalidate>
@@ -66,6 +69,8 @@
             </form>
         </section>
 
+        </div>
+        <div class="flex flex-col gap-6">
         <section aria-labelledby="zwei-faktor-titel" class="{{ $card }}">
             <h2 id="zwei-faktor-titel" class="{{ $h2 }}">Zwei-Faktor-Anmeldung</h2>
             @if ($twoFactorActive)
@@ -127,5 +132,7 @@
                 <button type="submit" class="o-btn o-btn-md mt-4 bg-sun-text text-white">Konto endgültig löschen</button>
             </form>
         </section>
+        </div>
+        </div>
     </div>
 @endsection

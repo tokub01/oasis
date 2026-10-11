@@ -12,19 +12,24 @@ use App\Http\Requests\Moderation\AssignCaseRequest;
 use App\Http\Requests\Moderation\DecisionRequest;
 use App\Models\ModerationCase;
 use App\Models\User;
+use App\Queries\Moderation\QueueOverview;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 /** Thin staff endpoints; workflow actions own authorization, locking and audit writes. */
 class CaseController extends Controller
 {
     /** Render Claude's Livewire moderation queue. */
-    public function index(): View
+    public function index(Request $request, QueueOverview $overview): View
     {
         Gate::authorize('viewModeration');
 
-        return view('moderation.index');
+        return view('moderation.index', [
+            'figures' => $overview->figures($request->user()),
+            'activity' => $overview->recentActivity(),
+        ]);
     }
 
     /** Provide case history and staff choices without exporting reporter contacts. */

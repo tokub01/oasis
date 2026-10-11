@@ -12,7 +12,7 @@
         <p class="m-0 text-[17px] [line-height:1.6] text-ink-2">Hier kann jede Person Inhalte melden, die sie für rechtswidrig hält, auch ohne Konto.</p>
         <div class="flex flex-col gap-[6px]">
             <label for="r-url" class="text-[15px] font-bold">Link zum Inhalt</label>
-            <input id="r-url" type="url" placeholder="https://get-oasis.com/…" class="o-input min-w-0" name="url" aria-invalid="{{ $errors->has('url') ? 'true' : 'false' }}" aria-describedby="r-url-error" required value="{{ old('url') }}">
+            <input id="r-url" type="url" placeholder="https://get-oasis.com/…" class="o-input min-w-0" name="url" aria-invalid="{{ $errors->has('url') ? 'true' : 'false' }}" aria-describedby="r-url-error" required value="{{ old('url', request()->query('url')) }}">
             <p id="r-url-error" class="o-error">@error('url'){{ $message }}@enderror</p>
         </div>
         <div class="flex flex-col gap-[6px]">

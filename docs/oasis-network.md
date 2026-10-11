@@ -1,0 +1,79 @@
+# Oasis core network (stage 2)
+
+Profiles, Tropfen, the Quelle, following, quiet reactions, oases, invitation links and the member/host statistics.
+Everything renders server-side and works without JavaScript (plain forms and links).
+
+## Data model (`database/migrations/2026_10_12_100000_create_network_tables.php`)
+
+| Table | Model | Purpose |
+|---|---|---|
+| `profiles` | `Profile` | bio, location, visibility (`public`/`members`, default members), avatar colour; one per account, created on first save (`User::profileOrDefault()`) |
+| `posts` | `Post` | a Tropfen: body ≤ 500, visibility, optional `oasis_id`, `reply_to_id`, `carried_post_id` (weitertragen), `removed_from_oasis_at` |
+| `post_images` | `PostImage` | up to 4 per Tropfen, required alt text, WebP on the private media disk (`oasis.media_disk`: `local` or `s3`) |
+| `follows` | `Follow` | follower → person or oasis (`followable` morph, class names) |
+| `reactions` | `Reaction` | one quiet reaction per member and Tropfen |
+| `oases`, `oasis_members` | `Oasis` | themed space with slug, description, house rules, visibility; members with role `host`/`member` |
+| `invitations` | `Invitation` | personal links, `oasis.invites_per_month` per calendar month, valid 30 days |
+
+Relations of an account live in `App\Models\Concerns\HasNetwork` (used by `User`). Deleting an account cascades to
+its profile, Tropfen, images (rows), follows, reactions, memberships and invitations; replies/carries of deleted
+Tropfen keep their (dangling) reference, stay replies/carries and show "nicht mehr verfügbar". Image files of deleted Tropfen are removed by `DeletePost`.
+
+## Rules
+
+- **Visibility** (`Post::scopeVisibleTo` / `isVisibleTo`, `Profile`/`Oasis::isVisibleTo`): public content is
+  readable by guests, members-only content by verified members. Unknown and unreadable resources are both 404.
+  A Tropfen in a members-only oasis, and a reply to or carry of a members-only Tropfen, is always members-only.
+- **Participation**: every write (post, reply, carry, react, follow, found an oasis, create an invitation) needs the
+  stage 1 gate `participate` (`User::canParticipate()`, see oasis-membership.md). Read-only accounts can still
+  read, delete their Tropfen, take back reactions and unfollow.
+- **Quelle** (`PostFeed::source`): own Tropfen and those of followed people and oases, newest first, cursor pages of
+  20, replies only on the Tropfen page. No ranking, no recommendations; the last page says
+  "Du bist auf dem neuesten Stand."
+- **Leise Zahlen**: reaction and reply counts are shown only to the author (`PostPolicy::viewStats`); nobody sees
+  who reacted. The Karawane (follower count) is shown on profiles.
+- **Oases**: following an oasis = membership (posting allowed). The founder becomes host; hosts edit texts,
+  appoint/demote hosts and remove Tropfen that break the house rules (`removed_from_oasis_at`: hidden for everyone
+  but the author). The last host can neither step down nor leave.
+- **Images** (`StorePostImage`): decoded and re-encoded as WebP with GD (drops EXIF/GPS and trailing data), longest
+  edge ≤ 2048 px, served by `PostImageController` after the Tropfen's visibility check; members-only images are
+  `Cache-Control: private`.
+- **Reports**: "Melden" on a Tropfen opens the existing Art. 16 DSA form prefilled with its URL.
+- **Invitations**: `/einladung/{token}` stores the token in the session; on `Registered` the new account and the
+  inviter follow each other (`NetworkServiceProvider`). Group trials ("Gemeinsam starten") belong to stage 1.
+- **Rate limit**: `throttle:network-posts`, 10 Tropfen per minute and account.
+
+## Routes (`routes/network.php`, names `network.*`)
+
+Guests: `/tropfen/{id}`, `/tropfen/{id}/bild/{image}`, `/oasen/{slug}`, `/einladung/{token}`, `/profil/{handle}`
+(route `oasis.profil`; real members first, sample profiles of the guest preview as fallback while
+`oasis.demo_pages` is on). Members: `/app` (Quelle, `app.home`), `/app/entdecken`, `/app/oasen`, `/app/oasen/neu`,
+`/oasen/{slug}/bearbeiten|statistik`, `/app/profil`, `/app/statistik`, `/app/einladen`, plus the POST/PUT/DELETE
+actions for Tropfen, reactions, follows, oases and roles.
+
+## Statistics
+
+| Module | Who sees it | Source |
+|---|---|---|
+| Deine Zahlen (`/app/statistik`) | the member only | `App\Queries\Network\MemberStats`: totals (Tropfen, reactions/replies/carries received, Karawane, following), 12 calendar weeks, top Tropfen of 30 days |
+| Oase · Statistik (`/oasen/{slug}/statistik`) | hosts of that oasis | `App\Queries\Network\OasisStats`: members, hosts, Tropfen (total/30 days), active authors, removed Tropfen, 12 weeks of joins and Tropfen |
+
+Only counts, never lists of people. Weekly grouping happens in PHP by ISO week so it works on every database.
+Charts are tables with CSS bars (`x-network.week-chart`), readable by screen readers.
+
+## Views and components
+
+`resources/views/app/home.blade.php` (Quelle), `resources/views/app/network/**`, components `x-network.post-card`,
+`x-network.compose`, `x-network.feed`, `x-network.avatar`, `x-network.stat`, `x-network.week-chart`.
+`app/network/frame.blade.php` renders guest-readable pages in the app shell for members and in the website layout
+(with a sign-up hint) for guests.
+
+## Tests
+
+`tests/Feature/Network/*` with builders in `tests/Support/NetworkFixtures.php`.
+
+## Open
+
+- Image storage: S3 bucket `get-oasis.com` (eu-central-1, Block Public Access on) via `OASIS_MEDIA_DISK=s3`; prefixes
+  `network/posts/{id}/` for images and `backups/database/` for backups. Images are streamed through the app.
+- Optional recommendations ("nur wenn du sie einschaltest") are not built; the feed is chronological only.

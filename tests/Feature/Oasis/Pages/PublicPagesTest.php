@@ -95,7 +95,8 @@ it('returns 404 for unknown or invalid profile handles', function () {
 
 it('renders changed trial days consistently in the shared navigation and page copy', function ($page) {
     config(['oasis.trial_days' => 47]);
-    $this->get(route('oasis.'.$page))->assertOk()->assertSee('47 Tage')->assertDontSee('30 Tage');
+    $this->get(route('oasis.'.$page))->assertOk()->assertSee('47 Tage')
+        ->assertDontSee('30 Tage testen')->assertDontSee('30 Tage kostenlos testen');
 })->with(['home', 'preise', 'funktionen', 'testen', 'anmelden', 'hilfe']);
 
 it('renders changed membership prices and derives yearly and daily amounts from config', function () {
@@ -118,6 +119,51 @@ it('renders changed membership prices and derives yearly and daily amounts from 
     $this->get(route('oasis.mitglied'))->assertOk()->assertSee('9,50 €')
         ->assertSee('data-month="7,25 € / Monat"', false)
         ->assertSee('data-year="65,25 € / Jahr"', false);
+    foreach (['home', 'hilfe'] as $page) {
+        $this->get(route('oasis.'.$page))->assertOk()->assertSee('7,25 €')->assertSee('9,50 €');
+    }
+});
+
+it('explains that password recovery opens at launch without linking back to the help page', function () {
+    config(['oasis.mail.contact' => 'contact@example.tld']);
+    $html = $this->get(route('oasis.anmelden'))->assertOk()->getContent();
+    expect(preg_match('/<a\b[^>]*>\s*Passwort vergessen\?\s*<\/a>/i', $html))->toBe(0);
+    expect($html)->toMatch('/<span\b[^>]*aria-disabled="true"[^>]*>\s*Passwort vergessen\?\s*<\/span>/i');
+    $this->get(route('oasis.hilfe'))->assertOk()->assertSee('Ab dem Start')
+        ->assertSee('Bis dahin gibt es noch keine Konten.')->assertSee('contact@example.tld')
+        ->assertDontSee('Wir schicken dir einen Link per E-Mail.');
+});
+
+it('provides a hidden progressive share button with the actual profile URL', function () {
+    $html = $this->get(route('oasis.profil', ['handle' => 'mira']))->assertOk()->getContent();
+    preg_match('/<button\b[^>]*aria-label="Profil teilen"[^>]*>/i', $html, $button);
+    expect($button[0] ?? '')->toContain('type="button"', 'data-oasis="share"', ' hidden',
+        'data-url="'.route('oasis.profil', ['handle' => 'mira']).'"');
+    expect(preg_match('/<a\b[^>]*aria-label="Profil teilen"/i', $html))->toBe(0);
+});
+
+it('marks unavailable sample tabs without links that reload the current view', function () {
+    $profile = $this->get(route('oasis.profil', ['handle' => 'mira']))->assertOk()->getContent();
+    foreach (['Antworten', 'Oasen'] as $label) {
+        expect($profile)->toMatch('/<span\b[^>]*aria-disabled="true"[^>]*title="In der Beispielansicht nicht verfügbar"[^>]*>\s*'.$label.'\s*<\/span>/i');
+    }
+    $discover = $this->get(route('oasis.entdecken'))->assertOk()->getContent();
+    expect($discover)->toMatch('/<span\b[^>]*aria-disabled="true"[^>]*title="In der Beispielansicht nicht verfügbar"[^>]*>\s*Neu\s*<\/span>/i');
+});
+
+it('only describes promises as codified when the corresponding config flag is enabled', function () {
+    config(['oasis.promises_codified' => false, 'oasis.statutes' => 'Configured statutes']);
+    $this->get(route('oasis.manifest'))->assertOk()->assertSee('Wird festgeschrieben:')
+        ->assertSee('Configured statutes')->assertDontSee('Diese Versprechen stehen in unseren');
+    $this->get(route('oasis.transparenz'))->assertOk()->assertSee('Diese Punkte schreiben wir vor dem Start')
+        ->assertDontSee('Diese Punkte stehen in unseren Regeln.');
+
+    config(['oasis.promises_codified' => true]);
+    $this->get(route('oasis.manifest'))->assertOk()->assertSee('Festgeschrieben:')
+        ->assertSee('Diese Versprechen stehen in unseren')->assertSee('Configured statutes')
+        ->assertDontSee('Wird festgeschrieben:');
+    $this->get(route('oasis.transparenz'))->assertOk()->assertSee('Diese Punkte stehen in unseren Regeln.')
+        ->assertDontSee('Diese Punkte schreiben wir vor dem Start');
 });
 
 it('renders operator, contact, founder and service placeholders from changed config', function () {

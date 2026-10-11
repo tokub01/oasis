@@ -2,7 +2,8 @@
     Widerrufsbelehrung (draft): route oasis.widerrufsbelehrung, frame from legal/_frame.
 
     Statutory model text for service contracts (Anlage 1 zu Art. 246a § 1 Abs. 2 Satz 2 EGBGB), including the
-    optional paragraph for electronic withdrawal, because Oasis offers the withdrawal form at oasis.widerrufen.
+    paragraph for the online withdrawal function (Gestaltungshinweis 3, § 356a BGB): Oasis offers that function at
+    oasis.widerrufen and confirms receipt with content, date and time (WithdrawalReceipt mail).
     The wording of the model must stay verbatim (formal "Sie") to keep its statutory protection; only the
     operator details are filled in from config('oasis.operator') and config('oasis.mail.contact').
     Draft pending legal review. No JavaScript required.
@@ -26,8 +27,8 @@
             <h2 class="{{ $h2 }}">Widerrufsrecht</h2>
             <p class="m-0">Sie haben das Recht, binnen vierzehn Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen.</p>
             <p class="m-0">Die Widerrufsfrist beträgt vierzehn Tage ab dem Tag des Vertragsabschlusses.</p>
-            <p class="m-0">Um Ihr Widerrufsrecht auszuüben, müssen Sie uns ({{ $address }}, Telefon: {{ $operator['phone'] }}, E-Mail: {{ $contact }}) mittels einer eindeutigen Erklärung (z. B. ein mit der Post versandter Brief oder E-Mail) über Ihren Entschluss, diesen Vertrag zu widerrufen, informieren. Sie können dafür das beigefügte Muster-Widerrufsformular verwenden, das jedoch nicht vorgeschrieben ist.</p>
-            <p class="m-0">Sie können das Muster-Widerrufsformular oder eine andere eindeutige Erklärung auch auf unserer Webseite (<a href="{{ route('oasis.widerrufen') }}" class="font-bold text-night underline underline-offset-4">{{ route('oasis.widerrufen') }}</a>) elektronisch ausfüllen und übermitteln. Machen Sie von dieser Möglichkeit Gebrauch, so werden wir Ihnen unverzüglich (z. B. per E-Mail) eine Bestätigung über den Eingang eines solchen Widerrufs übermitteln.</p>
+            <p class="m-0">Um Ihr Widerrufsrecht auszuüben, müssen Sie uns ({{ $address }}, Telefon: {{ $operator['phone'] }}, E-Mail: {{ $contact }}) mittels einer eindeutigen Erklärung (z. B. ein mit der Post versandter Brief oder eine E-Mail) über Ihren Entschluss, diesen Vertrag zu widerrufen, informieren. Sie können dafür das beigefügte Muster-Widerrufsformular verwenden, das jedoch nicht vorgeschrieben ist.</p>
+            <p class="m-0">Sie können Ihr Widerrufsrecht auch online unter <a href="{{ route('oasis.widerrufen') }}" class="font-bold text-night underline underline-offset-4">{{ route('oasis.widerrufen') }}</a> ausüben. Wenn Sie diese Online-Funktion nutzen, übermitteln wir Ihnen auf einem dauerhaften Datenträger (z. B. durch eine E-Mail) unverzüglich eine Eingangsbestätigung mit Informationen zum Inhalt der Widerrufserklärung sowie dem Datum und der Uhrzeit ihres Eingangs.</p>
             <p class="m-0">Zur Wahrung der Widerrufsfrist reicht es aus, dass Sie die Mitteilung über die Ausübung des Widerrufsrechts vor Ablauf der Widerrufsfrist absenden.</p>
         </section>
 

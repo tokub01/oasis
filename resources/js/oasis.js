@@ -9,6 +9,10 @@ const modules = {};
 // Module definitions go here: modules.name = (root) => { ... };
 
 // --- Preise: monthly/yearly toggle ------------------------------------------
+// Markup: root [data-oasis="pricing"] containing a hidden [data-period-toggle] with two buttons
+// [data-period="month"|"year"] and any number of elements with data-month/data-year texts.
+// Clicking a button swaps every element's text and sets aria-pressed.
+// Without JS: the toggle stays hidden and the server-rendered monthly values are shown.
 modules.pricing = (root) => {
     const toggle = root.querySelector("[data-period-toggle]");
     const buttons = toggle.querySelectorAll("[data-period]");
@@ -187,6 +191,11 @@ modules.membership = (root) => {
 
 
 // --- Oasis forms: cancellation ---------------------------------------------
+// Markup: the cancellation <form data-oasis="cancellation"> with radios [name="type"] and
+// [name="timing"], the wrapper [data-reason-field], and fields [name="reason"], [name="effective_date"].
+// Shows and requires the reason only for an extraordinary cancellation, and requires the date only when
+// "Zu einem bestimmten Datum" is chosen.
+// Without JS: all fields stay visible; CancellationFormRequest enforces the same rules on the server.
 modules.cancellation = (form) => {
     const reasonField = form.querySelector("[data-reason-field]");
     const reason = form.querySelector('[name="reason"]');

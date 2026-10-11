@@ -163,11 +163,17 @@ return [
     'legal' => [
         // Generic placeholder for paragraphs that still need a text.
         'text' => '[Text]',
+        // Data subject rights listed in the privacy policy (Art. 15–21 and 77 GDPR).
         'privacy_rights' => '[Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit, Widerspruch, Beschwerde bei einer Aufsichtsbehörde]',
+        // Categories of personal data named in the privacy policy.
         'privacy_data' => '[Kontodaten, Inhalte, Zahlungsdaten, technische Daten]',
+        // Contract term and notice periods for the AGB.
         'contract_term' => '[Monatlich kündbar; Jahresbeitrag zum Ende des Jahres, danach monatlich kündbar]',
+        // The promises the AGB must contain (see promises_codified).
         'promises' => '[Keine Werbung, kein Werbeprofil, kein Datenverkauf; Änderung nur mit Zustimmung der Mitglieder]',
+        // Price and billing section of the AGB.
         'prices' => '[Stufen, Abrechnung, Preisgarantie für Gründungsmitglieder]',
+        // Withdrawal instructions based on the statutory model.
         'withdrawal' => '[Widerrufsbelehrung nach dem gesetzlichen Muster, angepasst auf digitale Dienstleistungen]',
     ],
 ];

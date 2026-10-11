@@ -2,6 +2,12 @@
 
 namespace App\Support;
 
+/**
+ * German money formatting for every Oasis view, so a price looks the same on every page.
+ *
+ * Used by the price card, Preise, Startseite, Hilfe, Transparenz, Gründung, Gemeinsam and the checkout.
+ * Prices come from config('oasis.tiers') and may contain cents; never round them in a view.
+ */
 class OasisFormat
 {
     /**

@@ -77,13 +77,28 @@ return [
     'demo_pages' => (bool) env('OASIS_DEMO_PAGES', true),
 
     'transparency' => [
+        // Month the numbers refer to, as display text, e.g. 'Oktober 2026'.
         'as_of' => null,
+        // Paying members (integer).
         'members' => null,
+        // Running costs and income per month in euro. If 'costs' is null, the sum of
+        // 'cost_items' is used once every item has an amount. Coverage (income / costs)
+        // is computed in the view and hidden while either value is missing.
         'costs' => null,
         'income' => null,
+        // Sponsored Solidar and Paten seats (integer).
         'sponsored_seats' => null,
         // Cost items: label => amount in euro per month (null = not published yet).
-        'cost_items' => [],
+        'cost_items' => [
+            'Server und Speicher' => null,
+            'Entwicklung und Werkzeuge' => null,
+            'Moderation' => null,
+            'Zahlungsgebühren' => null,
+            'Rücklage' => null,
+        ],
+        // Member votes. The section stays hidden while this is empty. Each entry:
+        // ['title' => '…', 'open' => true|false, 'ends' => '31.10.2026',
+        //  'options' => ['…', '…'] (open votes), 'result' => '…' (closed votes)]
         'votes' => [],
     ],
 

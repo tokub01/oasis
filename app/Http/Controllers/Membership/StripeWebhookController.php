@@ -104,22 +104,47 @@ class StripeWebhookController extends WebhookController
      */
     public function handleInvoicePaymentFailed(array $payload): Response
     {
-        $customer = $payload['data']['object']['customer'] ?? null;
-        Log::warning("Stripe invoice payment failed for customer {$customer}.");
+        Log::warning('Stripe invoice payment failed.');
 
-        return parent::handleInvoicePaymentFailed($payload);
+        return $this->successMethod();
     }
 
     /**
-     * Handle checkout.session.completed for gift memberships.
+     * Fulfill only paid gift sessions; delayed payment is handled by the async success event.
      */
     public function handleCheckoutSessionCompleted(array $payload): Response
     {
         $session = $payload['data']['object'] ?? [];
         $metadata = $session['metadata'] ?? [];
 
-        if (($metadata['type'] ?? null) === 'gift_membership') {
-            app(StripeMembershipService::class)->fulfillGiftPurchase($metadata, $session['id'] ?? null);
+        if (($metadata['type'] ?? null) === 'gift_membership'
+            && ($session['payment_status'] ?? null) === 'paid'
+            && is_string($session['id'] ?? null) && $session['id'] !== '') {
+            app(StripeMembershipService::class)->fulfillGiftPurchase($metadata, $session['id']);
+        }
+
+        return $this->successMethod();
+    }
+
+    /**
+     * Delayed bank payments finish after Checkout has already completed.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    public function handleCheckoutSessionAsyncPaymentSucceeded(array $payload): Response
+    {
+        return $this->handleCheckoutSessionCompleted($payload);
+    }
+
+    /**
+     * No voucher is issued for failed delayed payments; do not log purchaser metadata.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    public function handleCheckoutSessionAsyncPaymentFailed(array $payload): Response
+    {
+        if (($payload['data']['object']['metadata']['type'] ?? null) === 'gift_membership') {
+            Log::warning('Stripe gift payment failed.');
         }
 
         return $this->successMethod();

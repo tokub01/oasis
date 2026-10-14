@@ -88,6 +88,7 @@ test('checkout.session.completed signed webhook fulfills gift membership voucher
         'data' => [
             'object' => [
                 'id' => 'cs_test_gift_123',
+                'payment_status' => 'paid',
                 'metadata' => [
                     'type' => 'gift_membership',
                     'purchaser_id' => (string) $buyer->id,

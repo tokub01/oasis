@@ -43,6 +43,8 @@ export class ConversationView {
         this.timeline = new Timeline();
         this.nextBeforeId = null;
         this.sweep = null;
+        /** Increases on every open/close; async results of an older value are dropped. */
+        this.openCount = 0;
 
         this.composer.addEventListener('submit', (event) => {
             event.preventDefault();
@@ -62,14 +64,17 @@ export class ConversationView {
     /** @param {string} conversationId */
     async open(conversationId) {
         this.close();
-        this.messages.replaceChildren();
-        this.notices.replaceChildren();
-        setText(this.title, '');
-        setText(this.lifetime, '');
+        const token = this.openCount;
         $(this.screen, '[data-details-link]').href = `#c/${conversationId}/info`;
         try {
             await this.refresh(conversationId);
+            if (!this.isCurrent(token)) {
+                return;
+            }
             await this.loadHistory();
+            if (!this.isCurrent(token)) {
+                return;
+            }
             this.ctx.realtime.watch(conversationId, {
                 onMessage: (envelope) => this.receive(envelope),
                 onKeyRotated: () => this.refresh(conversationId).catch((error) => this.handleFailure(error)),
@@ -84,14 +89,28 @@ export class ConversationView {
         }
     }
 
-    /** Leave the conversation: stop listening and forget its plaintext. */
+    /**
+     * Leave the conversation: stop listening and forget its plaintext – in memory AND on the page (rendered messages,
+     * the unsent draft, notices). Results of requests still running are ignored (see `isCurrent`).
+     */
     close() {
         this.ctx.realtime.leave();
         clearInterval(this.sweep);
         this.sweep = null;
+        this.openCount++;
         this.timeline.clear();
         this.conversation = null;
         this.nextBeforeId = null;
+        this.messages.replaceChildren();
+        this.notices.replaceChildren();
+        this.composer.elements.message.value = '';
+        setText(this.title, '');
+        setText(this.lifetime, '');
+    }
+
+    /** @returns {boolean} whether async work started under `token` still belongs to the open conversation */
+    isCurrent(token) {
+        return token === this.openCount && this.ctx.session.unlocked;
     }
 
     get isOwner() {
@@ -100,6 +119,7 @@ export class ConversationView {
 
     /** Steps 1–2: conversation, directory, grants and – as owner – a pending key. */
     async refresh(conversationId) {
+        const token = this.openCount;
         let { data: conversation } = await this.ctx.api.conversation(conversationId);
         this.ctx.clock.sync(conversation.server_time);
         const directory = await loadDirectory(this.ctx.api, this.ctx.session, conversationId);
@@ -114,6 +134,9 @@ export class ConversationView {
             } catch (error) {
                 this.warnings.push(describeError(error));
             }
+        }
+        if (!this.isCurrent(token)) {
+            return;
         }
         this.conversation = conversation;
         this.renderHeader();
@@ -154,11 +177,16 @@ export class ConversationView {
 
     /** Step 3: the next 50 older messages. */
     async loadHistory() {
-        const result = await this.ctx.api.messages(this.conversation.id, this.nextBeforeId);
+        const token = this.openCount;
+        const conversationId = this.conversation.id;
+        const result = await this.ctx.api.messages(conversationId, this.nextBeforeId);
         const now = this.ctx.clock.now();
         const items = [];
         for (const message of [...result.data].reverse()) {
-            items.push(await openMessage(this.ctx.session, this.conversation.id, message.envelope, now));
+            items.push(await openMessage(this.ctx.session, conversationId, message.envelope, now));
+        }
+        if (!this.isCurrent(token)) {
+            return;
         }
         this.timeline.prepend(items);
         this.nextBeforeId = result.next_before_id;
@@ -170,7 +198,11 @@ export class ConversationView {
         if (!this.conversation || String(envelope?.conversation_id) !== this.conversation.id) {
             return;
         }
+        const token = this.openCount;
         const item = await openMessage(this.ctx.session, this.conversation.id, envelope, this.ctx.clock.now());
+        if (!this.isCurrent(token)) {
+            return;
+        }
         if (this.timeline.append(item)) {
             this.renderMessages();
             if (item.senderId !== this.ctx.session.userId) {
@@ -181,10 +213,15 @@ export class ConversationView {
 
     /** Try again to decrypt messages that had no key (after a refresh brought new grants). */
     async redecrypt() {
+        const token = this.openCount;
+        const conversationId = this.conversation.id;
         let changed = false;
         for (const [index, item] of this.timeline.items.entries()) {
             if (item.state === MessageState.NO_KEY) {
-                const reopened = await openMessage(this.ctx.session, this.conversation.id, item.envelope, this.ctx.clock.now());
+                const reopened = await openMessage(this.ctx.session, conversationId, item.envelope, this.ctx.clock.now());
+                if (!this.isCurrent(token)) {
+                    return;
+                }
                 if (reopened && reopened.state !== MessageState.NO_KEY) {
                     this.timeline.items[index] = reopened;
                     changed = true;

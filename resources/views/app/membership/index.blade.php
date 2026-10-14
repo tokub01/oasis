@@ -181,7 +181,7 @@
                     <div class="flex flex-col justify-between gap-3 rounded-2xl border border-dune-line bg-dune p-4">
                         <div>
                             <span class="text-base font-extrabold text-night">{{ $tier['name'] }}</span>
-                            <p class="m-0 text-sm text-muted mt-1">12 Monate für {{ \App\Support\OasisFormat::euro($tier['monthly'] * config('oasis.year_months', 10)) }}</p>
+                            <p class="m-0 text-sm text-ink-2 mt-1">12 Monate für {{ \App\Support\OasisFormat::euro($tier['monthly'] * config('oasis.year_months', 10)) }}</p>
                         </div>
                         <form method="POST" action="{{ route('app.membership.gift.checkout') }}">
                             @csrf

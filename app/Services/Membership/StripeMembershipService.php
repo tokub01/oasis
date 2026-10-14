@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Cashier\Cashier;
 use Laravel\Cashier\Subscription;
+use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\InvalidRequestException;
 use Stripe\StripeClient;
 
@@ -217,7 +218,9 @@ class StripeMembershipService
         try {
             return $this->buildCheckoutSessionUrl($user, $tier, $rhythm, $priceId, $paymentTypes);
         } catch (InvalidRequestException $e) {
-            Log::warning('Stripe checkout failed with payment method types: '.$e->getMessage().'. Retrying with card fallback.');
+            Log::warning('Stripe checkout failed; retrying with card fallback.', [
+                'exception_class' => $e::class, 'provider_code' => $e->getStripeCode(),
+            ]);
 
             // Fallback to basic card if specific payment method type is not activated in dashboard
             return $this->buildCheckoutSessionUrl($user, $tier, $rhythm, $priceId, ['card']);
@@ -280,9 +283,10 @@ class StripeMembershipService
      *
      * @param  array<string, mixed>  $metadata
      */
-    public function fulfillGiftPurchase(array $metadata, ?string $sessionId = null): GiftMembership
+    public function fulfillGiftPurchase(array $metadata, string $sessionId): GiftMembership
     {
-        return GiftMembership::create([
+        // firstOrCreate recovers a competing insert through the database unique constraint.
+        return GiftMembership::firstOrCreate(['stripe_checkout_session_id' => $sessionId], [
             'code' => GiftMembership::generateCode(),
             'tier' => $metadata['tier'] ?? 'oase',
             'months' => (int) ($metadata['months'] ?? 12),
@@ -290,7 +294,6 @@ class StripeMembershipService
             'currency' => 'eur',
             'purchaser_user_id' => isset($metadata['purchaser_id']) ? (int) $metadata['purchaser_id'] : null,
             'purchaser_email' => $metadata['purchaser_email'] ?? null,
-            'stripe_checkout_session_id' => $sessionId,
         ]);
     }
 
@@ -411,7 +414,10 @@ class StripeMembershipService
             }
         } catch (\Throwable $e) {
             // The member was promised a refund (§ 357 BGB): the operator must refund manually within 14 days.
-            Log::error('Refund failed for subscription withdrawal '.$subscription->stripe_id.': '.$e->getMessage());
+            Log::error('Refund failed for subscription withdrawal.', [
+                'exception_class' => $e::class,
+                'provider_code' => $e instanceof ApiErrorException ? $e->getStripeCode() : null,
+            ]);
             Mail::raw(
                 'Die automatische Erstattung nach einem Widerruf ist fehlgeschlagen (Stripe-Abo '.$subscription->stripe_id
                 .'). Bitte innerhalb von 14 Tagen manuell im Stripe-Dashboard erstatten.',

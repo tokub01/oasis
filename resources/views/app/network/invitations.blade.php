@@ -32,7 +32,13 @@
                         <span class="text-muted">Abgelaufen</span>
                     @else
                         <label for="invite-{{ $invitation->id }}" class="text-sm font-bold">Gültig bis {{ $invitation->expires_at->locale('de')->isoFormat('D. MMMM') }} – Link zum Weitergeben:</label>
-                        <input id="invite-{{ $invitation->id }}" type="text" readonly class="o-input font-mono text-sm" value="{{ route('network.invitations.show', $invitation->token) }}">
+                        <div class="flex flex-wrap sm:flex-nowrap gap-2 items-center">
+                            <input id="invite-{{ $invitation->id }}" type="text" readonly class="o-input font-mono text-sm flex-1" value="{{ route('network.invitations.show', $invitation->token) }}">
+                            <button type="button" data-oasis="share" data-url="{{ route('network.invitations.show', $invitation->token) }}" aria-label="Link kopieren" hidden
+                                    class="o-btn o-btn-sm o-btn-dark whitespace-nowrap">
+                                <span data-share-label>Link kopieren</span>
+                            </button>
+                        </div>
                     @endif
                 </li>
             @empty

@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Stripe\Exception\ApiErrorException;
 
 /**
  * Controller for purchasing a 12-month gift membership voucher via Stripe Checkout.
@@ -32,7 +33,10 @@ class GiftPurchaseController extends Controller
 
             return redirect()->away($checkoutUrl);
         } catch (\Throwable $e) {
-            Log::error('Gift purchase checkout failed: '.$e->getMessage());
+            Log::error('Gift purchase checkout failed.', [
+                'exception_class' => $e::class,
+                'provider_code' => $e instanceof ApiErrorException ? $e->getStripeCode() : null,
+            ]);
 
             return redirect()->route('app.membership')
                 ->with('error', 'Der Kauf konnte leider nicht gestartet werden. Bitte versuche es später noch einmal.');

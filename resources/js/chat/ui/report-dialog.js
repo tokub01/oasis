@@ -41,8 +41,14 @@ export class ReportDialog {
         this.form.elements.reason.focus();
     }
 
+    /** Close and forget the quoted plaintext (also called when the chat is locked). */
     close() {
-        this.dialog.close();
+        if (this.dialog.open) {
+            this.dialog.close();
+        }
+        setText($(this.form, '[data-quote]'), '');
+        this.form.reset();
+        this.target = null;
     }
 
     async send() {

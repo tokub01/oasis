@@ -2,27 +2,23 @@
 
 namespace App\Http\Controllers\Account;
 
+use App\Actions\Account\DeleteAccount;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
-/** Permanently deletes the authenticated account after the route's password confirmation. */
+/** Permanently deletes the authenticated account after the route's password confirmation (see DeleteAccount). */
 class DeleteAccountController extends Controller
 {
-    /** Remove account/reset tokens/sessions and invalidate the current browser session. */
-    public function __invoke(Request $request): RedirectResponse
+    /** Delete the account, then end the browser session. A running membership sends the member back with a hint. */
+    public function __invoke(Request $request, DeleteAccount $delete): RedirectResponse
     {
         $user = $request->user();
-        // Logout rotates and saves the remember token; do this before deleting to avoid recreating the model.
-        Auth::guard('web')->logout();
-        DB::transaction(function () use ($user): void {
-            DB::table('password_reset_tokens')->where('email', $user->email)->delete();
-            DB::table('sessions')->where('user_id', $user->id)->delete();
-            $user->delete();
-        });
+        $delete->handle($user);
 
+        // Logout after the deletion succeeded; Auth must not save the remember token of the deleted model again.
+        Auth::guard('web')->forgetUser();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

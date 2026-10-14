@@ -20,6 +20,7 @@ class MessageController extends Controller
         $input = $request->validate(['before_id' => ['sometimes', 'integer', 'min:1', 'max:9007199254740991']]);
         $messages = Message::where('conversation_id', $conversation->id)->where('expires_at', '>', now())
             ->where('created_at', '>=', $member->joined_at)
+            ->whereNotIn('sender_id', $request->user()->blockedUserIds(true))
             ->when(isset($input['before_id']), fn ($query) => $query->where('id', '<', $input['before_id']))
             ->orderByDesc('id')->limit(51)->get();
         $hasMore = $messages->count() > 50;

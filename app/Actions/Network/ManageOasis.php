@@ -4,7 +4,9 @@ namespace App\Actions\Network;
 
 use App\Actions\Notifications\SendHint;
 use App\Enums\Network\OasisRole;
+use App\Enums\Network\Visibility;
 use App\Enums\Notifications\NoticeKind;
+use App\Models\Follow;
 use App\Models\Oasis;
 use App\Models\Post;
 use App\Models\User;
@@ -13,8 +15,9 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Creating and running an oasis: the founder becomes its first host and follower; hosts edit it, appoint further
- * hosts among its members and remove Tropfen that break the house rules.
+ * Creating and running an oasis: the founder becomes its first host and follower; hosts edit it (switching to
+ * members-only also protects existing Tropfen), appoint further hosts, remove Tropfen that break the house rules and
+ * close it. Before an account is deleted, its oases are handed over so none is left without a host.
  */
 class ManageOasis
 {
@@ -35,9 +38,49 @@ class ManageOasis
     /** @param array{name: string, description: string, house_rules: string, visibility: string, color: string} $input */
     public function update(Oasis $oasis, array $input): Oasis
     {
-        $oasis->update($input);
+        return DB::transaction(function () use ($oasis, $input): Oasis {
+            $oasis->update($input);
+            // Members-only means members-only for what was already written, too: every Tropfen in the oasis
+            // (incl. replies, which carry the oasis id) follows. Switching back to public does not publish them again.
+            if ($oasis->visibility === Visibility::Members) {
+                Post::where('oasis_id', $oasis->id)->where('visibility', Visibility::Public->value)
+                    ->update(['visibility' => Visibility::Members->value]);
+            }
 
-        return $oasis;
+            return $oasis;
+        });
+    }
+
+    /**
+     * Close an oasis (hosts only, checked by the caller). Its Tropfen stay with their authors without an oasis
+     * (`posts.oasis_id` is nulled by the foreign key); memberships and follows of the oasis are removed.
+     */
+    public function close(Oasis $oasis): void
+    {
+        DB::transaction(function () use ($oasis): void {
+            Follow::where('followable_type', $oasis->getMorphClass())->where('followable_id', $oasis->id)->delete();
+            $oasis->delete();
+        });
+    }
+
+    /**
+     * Before an account is deleted: in every oasis where it is the only host, the longest-standing other member
+     * becomes host; an oasis without other members is closed. No oasis is left without a host.
+     */
+    public function handOverBeforeDeletion(User $leaving): void
+    {
+        $hosted = $leaving->oases()->wherePivot('role', OasisRole::Host->value)->get();
+        foreach ($hosted as $oasis) {
+            if ($oasis->hosts()->whereKeyNot($leaving->id)->exists()) {
+                continue;
+            }
+            $successor = $oasis->members()->whereKeyNot($leaving->id)->orderBy('oasis_members.joined_at')->first();
+            if ($successor === null) {
+                $this->close($oasis);
+            } else {
+                $oasis->members()->updateExistingPivot($successor->id, ['role' => OasisRole::Host->value]);
+            }
+        }
     }
 
     /** Make a member a host (or back to member). The last host cannot step down. */

@@ -23,12 +23,12 @@
         <div class="o-auto-grid [--min:220px] [gap:18px_20px]">
             <div class="flex flex-col gap-[6px]">
                 <label for="r-name" class="text-[15px] font-bold">Dein Name</label>
-                <input id="r-name" type="text" autocomplete="name" class="o-input min-w-0" name="name" aria-invalid="{{ $errors->has('name') ? 'true' : 'false' }}" aria-describedby="r-name-error" required value="{{ old('name') }}">
+                <input id="r-name" type="text" autocomplete="name" class="o-input min-w-0" name="name" aria-invalid="{{ $errors->has('name') ? 'true' : 'false' }}" aria-describedby="r-name-error" required value="{{ old('name', auth()->user()?->display_name) }}">
                 <p id="r-name-error" class="o-error">@error('name'){{ $message }}@enderror</p>
             </div>
             <div class="flex flex-col gap-[6px]">
                 <label for="r-mail" class="text-[15px] font-bold">Deine E-Mail-Adresse</label>
-                <input id="r-mail" type="email" autocomplete="email" class="o-input min-w-0" name="email" aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}" aria-describedby="r-mail-error" required value="{{ old('email') }}">
+                <input id="r-mail" type="email" autocomplete="email" class="o-input min-w-0" name="email" aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}" aria-describedby="r-mail-error" required value="{{ old('email', auth()->user()?->email) }}">
                 <p id="r-mail-error" class="o-error">@error('email'){{ $message }}@enderror</p>
             </div>
         </div>

@@ -21,6 +21,11 @@ export class ChatSession {
         this.conversationKeys = new Map();
         /** @type {Map<string, {encryption: Uint8Array, signing: Uint8Array, keyChangedAt: string|null}>} */
         this.publicKeys = new Map();
+        /**
+         * Increases on every lock. Async work (key distribution, opening grants) captures it before its first await
+         * and may only store a key if it is unchanged – a key arriving after "Sperren" is wiped instead.
+         */
+        this.generation = 0;
     }
 
     /** @returns {boolean} whether an identity is unlocked in this tab */
@@ -36,6 +41,7 @@ export class ChatSession {
 
     /** Wipe the identity and every conversation key. Verified public keys are public and may stay. */
     lock() {
+        this.generation++;
         wipeIdentity(this.identity);
         this.identity = null;
         for (const key of this.conversationKeys.values()) {
@@ -49,13 +55,25 @@ export class ChatSession {
         return this.conversationKeys.get(`${conversationId}:${keyVersion}`) ?? null;
     }
 
-    rememberConversationKey(conversationId, keyVersion, key) {
+    /**
+     * Keep a conversation key in memory. Refused (and the key wiped) if the session was locked or re-unlocked since
+     * `generation` was captured.
+     *
+     * @param {number} [generation] value of `this.generation` when the async work started; defaults to the current one
+     * @returns {boolean} whether the key was kept
+     */
+    rememberConversationKey(conversationId, keyVersion, key, generation = this.generation) {
+        if (!this.unlocked || generation !== this.generation) {
+            wipe(key);
+            return false;
+        }
         const slot = `${conversationId}:${keyVersion}`;
         const previous = this.conversationKeys.get(slot);
         if (previous && previous !== key) {
             wipe(previous);
         }
         this.conversationKeys.set(slot, key);
+        return true;
     }
 
     /**

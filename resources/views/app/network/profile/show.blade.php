@@ -60,6 +60,7 @@
                                     @csrf
                                     <button type="submit" class="o-btn o-btn-md o-btn-outline text-muted">Blockieren</button>
                                 </form>
+                                <a href="{{ route('oasis.melden', ['url' => route('oasis.profil', $member->username)]) }}" class="o-link self-center text-[15px]">Melden</a>
                             </div>
                         @endif
                     @endauth

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
-/** Oases: list, create, read (also as guest for public ones), edit, host roles and host statistics. */
+/** Oases: list, create, read (also as guest for public ones), edit, close, host roles and host statistics. */
 class OasisController extends Controller
 {
     public function __construct(private readonly ManageOasis $oases) {}
@@ -86,6 +86,25 @@ class OasisController extends Controller
         $this->oases->setRole($oasis, $user, OasisRole::from($input['role']));
 
         return back()->with('status', 'Die Rolle von '.$user->display_name.' ist geändert.');
+    }
+
+    /** Confirmation page before closing (no JavaScript dialog: the CSP allows no inline scripts). */
+    public function confirmClose(Oasis $oasis): View
+    {
+        Gate::authorize('host', $oasis);
+
+        return view('app.network.oases.close', ['oasis' => $oasis->loadCount(['members', 'posts'])]);
+    }
+
+    /** Close the oasis; its Tropfen stay with their authors. */
+    public function destroy(Request $request, Oasis $oasis): RedirectResponse
+    {
+        Gate::authorize('host', $oasis);
+        $request->validate(['confirm' => ['accepted']], ['confirm.accepted' => 'Bitte bestätige, dass du die Oase schließen möchtest.']);
+        $name = $oasis->name;
+        $this->oases->close($oasis);
+
+        return redirect()->route('network.oases.index')->with('status', 'Die Oase „'.$name.'“ ist geschlossen. Die Tropfen bleiben bei den Menschen, die sie geschrieben haben.');
     }
 
     /** Host statistics: sums and weekly activity, no lists of people. */

@@ -89,6 +89,7 @@ function start(root) {
         },
         lock() {
             view.close();
+            ctx.report.close();
             ctx.session.lock();
             ctx.announce('Nachrichten gesperrt. Deine Schlüssel sind aus dem Speicher gelöscht.');
             route();
@@ -127,6 +128,7 @@ function start(root) {
     // Wipe keys when the tab is closed or left; bfcache restores then show the unlock screen again.
     window.addEventListener('pagehide', () => {
         view.close();
+        ctx.report.close();
         ctx.session.lock();
     });
     window.addEventListener('pageshow', (event) => {

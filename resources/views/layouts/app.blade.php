@@ -57,6 +57,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/oasis.js'])
     @livewireStyles
     @stack('scripts')
+    <noscript>
+        <style>[data-oasis-chat] [data-screen="loading"] { display: none !important; }</style>
+    </noscript>
 </head>
 <body class="bg-sand text-ink antialiased">
     <a href="#inhalt" class="o-skip-link">Zum Inhalt springen</a>

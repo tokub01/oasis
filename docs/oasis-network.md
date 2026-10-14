@@ -77,3 +77,14 @@ Charts are tables with CSS bars (`x-network.week-chart`), readable by screen rea
 - Image storage: S3 bucket `get-oasis.com` (eu-central-1, Block Public Access on) via `OASIS_MEDIA_DISK=s3`; prefixes
   `network/posts/{id}/` for images and `backups/database/` for backups. Images are streamed through the app.
 - Optional recommendations ("nur wenn du sie einschaltest") are not built; the feed is chronological only.
+
+## Stage 9 changes
+
+- **Members-only switch**: when hosts switch an oasis to members-only, all its Tropfen (incl. replies) become
+  members-only in the same transaction (`ManageOasis::update`); switching back does not publish them again.
+  Already downloaded public content cannot be recalled; public image responses were cacheable for one day.
+- **Closing an oasis**: hosts close it via a confirmation page (`/oasen/{slug}/schliessen`, `DELETE /oasen/{slug}`);
+  Tropfen stay with their authors without an oasis, memberships and follows are removed.
+- **Account deletion** (`App\Actions\Account\DeleteAccount`): oases where the account is the only host get the
+  longest member as host or are closed when empty; uploaded images are removed from the media disk after the commit.
+- **Reporting**: "Melden" on foreign profiles and oases as well; the report form is prefilled for members.

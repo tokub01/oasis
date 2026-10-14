@@ -39,6 +39,9 @@
                                 <button type="submit" class="o-btn o-btn-md o-btn-primary">Folgen</button>
                             </form>
                         @endif
+                        @unless ($isHost)
+                            <a href="{{ route('oasis.melden', ['url' => route('network.oases.show', $oasis)]) }}" class="o-link self-center text-[15px]">Melden</a>
+                        @endunless
                     </div>
                     @error('follow') <p role="alert" class="m-0 font-bold text-sun-text">{{ $message }}</p> @enderror
                 @endauth

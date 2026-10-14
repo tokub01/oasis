@@ -2,25 +2,19 @@
 
 namespace App\Http\Controllers\Account;
 
+use App\Actions\Account\ExportAccount;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-/** Downloads only the signed-in account's profile data, used by the settings export link. */
+/** Downloads the signed-in account's own data as a ZIP (see ExportAccount), also in read-only mode. */
 class ExportAccountController extends Controller
 {
-    /** Explicitly allowlist export fields so passwords and 2FA secrets never enter the download. */
-    public function __invoke(Request $request): StreamedResponse
+    public function __invoke(Request $request, ExportAccount $export): BinaryFileResponse
     {
-        $data = $request->user()->only([
-            'id', 'display_name', 'username', 'email', 'birth_date', 'email_verified_at',
-            'terms_accepted_at', 'trial_ends_at', 'created_at', 'updated_at',
-        ]);
-
-        return response()->streamDownload(
-            fn () => print (json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)),
-            'oasis-konto.json',
-            ['Content-Type' => 'application/json', 'Cache-Control' => 'no-store, private'],
-        );
+        return response()->download($export->handle($request->user()), 'oasis-daten.zip', [
+            'Content-Type' => 'application/zip',
+            'Cache-Control' => 'no-store, private',
+        ])->deleteFileAfterSend();
     }
 }

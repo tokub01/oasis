@@ -52,6 +52,12 @@
         </form>
 
         @if ($editing)
+            <section aria-labelledby="oase-schliessen" class="flex flex-col gap-3 rounded-[24px] border border-sun-text bg-paper p-6">
+                <h2 id="oase-schliessen" class="m-0 text-[21px] font-extrabold text-night">Oase schließen</h2>
+                <p class="m-0 text-ink-2">Die Oase verschwindet für alle. Die Tropfen bleiben bei den Menschen, die sie geschrieben haben.</p>
+                <a href="{{ route('network.oases.close', $oasis) }}" class="o-btn o-btn-md o-btn-outline self-start">Oase schließen …</a>
+            </section>
+
             <section aria-labelledby="oase-rollen" class="flex flex-col gap-3 rounded-[24px] bg-paper p-6">
                 <h2 id="oase-rollen" class="m-0 text-[21px] font-extrabold text-night">Gastgeber:innen</h2>
                 @error('role') <p role="alert" class="m-0 font-bold text-sun-text">{{ $message }}</p> @enderror

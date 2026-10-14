@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Network;
 
+use App\Actions\Network\StorePostImage;
 use App\Enums\Network\Visibility;
 use App\Models\Oasis;
 use App\Models\Post;
@@ -44,7 +45,8 @@ class PostRequest extends FormRequest
             'reply_to' => ['nullable', 'integer', Rule::exists('posts', 'id')],
             'carried' => ['nullable', 'integer', Rule::exists('posts', 'id'), 'prohibits:reply_to'],
             'images' => ['nullable', 'array', 'max:'.Post::MAX_IMAGES],
-            'images.*' => ['file', 'image', 'mimes:jpeg,png,webp,gif', 'max:'.self::IMAGE_MAX_KB],
+            'images.*' => ['file', 'image', 'mimes:jpeg,png,webp,gif', 'max:'.self::IMAGE_MAX_KB,
+                Rule::dimensions()->maxWidth(StorePostImage::MAX_INPUT_EDGE)->maxHeight(StorePostImage::MAX_INPUT_EDGE)],
             // Alternative text is required for every image (accessibility); index matches images.*.
             'alts' => ['nullable', 'array', 'max:'.Post::MAX_IMAGES],
             'alts.*' => ['nullable', 'string', 'max:300'],
@@ -72,6 +74,7 @@ class PostRequest extends FormRequest
             'images.max' => 'Höchstens '.Post::MAX_IMAGES.' Bilder pro Tropfen.',
             'images.*.image' => 'Das ist kein Bild.',
             'images.*.mimes' => 'Bilder bitte als JPEG, PNG, WebP oder GIF.',
+            'images.*.dimensions' => 'Ein Bild darf höchstens 12000 Pixel pro Kante haben.',
             'images.*.max' => 'Ein Bild darf höchstens 8 MB groß sein.',
         ];
     }

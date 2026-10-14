@@ -94,3 +94,12 @@ single-use recovery codes, export isolation, deletion/logout, and profile/passwo
 
 Run `./vendor/bin/sail artisan test`, `./vendor/bin/sail pint --test app tests routes config` and `npm run build`.
 The stage handoff in `docs/oasis-stage0-backend-report.md` records actual check results and integration notes.
+
+## Export and deletion (stage 9)
+
+- **Export** (`/app/konto/export`, `App\Actions\Account\ExportAccount`): ZIP `oasis-daten.zip` with
+  `oasis-daten.json` (account, profile, own Tropfen with image descriptions, follows, oases, bookmarks) and the own
+  images under `bilder/`. Allowlisted fields only; encrypted chat messages are not readable by the server and not
+  included. Available in read-only mode, as the AGB promise.
+- **Deletion** (`App\Actions\Account\DeleteAccount`): refused with a hint while a paid membership is running and
+  not cancelled (Stripe would keep charging); oases are handed over or closed; images are deleted from the media disk.

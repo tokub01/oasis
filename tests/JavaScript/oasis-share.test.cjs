@@ -63,3 +63,14 @@ test("failed copying does not claim that the link was copied", async () => {
     await click();
     assert.equal(attributes["aria-label"], undefined);
 });
+
+test("clipboard fallback displays visible feedback when data-share-label is present", async () => {
+    let copiedUrl;
+    const { button, click } = setup({
+        clipboard: { writeText: async (url) => { copiedUrl = url; } },
+    });
+    const label = { textContent: "Link kopieren" };
+    button.querySelector = (selector) => (selector === "[data-share-label]" ? label : null);
+    await click();
+    assert.equal(label.textContent, "Kopiert!");
+});

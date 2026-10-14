@@ -210,3 +210,27 @@ test('measureDraft enforces characters and UTF-8 bytes', () => {
     assert.equal(measureDraft('a'.repeat(4001)).tooLong, true);
     assert.equal(measureDraft('🌴'.repeat(1497)).tooLong, true);
 });
+
+test('a key that arrives after locking is wiped instead of kept (stale session generation)', async () => {
+    const owner = await member('1');
+    const users = [owner.publicUser];
+    let release;
+    const gate = new Promise((resolve) => { release = resolve; });
+    const api = { ...fakeApi(users), activateKey: async (id, version) => { await gate; return { data: { ...conversationFor(users, version), rotation_required: false } }; } };
+    await loadDirectory(api, owner.session, '42');
+
+    const pending = distributeKey(api, owner.session, conversationFor(users));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    owner.session.lock();
+    release();
+    await pending;
+
+    assert.equal(owner.session.conversationKeys.size, 0);
+});
+
+test('rememberConversationKey refuses and wipes keys for a locked or newer session', () => {
+    const session = new ChatSession('1');
+    const key = new Uint8Array(32).fill(9);
+    assert.equal(session.rememberConversationKey('42', 1, key), false);
+    assert.ok(key.every((byte) => byte === 0));
+});

@@ -17,12 +17,15 @@ it('downloads only the authenticated users allowlisted data without secrets', fu
         'two_factor_recovery_codes' => 'private-codes']);
     $other = User::factory()->create();
     $response = $this->actingAs($owner)->get(route('account.export'))
-        ->assertOk()->assertDownload('oasis-konto.json')->assertHeader('Content-Type', 'application/json');
-    $data = json_decode($response->streamedContent(), true, flags: JSON_THROW_ON_ERROR);
-    expect($data['email'])->toBe($owner->email)->not->toBe($other->email);
-    expect(array_keys($data))->toBe(['id', 'display_name', 'username', 'email', 'birth_date',
+        ->assertOk()->assertDownload('oasis-daten.zip')->assertHeader('Content-Type', 'application/zip');
+    $zip = new ZipArchive;
+    $zip->open($response->getFile()->getPathname());
+    $json = $zip->getFromName('oasis-daten.json');
+    $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
+    expect($data['konto']['email'])->toBe($owner->email)->not->toBe($other->email);
+    expect(array_keys($data['konto']))->toBe(['id', 'display_name', 'username', 'email', 'birth_date',
         'email_verified_at', 'terms_accepted_at', 'trial_ends_at', 'created_at', 'updated_at']);
-    expect($response->streamedContent())->not->toContain('private-secret', 'private-codes', $other->username);
+    expect($json)->not->toContain('private-secret', 'private-codes', $other->username);
 });
 
 it('requires authentication for export and deletion', function () {

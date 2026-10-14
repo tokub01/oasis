@@ -27,6 +27,8 @@ class SendMessage
             ConversationKeys::lockUsers([$sender->id]);
             $conversation = Conversation::query()->lockForUpdate()->findOrFail($conversation->id);
             $conversation->requireMember($sender);
+            abort_if($conversation->activeMembers()->whereIn('user_id', $sender->blockedUserIds(true))->exists(),
+                403, 'Mit blockierten Personen können keine Nachrichten ausgetauscht werden.');
             abort_unless(! $conversation->rotation_required && $conversation->key_version === (int) $envelope['key_version'],
                 409, 'Bitte warte auf den neuen Chat-Schlüssel.');
             $expiry = CarbonImmutable::parse($envelope['expires_at']);

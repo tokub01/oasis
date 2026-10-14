@@ -46,7 +46,7 @@
 
     @if ($prefix)
         <div @class([
-            'flex min-h-[52px] items-center overflow-hidden rounded-[14px] border-[1.5px] bg-field focus-within:outline-3 focus-within:outline-offset-3 focus-within:outline-spring',
+            'flex min-h-[52px] items-center overflow-hidden rounded-[14px] border-[1.5px] bg-field focus-within:outline-3 focus-within:outline-offset-3 focus-within:outline-spring-text',
             'border-sun-text' => $hasError,
             'border-field-line' => ! $hasError,
         ])>

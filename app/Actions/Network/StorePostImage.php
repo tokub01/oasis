@@ -20,11 +20,25 @@ class StorePostImage
     /** Longest edge in pixels after scaling. */
     public const MAX_EDGE = 2048;
 
+    /** Input bounds apply before GD allocates the decoded bitmap. */
+    public const MAX_INPUT_EDGE = 12000;
+
+    public const MAX_INPUT_PIXELS = 40_000_000;
+
     private const QUALITY = 82;
 
     /** @throws ValidationException if the file cannot be decoded as an image */
     public function handle(Post $post, UploadedFile $file, string $alt, int $position): PostImage
     {
+        $dimensions = @getimagesize($file->getRealPath());
+        if ($dimensions === false) {
+            throw ValidationException::withMessages(["images.$position" => 'Dieses Bild können wir nicht lesen.']);
+        }
+        if ($dimensions[0] > self::MAX_INPUT_EDGE || $dimensions[1] > self::MAX_INPUT_EDGE
+            || $dimensions[0] * $dimensions[1] > self::MAX_INPUT_PIXELS) {
+            throw ValidationException::withMessages(["images.$position" => 'Ein Bild darf höchstens 40 Megapixel und 12000 Pixel pro Kante haben.']);
+        }
+
         $source = @imagecreatefromstring((string) file_get_contents($file->getRealPath()));
         if ($source === false) {
             throw ValidationException::withMessages(["images.$position" => 'Dieses Bild können wir nicht lesen.']);

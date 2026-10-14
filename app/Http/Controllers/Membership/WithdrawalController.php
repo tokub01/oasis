@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use Stripe\Exception\ApiErrorException;
 
 /**
  * Controller for statutory 14-day contract withdrawals (§ 355, 356 BGB).
@@ -59,7 +60,10 @@ class WithdrawalController extends Controller
             return redirect()->route('app.membership')
                 ->with('error', $e->getMessage());
         } catch (\Throwable $e) {
-            Log::error('Withdrawal error: '.$e->getMessage());
+            Log::error('Withdrawal error.', [
+                'exception_class' => $e::class,
+                'provider_code' => $e instanceof ApiErrorException ? $e->getStripeCode() : null,
+            ]);
 
             return redirect()->route('app.membership')
                 ->with('error', 'Dein Widerruf konnte leider nicht verarbeitet werden. Bitte versuche es später noch einmal.');

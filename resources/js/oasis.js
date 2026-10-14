@@ -32,7 +32,7 @@ modules.pricing = (root) => {
     toggle.hidden = false;
 };
 
-// --- Profil: share the profile link ------------------------------------------
+// --- Profil / Einladungen: share or copy a link ------------------------------
 // The button is rendered `hidden` and only shown when sharing or copying works.
 modules.share = (button) => {
     const url = button.dataset.url;
@@ -47,6 +47,22 @@ modules.share = (button) => {
             } else {
                 await navigator.clipboard.writeText(url);
                 button.setAttribute("aria-label", "Link kopiert");
+                const label = button.querySelector ? button.querySelector("[data-share-label]") : null;
+                if (label) {
+                    const original = label.textContent;
+                    label.textContent = "Kopiert!";
+                    setTimeout(() => {
+                        label.textContent = original;
+                        button.setAttribute("aria-label", original);
+                    }, 2000);
+                } else if (button.innerHTML !== undefined && button.innerHTML) {
+                    const originalHtml = button.innerHTML;
+                    button.innerHTML = '<span class="text-xs font-bold text-spring-text">Kopiert!</span>';
+                    setTimeout(() => {
+                        button.innerHTML = originalHtml;
+                        button.setAttribute("aria-label", "Profil teilen");
+                    }, 2000);
+                }
             }
         } catch {
             // The person cancelled the share sheet; nothing to do.

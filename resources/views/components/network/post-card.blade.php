@@ -140,10 +140,16 @@
                 </form>
             @endcan
             @can('delete', $post)
-                <form method="POST" action="{{ route('network.posts.destroy', $post) }}">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Löschen</button>
-                </form>
+                <details class="relative inline-block">
+                    <summary class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Löschen</summary>
+                    <div class="absolute right-0 bottom-full z-10 mb-2 flex flex-col gap-2 rounded-2xl border border-paper-line bg-paper p-3 shadow-lg text-xs whitespace-nowrap">
+                        <span class="font-bold text-night">Wirklich löschen?</span>
+                        <form method="POST" action="{{ route('network.posts.destroy', $post) }}">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="o-btn o-btn-sm bg-sun text-sun-ink text-xs font-bold w-full">Löschen bestätigen</button>
+                        </form>
+                    </div>
+                </details>
             @else
                 @if ($viewer && $viewer->id !== $post->author->id)
                     @if ($viewer->hasMuted($post->author))
@@ -157,10 +163,17 @@
                             <button type="submit" class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Stumm</button>
                         </form>
                     @endif
-                    <form method="POST" action="{{ route('safety.block.store', $post->author) }}">
-                        @csrf
-                        <button type="submit" class="o-link cursor-pointer border-none bg-transparent px-2 text-sm text-muted">Blockieren</button>
-                    </form>
+                    <details class="relative inline-block">
+                        <summary class="o-link cursor-pointer border-none bg-transparent px-2 text-sm text-muted">Blockieren</summary>
+                        <div class="absolute right-0 bottom-full z-10 mb-2 flex flex-col gap-2 rounded-2xl border border-paper-line bg-paper p-3 shadow-lg text-xs whitespace-nowrap">
+                            <span class="font-bold text-night">Wirklich blockieren?</span>
+                            <span class="text-ink-2 max-w-[200px] whitespace-normal">Ihr verliert gegenseitige Follows.</span>
+                            <form method="POST" action="{{ route('safety.block.store', $post->author) }}">
+                                @csrf
+                                <button type="submit" class="o-btn o-btn-sm bg-night text-on-night text-xs font-bold w-full">Blockieren bestätigen</button>
+                            </form>
+                        </div>
+                    </details>
                     <a href="{{ route('oasis.melden', ['url' => $postUrl]) }}" class="o-link px-2 text-sm">Melden</a>
                 @elseif ($viewer)
                     <a href="{{ route('oasis.melden', ['url' => $postUrl]) }}" class="o-link px-2 text-sm">Melden</a>

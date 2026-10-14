@@ -115,7 +115,7 @@
 
         <section aria-labelledby="daten-titel" class="{{ $card }}">
             <h2 id="daten-titel" class="{{ $h2 }}">Deine Daten</h2>
-            <p class="m-0 text-ink-2">Lade alle Daten herunter, die wir zu deinem Konto speichern, als JSON-Datei.</p>
+            <p class="m-0 text-ink-2">Lade deine Daten herunter: Konto, Profil, Tropfen mit Bildern, wem du folgst, Oasen und Gemerktes – als ZIP-Datei. Verschlüsselte Chat-Nachrichten können wir nicht lesen und deshalb nicht exportieren.</p>
             <a href="{{ route('account.export') }}" class="o-btn o-btn-md o-btn-outline self-start">Daten herunterladen</a>
         </section>
 

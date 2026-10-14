@@ -8,6 +8,7 @@ use App\Services\Membership\StripeMembershipService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Stripe\Exception\ApiErrorException;
 
 /**
  * Controller for redeeming a gift membership voucher on the user's account.
@@ -37,7 +38,10 @@ class GiftRedemptionController extends Controller
             return redirect()->route('app.membership')
                 ->withErrors(['code' => $e->getMessage()]);
         } catch (\Throwable $e) {
-            Log::error('Gift redemption error: '.$e->getMessage());
+            Log::error('Gift redemption error.', [
+                'exception_class' => $e::class,
+                'provider_code' => $e instanceof ApiErrorException ? $e->getStripeCode() : null,
+            ]);
 
             return redirect()->route('app.membership')
                 ->withErrors(['code' => 'Der Gutschein konnte leider nicht eingelöst werden. Bitte prüfe deine Eingabe oder wende dich an den Support.']);

@@ -39,6 +39,10 @@
                     <p class="m-0 text-lg text-ink-2">Keine Zahlungsdaten. Der Test endet von selbst.</p>
                 </div>
 
+                @if (session('status'))
+                    <p role="status" class="m-0 rounded-2xl bg-dune px-[18px] py-3.5 text-base leading-normal text-ink">{{ session('status') }}</p>
+                @endif
+
                 @if ($errors->any())
                     <p role="alert" class="o-error m-0 rounded-2xl border border-sun-text px-[18px] py-3.5">Bitte prüfe die markierten Felder.</p>
                 @endif

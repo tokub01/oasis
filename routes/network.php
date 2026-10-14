@@ -42,6 +42,8 @@ Route::name('network.')->group(function () {
         Route::post('/app/oasen', [OasisController::class, 'store'])->name('oases.store');
         Route::get('/oasen/{oasis}/bearbeiten', [OasisController::class, 'edit'])->name('oases.edit');
         Route::put('/oasen/{oasis}', [OasisController::class, 'update'])->name('oases.update');
+        Route::get('/oasen/{oasis}/schliessen', [OasisController::class, 'confirmClose'])->name('oases.close');
+        Route::delete('/oasen/{oasis}', [OasisController::class, 'destroy'])->name('oases.destroy');
         Route::put('/oasen/{oasis}/mitglieder/{user:username}', [OasisController::class, 'setRole'])
             ->withoutScopedBindings()->name('oases.role');
         Route::get('/oasen/{oasis}/statistik', [OasisController::class, 'stats'])->name('oases.stats');

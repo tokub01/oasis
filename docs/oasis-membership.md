@@ -172,3 +172,17 @@ Aggregierte Abfragen aus lokalen Datenbanktabellen, keine API-Netzwerkaufrufe, k
 | `foundingSeatsRemaining()` | `int` | Verbleibende Gründungsplätze |
 | `giftsSold(CarbonInterface $from, CarbonInterface $to)` | `int` | Verkaufte Geschenk-Gutscheine |
 | `giftsRedeemed(CarbonInterface $from, CarbonInterface $to)` | `int` | Eingelöste Geschenk-Gutscheine |
+
+## Stage 9: paid, idempotent gift fulfillment and payment logs
+
+Gift Checkout completion issues a voucher only when `payment_status` is exactly `paid` and a Checkout Session ID
+is present. Delayed SEPA payments are fulfilled on `checkout.session.async_payment_succeeded`;
+`checkout.session.async_payment_failed` is acknowledged without creating a voucher or logging purchaser metadata.
+A unique database index on `gift_memberships.stripe_checkout_session_id` and Laravel's `firstOrCreate` recovery
+prevent duplicate vouchers from retries or competing inserts. Existing vouchers without a Stripe session remain
+valid; non-null duplicate session IDs must be reconciled before applying the unique-index migration.
+
+Unexpected payment failures log only the exception class and provider error code, never the raw exception message
+or response body. Domain errors remain translated user-facing messages. Password reset link requests additionally
+have a six-per-minute IP budget; account-specific broker throttling and neutral known/unknown-address responses
+remain in place.

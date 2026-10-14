@@ -136,6 +136,7 @@ export async function openGrants(api, session, conversation) {
     if (!owner) {
         return [];
     }
+    const generation = session.generation;
     const { data: grants } = await api.keyGrants(conversation.id);
     const versions = [];
     for (const grant of grants) {
@@ -149,8 +150,9 @@ export async function openGrants(api, session, conversation) {
                 || opened.granterId !== conversation.created_by) {
                 throw new InvalidKeyGrantError();
             }
-            session.rememberConversationKey(conversation.id, opened.keyVersion, opened.conversationKey);
-            versions.push(opened.keyVersion);
+            if (session.rememberConversationKey(conversation.id, opened.keyVersion, opened.conversationKey, generation)) {
+                versions.push(opened.keyVersion);
+            }
         } catch (error) {
             if (!(error instanceof InvalidKeyGrantError)) {
                 throw error;
@@ -173,6 +175,7 @@ export async function distributeKey(api, session, conversation) {
     if (missing.length > 0) {
         throw new MissingMemberKeysError(missing.map((member) => member.username));
     }
+    const generation = session.generation;
     const key = await createConversationKey();
     const grants = [];
     for (const member of conversation.members) {
@@ -188,7 +191,8 @@ export async function distributeKey(api, session, conversation) {
     }
     await api.storeKeyGrants(conversation.id, conversation.key_version, grants);
     const { data } = await api.activateKey(conversation.id, conversation.key_version);
-    session.rememberConversationKey(conversation.id, conversation.key_version, key);
+    // Locked meanwhile: the key is wiped instead of being kept (the grants on the server stay encrypted).
+    session.rememberConversationKey(conversation.id, conversation.key_version, key, generation);
     return data;
 }
 

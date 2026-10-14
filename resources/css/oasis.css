@@ -76,8 +76,13 @@
     }
 
     :is(a, button, input, select, textarea, summary):focus-visible {
-        outline: 3px solid var(--color-spring);
+        outline: 3px solid var(--color-spring-text);
         outline-offset: 3px;
+    }
+
+    :is(.bg-night, .bg-night-2, .text-on-night, [class*="bg-night"]) :is(a, button, input, select, textarea, summary):focus-visible,
+    :is(a, button, input, select, textarea, summary):is(.bg-night, .bg-night-2, .text-on-night, [class*="bg-night"]):focus-visible {
+        outline-color: var(--color-spring);
     }
 
     summary {

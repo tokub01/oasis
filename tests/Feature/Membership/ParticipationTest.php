@@ -132,7 +132,7 @@ test('read-only accounts with expired trial can still export and delete their ac
     $this->actingAs($user)
         ->get(route('account.export'))
         ->assertOk()
-        ->assertHeader('content-type', 'application/json');
+        ->assertHeader('content-type', 'application/zip');
 
     // Delete confirmation remains accessible (password confirmation route)
     $this->actingAs($user)

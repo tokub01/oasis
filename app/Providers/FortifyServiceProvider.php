@@ -11,7 +11,9 @@ use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -73,6 +75,14 @@ class FortifyServiceProvider extends ServiceProvider
 
             return Limit::perMinute(5)->by((is_string($login) ? Str::lower(trim($login)) : '').'|'.$request->ip());
         });
+        // Fortify has no reset-link limiter setting; matching also covers cached routes.
+        Event::listen(RouteMatched::class, function (RouteMatched $event): void {
+            if ($event->route->getName() === 'password.email') {
+                $event->route->middleware('throttle:password-reset');
+            }
+        });
+
+        RateLimiter::for('password-reset', fn (Request $request) => Limit::perMinute(6)->by($request->ip()));
         RateLimiter::for('registration', fn (Request $request) => Limit::perMinute(6)->by($request->ip()));
         RateLimiter::for('two-factor', fn (Request $request) => Limit::perMinute(5)
             ->by($request->session()->get('login.id').'|'.$request->ip()));

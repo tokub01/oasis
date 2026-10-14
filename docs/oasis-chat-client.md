@@ -79,3 +79,13 @@ Run JS tests with `./vendor/bin/sail node --test tests/js/chat/*.test.mjs`.
 - The chat bundle includes libsodium (≈ 660 kB, 225 kB gzip); it is only loaded on the chat page.
 - Verified safety numbers are not remembered (nothing on the device, and the server must not vouch for them).
 - No unread counts, typing or read receipts (by design in this stage).
+
+## Locking (stage 9)
+
+- `ConversationView::close()` (called on "Sperren", `pagehide`, idle lock and every screen change) also removes the
+  rendered messages, notices, title and the unsent draft from the page; the report dialog forgets its quote.
+- `ChatSession::generation` increases on every lock. Key distribution and opening grants capture it before their
+  first request and may only keep a key if it is unchanged – a key arriving after locking is wiped
+  (`rememberConversationKey` returns false). Results of history loads and realtime messages for a closed
+  conversation are dropped (`ConversationView::isCurrent`).
+- Tests: `tests/js/chat/client.test.mjs` (stale generation), `tests/js/chat/view-lock.test.mjs` (page cleared).

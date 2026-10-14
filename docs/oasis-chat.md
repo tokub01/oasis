@@ -140,3 +140,14 @@ No attachments, voice, read receipts, typing, push or per-message forward secrec
 can decrypt retained ciphertext of that version. Metadata remains visible; web-delivered crypto and the design require
 an external security review before launch.
 
+
+## Stage 9: blocks in existing conversations
+
+Sending is refused with 403 whenever the sender and any active conversation member have blocked each other.
+This applies to existing direct and group conversations; no message is stored or broadcast. A block between two
+other members does not prevent an uninvolved sender from writing. Departed members do not affect this send check.
+
+History excludes blocked senders before the 50-message cursor page is selected, preserving full pages and valid
+cursors. Exact-username chat discovery also hides blocked accounts in either direction. The historical public-key
+directory remains available to active members for verification of old signatures. Blocking cannot erase ciphertext
+or keys already obtained by a client.

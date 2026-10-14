@@ -7,6 +7,7 @@ use App\Services\Membership\StripeMembershipService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Stripe\Exception\ApiErrorException;
 
 /**
  * Controller redirecting authenticated members to the Stripe Customer Portal
@@ -31,7 +32,10 @@ class PortalController extends Controller
 
             return redirect()->away($url);
         } catch (\Throwable $e) {
-            Log::error('Stripe billing portal loading failed: '.$e->getMessage());
+            Log::error('Stripe billing portal loading failed.', [
+                'exception_class' => $e::class,
+                'provider_code' => $e instanceof ApiErrorException ? $e->getStripeCode() : null,
+            ]);
 
             return redirect()->route('app.membership')
                 ->with('error', 'Das Kundenportal konnte leider nicht geladen werden. Bitte versuche es später noch einmal.');

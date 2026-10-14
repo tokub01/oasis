@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Stripe\Exception\ApiErrorException;
 
 /**
  * Controller handling the checkout initiation from /mitglied-werden.
@@ -57,7 +58,10 @@ class CheckoutController extends Controller
 
             return redirect()->away($checkoutUrl);
         } catch (\Throwable $e) {
-            Log::error('Stripe checkout initiation failed: '.$e->getMessage());
+            Log::error('Stripe checkout initiation failed.', [
+                'exception_class' => $e::class,
+                'provider_code' => $e instanceof ApiErrorException ? $e->getStripeCode() : null,
+            ]);
 
             return redirect()->route('oasis.mitglied')
                 ->with('error', 'Der Bezahlvorgang konnte leider nicht gestartet werden. Bitte versuche es später noch einmal.');

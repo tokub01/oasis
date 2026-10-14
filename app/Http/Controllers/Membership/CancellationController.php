@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use Stripe\Exception\ApiErrorException;
 
 /**
  * Controller for member subscription cancellations complying with § 312k BGB button flow:
@@ -58,7 +59,10 @@ class CancellationController extends Controller
             return redirect()->route('app.membership')
                 ->with('error', $e->getMessage());
         } catch (\Throwable $e) {
-            Log::error('Cancellation error: '.$e->getMessage());
+            Log::error('Cancellation error.', [
+                'exception_class' => $e::class,
+                'provider_code' => $e instanceof ApiErrorException ? $e->getStripeCode() : null,
+            ]);
 
             return redirect()->route('app.membership')
                 ->with('error', 'Deine Kündigung konnte leider nicht verarbeitet werden. Bitte versuche es später noch einmal.');

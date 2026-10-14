@@ -3,6 +3,7 @@
 namespace App\Actions\Network;
 
 use App\Enums\Network\Visibility;
+use App\Events\Network\PostPublished;
 use App\Models\Oasis;
 use App\Models\Post;
 use App\Models\User;
@@ -56,6 +57,8 @@ class PublishPost
             $post->delete();
             throw $failure;
         }
+
+        event(new PostPublished($post));
 
         return $post;
     }

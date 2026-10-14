@@ -16,6 +16,7 @@
     $canInteract = $viewer?->can('interact', $post) ?? false;
     $carried = $post->carried;
     $postUrl = route('network.posts.show', $post);
+    $bookmarked = $viewer && ($post->bookmarked ?? $viewer->hasBookmarked($post));
 @endphp
 
 <article id="tropfen-{{ $post->id }}" {{ $attributes->class('flex flex-col gap-3 rounded-[24px] border border-paper-line bg-paper p-[22px]') }}>
@@ -53,7 +54,7 @@
         <p class="m-0 rounded-2xl bg-dune px-4 py-3 text-sm">Die Gastgeber:innen haben diesen Tropfen aus der Oase entfernt. Nur du siehst ihn noch.</p>
     @endif
 
-    <p class="m-0 text-[17px] leading-[1.55] whitespace-pre-line break-words">{{ $post->body }}</p>
+    <p class="m-0 text-[17px] leading-[1.55] whitespace-pre-line break-words"><x-network.rich-text :text="$post->body" /></p>
 
     @if ($post->images->isNotEmpty())
         <div @class(['grid gap-2', 'grid-cols-2' => $post->images->count() > 1])>
@@ -67,10 +68,11 @@
 
     @if ($post->carried_post_id !== null)
         @if ($carried && $carried->isVisibleTo($viewer))
-            <a href="{{ route('network.posts.show', $carried) }}" class="flex flex-col gap-1 rounded-2xl border border-dune-line p-4 text-ink no-underline">
-                <span class="text-sm font-bold text-night">{{ $carried->author->display_name }} <span class="font-medium text-muted">{{ '@'.$carried->author->username }}</span></span>
-                <span class="line-clamp-4 whitespace-pre-line">{{ $carried->body }}</span>
-            </a>
+            {{-- No outer link: the text may contain @/# links, and links must not be nested. --}}
+            <div class="flex flex-col gap-1 rounded-2xl border border-dune-line p-4 text-ink">
+                <a href="{{ route('network.posts.show', $carried) }}" class="text-sm font-bold text-night no-underline">{{ $carried->author->display_name }} <span class="font-medium text-muted">{{ '@'.$carried->author->username }}</span></a>
+                <span class="line-clamp-4 whitespace-pre-line"><x-network.rich-text :text="$carried->body" /></span>
+            </div>
         @else
             <p class="m-0 rounded-2xl border border-dashed border-dune-line p-4 text-sm text-muted">Dieser Tropfen ist nicht mehr verfügbar.</p>
         @endif
@@ -110,6 +112,26 @@
             <span class="text-sm">Antworten und Reagieren nur für Mitglieder · <a href="{{ route('register') }}" class="text-night underline underline-offset-4">{{ config('oasis.trial_days') }} Tage testen</a></span>
         @endif
 
+        @if ($viewer)
+            @if ($bookmarked)
+                <form method="POST" action="{{ route('safety.bookmarks.destroy', $post) }}">
+                    @csrf @method('DELETE')
+                    <button type="submit" aria-pressed="true" aria-label="Aus Merkliste entfernen" title="Aus Merkliste entfernen" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-none bg-transparent px-3 text-spring-text">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="flex-none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                        <span>Gemerkt</span>
+                    </button>
+                </form>
+            @else
+                <form method="POST" action="{{ route('safety.bookmarks.store', $post) }}">
+                    @csrf
+                    <button type="submit" aria-pressed="false" aria-label="Tropfen merken" title="Tropfen merken" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-none bg-transparent px-3 text-night">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="flex-none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                        <span>Merken</span>
+                    </button>
+                </form>
+            @endif
+        @endif
+
         <span class="ml-auto flex flex-wrap items-center gap-1.5">
             @can('removeFromOasis', $post)
                 <form method="POST" action="{{ route('network.posts.remove', $post) }}">
@@ -122,8 +144,27 @@
                     @csrf @method('DELETE')
                     <button type="submit" class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Löschen</button>
                 </form>
-            @elseif ($viewer)
-                <a href="{{ route('oasis.melden', ['url' => $postUrl]) }}" class="o-link px-2 text-sm">Melden</a>
+            @else
+                @if ($viewer && $viewer->id !== $post->author->id)
+                    @if ($viewer->hasMuted($post->author))
+                        <form method="POST" action="{{ route('safety.mute.destroy', $post->author) }}">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Nicht mehr stumm</button>
+                        </form>
+                    @else
+                        <form method="POST" action="{{ route('safety.mute.store', $post->author) }}">
+                            @csrf
+                            <button type="submit" class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Stumm</button>
+                        </form>
+                    @endif
+                    <form method="POST" action="{{ route('safety.block.store', $post->author) }}">
+                        @csrf
+                        <button type="submit" class="o-link cursor-pointer border-none bg-transparent px-2 text-sm text-muted">Blockieren</button>
+                    </form>
+                    <a href="{{ route('oasis.melden', ['url' => $postUrl]) }}" class="o-link px-2 text-sm">Melden</a>
+                @elseif ($viewer)
+                    <a href="{{ route('oasis.melden', ['url' => $postUrl]) }}" class="o-link px-2 text-sm">Melden</a>
+                @endif
             @endcan
         </span>
     </footer>

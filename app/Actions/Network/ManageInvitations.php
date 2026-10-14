@@ -2,6 +2,8 @@
 
 namespace App\Actions\Network;
 
+use App\Actions\Notifications\SendHint;
+use App\Enums\Notifications\NoticeKind;
 use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Support\Str;
@@ -50,6 +52,10 @@ class ManageInvitations
         $invitation->forceFill(['accepted_by' => $member->id, 'accepted_at' => now()])->save();
         $this->follows->follow($member, $invitation->inviter);
         $this->follows->follow($invitation->inviter, $member);
+
+        app(SendHint::class)->handle($invitation->inviter, $member,
+            NoticeKind::Invitation, 'invitation:'.$invitation->id,
+            ids: ['invitation_id' => $invitation->id]);
 
         return true;
     }

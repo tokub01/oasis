@@ -11,13 +11,15 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
-/** Stage 2 core network: posting budget and accepting an invitation link right after registration. */
+/** Stage 2 core network: posting and search budgets, accepting an invitation link right after registration. */
 class NetworkServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
         // Generous for people, tight enough to stop scripted flooding.
         RateLimiter::for('network-posts', fn (Request $request) => Limit::perMinute(10)->by('network-posts:'.$request->user()?->id));
+        // Search runs LIKE/REGEXP over Tropfen: bounded per account (guests per IP) so it cannot be used to load the DB.
+        RateLimiter::for('search', fn (Request $request) => Limit::perMinute(30)->by('search:'.($request->user()?->id ?? $request->ip())));
 
         // InvitationController::show remembers the token in the session; the new account accepts it on sign-up.
         Event::listen(Registered::class, function (Registered $event): void {

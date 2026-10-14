@@ -89,6 +89,12 @@ class Post extends Model
         return $this->hasMany(Reaction::class);
     }
 
+    /** @return HasMany<Bookmark, $this> */
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(Bookmark::class);
+    }
+
     /**
      * Restrict a query to the Tropfen a viewer (null = guest) may read.
      *
@@ -106,6 +112,9 @@ class Post extends Model
 
     public function isVisibleTo(?User $viewer): bool
     {
+        if ($viewer !== null && in_array($this->user_id, $viewer->blockedUserIds(), true)) {
+            return false;
+        }
         if ($viewer !== null && $viewer->id === $this->user_id) {
             return true;
         }

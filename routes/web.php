@@ -18,3 +18,10 @@ require __DIR__.'/membership.php';
 
 // Stage 6: admin statistics, transparency reports and member votes.
 require __DIR__.'/admin.php';
+
+// Stage 8: search and #Thema pages.
+require __DIR__.'/search.php';
+
+require __DIR__.'/notifications.php';
+
+require __DIR__.'/safety.php';

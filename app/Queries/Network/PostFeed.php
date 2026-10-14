@@ -50,6 +50,23 @@ class PostFeed
             ->whereHas('author.profile', fn (Builder $profile) => $profile->where('visibility', 'public')), $viewer);
     }
 
+    /** Search: Tropfen (also replies) whose text contains the term, newest first. LIKE wildcards are escaped. */
+    public function matching(string $term, ?User $viewer): CursorPaginator
+    {
+        return $this->paginate($viewer, Post::query()->where('body', 'like', '%'.self::escapeLike($term).'%'));
+    }
+
+    /**
+     * Tropfen carrying a #Thema, newest first. Matched as a whole word, case-insensitive, so "#garten" finds neither
+     * "#gartenzaun" nor an e-mail-like "a#garten".
+     */
+    public function tagged(string $tag, ?User $viewer): CursorPaginator
+    {
+        $pattern = '(^|[^[:alnum:]_])#'.preg_quote(mb_strtolower($tag), '/').'([^[:alnum:]_]|$)';
+
+        return $this->paginate($viewer, Post::query()->whereRaw('LOWER(body) REGEXP ?', [$pattern]));
+    }
+
     /**
      * Replies to a Tropfen, oldest first (a conversation reads top-down).
      *
@@ -57,7 +74,9 @@ class PostFeed
      */
     public function replies(Post $post, ?User $viewer): Collection
     {
-        return $this->withCardData(Post::query()->where('reply_to_id', $post->id)->visibleTo($viewer), $viewer)
+        $query = Post::query()->where('reply_to_id', $post->id)->visibleTo($viewer);
+
+        return $this->withCardData($this->filterSafety($query, $viewer), $viewer)
             ->orderBy('id')->limit(200)->get();
     }
 
@@ -67,8 +86,34 @@ class PostFeed
      */
     private function paginate(?User $viewer, Builder $query, ?User $reactor = null): CursorPaginator
     {
-        return $this->withCardData($query->visibleTo($viewer), $reactor ?? $viewer)
+        $actor = $reactor ?? $viewer;
+
+        return $this->withCardData($this->filterSafety($query->visibleTo($viewer), $actor), $actor)
             ->orderByDesc('id')->cursorPaginate(self::PER_PAGE);
+    }
+
+    /** Exclude posts from blocked users (bidirectional) and muted users (for this viewer). */
+    private function filterSafety(Builder $query, ?User $viewer): Builder
+    {
+        if ($viewer === null) {
+            return $query;
+        }
+
+        if (! empty($blocked = $viewer->blockedUserIds())) {
+            $query->whereNotIn('posts.user_id', $blocked);
+        }
+
+        if (! empty($muted = $viewer->mutedUserIds())) {
+            $query->whereNotIn('posts.user_id', $muted);
+        }
+
+        return $query;
+    }
+
+    /** Escape `%`, `_` and `\` so user input is matched literally in LIKE. */
+    public static function escapeLike(string $value): string
+    {
+        return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
     }
 
     /**
@@ -82,6 +127,7 @@ class PostFeed
             ->withCount(['reactions', 'replies'])
             ->when($viewer !== null, fn (Builder $mine) => $mine->withExists([
                 'reactions as reacted' => fn (Builder $reaction) => $reaction->where('user_id', $viewer->id),
+                'bookmarks as bookmarked' => fn (Builder $bookmark) => $bookmark->where('user_id', $viewer->id),
             ]));
     }
 }

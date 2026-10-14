@@ -6,7 +6,7 @@
     Variables:
       title   string       page title (suffix " · Oasis" is added)
       active  string|null  key of the current navigation item: quelle|entdecken|oasen|nachrichten|profil, or of an
-                           account page: einstellungen|mitgliedschaft|zahlen|einladen|abstimmungen|moderation
+                           account page: hinweise|gemerkt|einstellungen|mitgliedschaft|zahlen|einladen|sicherheit|abstimmungen|moderation
       wide    bool         wider main column for pages with a side column (Quelle), default false
     Stack 'scripts': page-specific Vite entries in <head> (e.g. the chat page).
 
@@ -26,16 +26,21 @@
     ];
     // Account pages: below the main sections on desktop, in the "Mehr" menu on phones.
     $more = [
+        'hinweise' => ['Hinweise', route('notifications.index')],
+        'gemerkt' => ['Gemerkt', route('safety.bookmarks')],
         'einstellungen' => ['Einstellungen', route('app.settings')],
         'mitgliedschaft' => ['Mitgliedschaft', route('app.membership')],
         'zahlen' => ['Deine Zahlen', route('network.stats')],
         'einladen' => ['Menschen einladen', route('network.invitations.index')],
+        'sicherheit' => ['Blockiert & stumm', route('safety.index')],
         'abstimmungen' => ['Abstimmungen', route('app.votes')],
     ];
     // Staff (moderators, admins) get a link to the moderation area; the `staff` middleware still checks 2FA.
     if ($user?->role?->isStaff()) {
         $more['moderation'] = ['Moderation', route('moderation.index')];
     }
+    // Calm indicator for unread hints: a small dot, never a red counter.
+    $hasUnread = $user?->unreadNotifications()->exists() ?? false;
     $trialDaysLeft = $user?->trial_ends_at?->isFuture()
         ? (int) ceil(now()->diffInDays($user->trial_ends_at))
         : null;
@@ -63,6 +68,16 @@
                     <x-oasis.logo :size="36" />
                 </a>
 
+                {{-- Search: a field in the sidebar from 1024px, an icon link on phones (next to "Mehr"). --}}
+                <form method="GET" action="{{ route('search.index') }}" role="search" class="hidden lg:block">
+                    <label for="app-search" class="sr-only">Suchen</label>
+                    <input id="app-search" type="search" name="q" maxlength="100" placeholder="Suchen …" value="{{ request()->routeIs('search.index') ? request('q') : '' }}"
+                           class="o-input min-h-11 w-full py-2">
+                </form>
+                <a href="{{ route('search.index') }}" aria-label="Suchen" class="ml-auto flex min-h-11 min-w-11 items-center justify-center rounded-full text-night lg:hidden">
+                    <x-oasis.icon name="search" :size="22" />
+                </a>
+
                 <nav aria-label="App-Navigation"
                      class="fixed inset-x-0 bottom-0 z-20 border-t border-dune-line bg-paper pb-[env(safe-area-inset-bottom)] lg:static lg:border-0 lg:bg-transparent lg:pb-0">
                     <ul class="m-0 flex list-none justify-around p-0 lg:flex-col lg:justify-start lg:gap-1">
@@ -87,7 +102,7 @@
                     <ul class="m-0 flex list-none flex-col gap-1 p-0">
                         @foreach ($more as $key => [$label, $href])
                             <li><a href="{{ $href }}" @if ($active === $key) aria-current="page" @endif
-                                   @class(['flex min-h-11 items-center rounded-xl px-4 no-underline', 'font-bold text-night bg-dune' => $active === $key, 'text-ink-2' => $active !== $key])>{{ $label }}</a></li>
+                                   @class(['flex min-h-11 items-center gap-2 rounded-xl px-4 no-underline', 'font-bold text-night bg-dune' => $active === $key, 'text-ink-2' => $active !== $key])>{{ $label }}@if ($key === 'hinweise' && $hasUnread)<span class="size-2 rounded-full bg-spring" aria-hidden="true"></span><span class="sr-only">(neue Hinweise)</span>@endif</a></li>
                         @endforeach
                     </ul>
                 </nav>
@@ -99,12 +114,13 @@
 
                 {{-- Phones: the same account pages and logout in a "Mehr" disclosure (works without JavaScript). --}}
                 <details class="relative lg:hidden">
-                    <summary class="flex min-h-11 cursor-pointer list-none items-center rounded-full border border-dune-line px-4 font-bold text-night">Mehr</summary>
+                    <summary class="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-full border border-dune-line px-4 font-bold text-night">Mehr
+                        @if ($hasUnread)<span class="size-2 rounded-full bg-spring" aria-hidden="true"></span><span class="sr-only">(neue Hinweise)</span>@endif</summary>
                     <div class="absolute right-0 z-30 mt-2 flex w-60 flex-col gap-1 rounded-2xl border border-dune-line bg-paper p-2 shadow-lg">
                         <nav aria-label="Konto">
                             <ul class="m-0 flex list-none flex-col gap-1 p-0">
                                 @foreach ($more as $key => [$label, $href])
-                                    <li><a href="{{ $href }}" @if ($active === $key) aria-current="page" @endif class="flex min-h-11 items-center rounded-xl px-3 text-night no-underline">{{ $label }}</a></li>
+                                    <li><a href="{{ $href }}" @if ($active === $key) aria-current="page" @endif class="flex min-h-11 items-center gap-2 rounded-xl px-3 text-night no-underline">{{ $label }}@if ($key === 'hinweise' && $hasUnread)<span class="size-2 rounded-full bg-spring" aria-hidden="true"></span><span class="sr-only">(neue Hinweise)</span>@endif</a></li>
                                 @endforeach
                             </ul>
                         </nav>

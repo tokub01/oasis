@@ -2,7 +2,9 @@
 
 namespace App\Actions\Network;
 
+use App\Actions\Notifications\SendHint;
 use App\Enums\Network\OasisRole;
+use App\Enums\Notifications\NoticeKind;
 use App\Models\Oasis;
 use App\Models\Post;
 use App\Models\User;
@@ -44,10 +46,20 @@ class ManageOasis
         if (! $oasis->isMember($member)) {
             throw ValidationException::withMessages(['role' => 'Nur Mitglieder der Oase können Gastgeber:in werden.']);
         }
+        if (auth()->user() instanceof User && auth()->user()->isBlockedWith($member)) {
+            throw ValidationException::withMessages(['role' => 'Rollen können für blockierte Personen nicht geändert werden.']);
+        }
         if ($role === OasisRole::Member && $oasis->isHost($member) && $oasis->hosts()->count() === 1) {
             throw ValidationException::withMessages(['role' => 'Eine Oase braucht mindestens eine Gastgeber:in.']);
         }
-        $oasis->members()->updateExistingPivot($member->id, ['role' => $role->value]);
+        // The conditional update also suppresses hints from concurrent, repeated promotions.
+        $changed = $oasis->members()->wherePivot('role', '!=', $role->value)
+            ->updateExistingPivot($member->id, ['role' => $role->value]);
+        if ($changed && $role === OasisRole::Host && auth()->user() instanceof User) {
+            app(SendHint::class)->handle($member, auth()->user(),
+                NoticeKind::Host, 'host:'.Str::uuid(),
+                ids: ['oasis_id' => $oasis->id]);
+        }
     }
 
     /** Host action: the Tropfen disappears from the oasis and from everyone's view except its author's. */

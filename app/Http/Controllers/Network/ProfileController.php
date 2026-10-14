@@ -27,6 +27,7 @@ class ProfileController extends Controller
             return $this->sample($handle);
         }
         $viewer = $request->user();
+        abort_if($viewer !== null && $viewer->isBlockedWith($user), 404);
         abort_unless($user->profileOrDefault()->isVisibleTo($viewer), 404);
 
         return view('app.network.profile.show', [

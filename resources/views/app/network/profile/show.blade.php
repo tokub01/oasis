@@ -30,16 +30,37 @@
                     @auth
                         @if ($isMe)
                             <a href="{{ route('network.profile.edit') }}" class="o-btn o-btn-md o-btn-outline">Profil bearbeiten</a>
-                        @elseif ($following)
-                            <form method="POST" action="{{ route('network.unfollow.user', $member) }}">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="o-btn o-btn-md o-btn-dark">Gefolgt · nicht mehr folgen</button>
-                            </form>
-                        @elseif (auth()->user()->can('participate'))
-                            <form method="POST" action="{{ route('network.follow.user', $member) }}">
-                                @csrf
-                                <button type="submit" class="o-btn o-btn-md o-btn-primary">Folgen</button>
-                            </form>
+                        @else
+                            <div class="flex flex-wrap items-center gap-2">
+                                @if ($following)
+                                    <form method="POST" action="{{ route('network.unfollow.user', $member) }}">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="o-btn o-btn-md o-btn-dark">Gefolgt · nicht mehr folgen</button>
+                                    </form>
+                                @elseif (auth()->user()->can('participate'))
+                                    <form method="POST" action="{{ route('network.follow.user', $member) }}">
+                                        @csrf
+                                        <button type="submit" class="o-btn o-btn-md o-btn-primary">Folgen</button>
+                                    </form>
+                                @endif
+
+                                @if (auth()->user()->hasMuted($member))
+                                    <form method="POST" action="{{ route('safety.mute.destroy', $member) }}">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="o-btn o-btn-md o-btn-outline">Nicht mehr stumm</button>
+                                    </form>
+                                @else
+                                    <form method="POST" action="{{ route('safety.mute.store', $member) }}">
+                                        @csrf
+                                        <button type="submit" class="o-btn o-btn-md o-btn-outline">Stummschalten</button>
+                                    </form>
+                                @endif
+
+                                <form method="POST" action="{{ route('safety.block.store', $member) }}">
+                                    @csrf
+                                    <button type="submit" class="o-btn o-btn-md o-btn-outline text-muted">Blockieren</button>
+                                </form>
+                            </div>
                         @endif
                     @endauth
                 </div>

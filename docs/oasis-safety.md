@@ -1,0 +1,99 @@
+# Oasis Safety Architecture (Stage 8)
+
+Blockieren, Stummschalten und private Merkliste für das Oasis-Netzwerk.
+
+## Grundsätze & Datenschutz
+
+- **Ruhig & ohne Suchtmechanik**: Keine Zähler-Badges für Merklisten, keine Push-Spirale, keine öffentlichen Zähler, wer was gemerkt hat.
+- **Leise Schutzmaßnahmen**: Blockierte oder stummgeschaltete Personen werden zu keinem Zeitpunkt benachrichtigt.
+- **Konsequente Nicht-Existenz**: Bei einer Blockade existieren die beiden Konten füreinander schlicht nicht mehr (404 Not Found für Profile und Tropfen).
+- **Vollständige Zugänglichkeit**: Funktioniert ohne JavaScript über Standard-Formulare mit CSRF-Schutz und barrierefreie HTML5-Elemente (`role="status"`, zugängliche Namen für Bildschirmleser).
+
+---
+
+## 1. Datenmodell (`database/migrations/2026_10_14_200000_create_safety_tables.php`)
+
+| Tabelle | Model | Felder & Fremdschlüssel | Zweck & Regeln |
+|---|---|---|---|
+| `blocks` | `App\Models\Block` | `id`, `user_id` (FK `users`, cascade), `blocked_user_id` (FK `users`, cascade), timestamps, Unique(`user_id`, `blocked_user_id`), Index(`blocked_user_id`, `user_id`) | Beidseitige Blockade: Konten sehen gegenseitig keine Tropfen, Antworten oder Profile (404), können sich nicht folgen, nicht interagieren, Rollen nicht ändern und keinen Chat starten. |
+| `mutes` | `App\Models\Mute` | `id`, `user_id` (FK `users`, cascade), `muted_user_id` (FK `users`, cascade), timestamps, Unique(`user_id`, `muted_user_id`), Index(`muted_user_id`) | Einseitige Stummschaltung: Tropfen der Person verschwinden aus Quelle, Entdecken, Oasen und Antworten des Betrachters. Profil bleibt aufrufbar. |
+| `bookmarks` | `App\Models\Bookmark` | `id`, `user_id` (FK `users`, cascade), `post_id` (FK `posts`, cascade), timestamps, Unique(`user_id`, `post_id`), Index(`user_id`, `created_at`) | Private Merkliste: Tropfen privat speichern/entfernen (nur für Mitglieder). Niemand sieht, wer was gemerkt hat (auch Autor:innen nicht). |
+
+Beim Löschen eines Kontos (`User::delete()`) kaskadieren alle Blöcke, Stummschaltungen und Lesezeichen automatisch über Datenbank-Fremdschlüssel (`ON DELETE CASCADE`).
+
+---
+
+## 2. Schnittstelle `App\Models\Concerns\HasSafety`
+
+Das Trait wird von `App\Models\User` verwendet und stellt standardisierte Methoden bereit:
+
+- `isBlockedWith(User $other): bool`: Prüft beidseitig, ob eine Blockade zwischen zwei Konten vorliegt.
+- `blockedUserIds(): array<int>`: Liefert alle Benutzer-IDs, mit denen eine Blockade in beliebiger Richtung besteht (gecached pro Request).
+- `mutedUserIds(): array<int>`: Liefert alle Benutzer-IDs, die dieses Konto stummgeschaltet hat (einseitig, gecached pro Request).
+- `hasBlocked(User $other): bool`: Prüft, ob dieses Konto ein anderes aktiv blockiert hat.
+- `hasMuted(User $other): bool`: Prüft, ob dieses Konto ein anderes stummgeschaltet hat.
+- `hasBookmarked(Post $post): bool`: Prüft, ob dieses Konto einen Tropfen gemerkt hat.
+- `clearSafetyCache(): void`: Setzt die In-Memory-Caches der Benutzer-IDs zurück (z. B. nach Mutationen).
+
+---
+
+## 3. Andockpunkte im Netzwerk & Chat
+
+1. **`App\Queries\Network\PostFeed`**:
+   - Alle Listen (`source`, `byAuthor`, `inOasis`, `discover`, `matching`, `tagged`, `replies`) filtern Tropfen von blockierten Benutzern (beidseitig) und stummgeschalteten Benutzern (für den Betrachter) über `filterSafety` aus (`whereNotIn('posts.user_id', ...)`).
+   - `withCardData` lädt die Lesezeichen-Präsenz (`bookmarks as bookmarked`) für den Betrachter optimiert via Subquery.
+
+2. **`App\Models\Post` & `App\Policies\PostPolicy`**:
+   - `Post::isVisibleTo(?User $viewer)` gibt `false` zurück, wenn zwischen Autor:in und Betrachter:in eine Blockade besteht.
+   - `PostPolicy::view` verweigert die Sichtbarkeit bei Blockaden.
+   - `PostPolicy::interact` verweigert Antworten, Weitertragen und Reaktionen bei Blockaden.
+
+3. **`App\Http\Controllers\Network\ProfileController`**:
+   - `show`: Gibt `404 Not Found` zurück, wenn zwischen Profilinhaber:in und Betrachter:in eine Blockade vorliegt.
+
+4. **`App\Actions\Network\ManageFollows`**:
+   - `follow`: Wirft `ValidationException`, wenn die Zielperson blockiert ist oder den Aufrufer blockiert hat.
+
+5. **`App\Actions\Network\ManageOasis`**:
+   - `setRole`: Wirft `ValidationException`, wenn zwischen agierendem Host und dem Mitglied eine Blockade vorliegt.
+
+6. **`App\Actions\Chat\ManageConversation`**:
+   - `create`: Wirft `ValidationException` (HTTP 422), wenn ein Mitglied blockiert ist.
+   - `membership`: Verweigert mit HTTP 422 das Hinzufügen von blockierten Konten zu Gruppenchats.
+
+7. **`App\Actions\Safety\ManageBlock`**:
+   - Beim Blockieren werden bestehende Follow-Beziehungen zwischen den beiden Konten in **beide** Richtungen sofort gelöscht.
+
+8. **`App\Queries\Safety\BookmarkList`**:
+   - Sortierung: Neueste Lesezeichen zuerst (`bookmarks.id DESC`).
+   - Ungültige Tropfen (gelöscht, aus Oasen entfernt, oder von blockierten/stummgeschalteten Konten) werden automatisch herausgefiltert.
+
+---
+
+## 4. Routen (`routes/safety.php`)
+
+Alle Sicherheits-Routen erfordern ein authentifiziertes, bestätigtes Konto (`middleware(['auth', 'verified'])`):
+
+- `GET  /app/sicherheit` (`safety.index`): Übersicht blockierter und stummgeschalteter Konten mit Aufheben-Optionen.
+- `POST /app/sicherheit/block/{user}` (`safety.block.store`): Konto blockieren.
+- `DELETE /app/sicherheit/block/{user}` (`safety.block.destroy`): Blockade aufheben.
+- `POST /app/sicherheit/mute/{user}` (`safety.mute.store`): Konto stummschalten.
+- `DELETE /app/sicherheit/mute/{user}` (`safety.mute.destroy`): Stummschaltung aufheben.
+- `GET  /app/gemerkt` (`safety.bookmarks`): Private Merkliste (neueste zuerst).
+- `POST /app/gemerkt/{post}` (`safety.bookmarks.store`): Tropfen merken.
+- `DELETE /app/gemerkt/{post}` (`safety.bookmarks.destroy`): Tropfen aus Merkliste entfernen.
+
+---
+
+## 5. Benutzeroberfläche & Komponenten
+
+- **`post-card.blade.php`**:
+  - Knopf "Merken" / "Gemerkt" für Mitglieder mit diskretem Lesezeichen-Icon.
+  - Aktionen "Stumm" / "Nicht mehr stumm", "Blockieren" und "Melden" in der Fußzeile (nur für fremde Beiträge).
+- **`profile/show.blade.php`**:
+  - Knöpfe "Stummschalten" / "Nicht mehr stumm" und "Blockieren" für angemeldete Mitglieder im Kopfbereich fremder Profile.
+- **`safety/index.blade.php`**:
+  - Übersichtliche Listen für blockierte und stummgeschaltete Konten mit Zählern, Avataren, Namen und Aktionen zum Aufheben.
+  - Zweispaltiges Layout (`x-network.columns`, `'wide' => true`) mit erklärenden Infokarten.
+- **`safety/bookmarks.blade.php`**:
+  - Darstellung über `<x-network.feed>` mit Hinweisen zur privaten Natur der Lesezeichen.

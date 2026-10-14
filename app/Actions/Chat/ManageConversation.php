@@ -38,11 +38,18 @@ class ManageConversation
         if (in_array($owner->id, $ids, true) || ($input['type'] === 'direct' && count($ids) !== 1)) {
             throw ValidationException::withMessages(['member_ids' => 'Bitte wähle die anderen Mitglieder passend zur Chat-Art aus.']);
         }
+        $allIds = [...$ids, $owner->id];
+        if (DB::table('blocks')->whereIn('user_id', $allIds)->whereIn('blocked_user_id', $allIds)->exists()) {
+            throw ValidationException::withMessages(['member_ids' => 'Mit blockierten Personen kann kein Chat gestartet werden.']);
+        }
         $ids[] = $owner->id;
 
         return DB::transaction(function () use ($owner, $input, $ids) {
             ConversationKeys::lockUsers($ids);
             $this->requireReady($ids);
+            if (DB::table('blocks')->whereIn('user_id', $ids)->whereIn('blocked_user_id', $ids)->exists()) {
+                throw ValidationException::withMessages(['member_ids' => 'Mit blockierten Personen kann kein Chat gestartet werden.']);
+            }
             $conversation = Conversation::create(['type' => $input['type'], 'title' => $input['title'] ?? null,
                 'created_by' => $owner->id, 'lifetime_days' => $input['lifetime_days'],
                 'key_version' => 1, 'rotation_required' => true]);
@@ -82,6 +89,13 @@ class ManageConversation
             abort_if($userId === (int) $conversation->created_by, 422, 'Der Besitzer bleibt Mitglied.');
             $member = $conversation->memberships()->where('user_id', $userId)->first();
             if ($add) {
+                $activeMemberIds = $conversation->activeMembers()->pluck('user_id')->map(fn ($id) => (int) $id)->all();
+                $checkIds = array_unique([...$activeMemberIds, $userId]);
+                abort_if(
+                    DB::table('blocks')->whereIn('user_id', $checkIds)->whereIn('blocked_user_id', $checkIds)->exists(),
+                    422,
+                    'Mit blockierten Personen kann kein Chat geführt werden.'
+                );
                 $this->requireReady([$userId]);
                 abort_if($member && $member->left_at === null, 422, 'Dieses Konto ist bereits Mitglied.');
                 abort_if($conversation->activeMembers()->count() >= 50, 422, 'Ein Chat hat höchstens 50 Mitglieder.');

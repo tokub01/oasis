@@ -3,10 +3,10 @@
     Variables: $oasis (Oasis; unsaved on create), $members (Collection<User>, edit only)
 --}}
 @php($editing = $oasis->exists)
-@extends('layouts.app', ['title' => $editing ? $oasis->name.' bearbeiten' : 'Oase eröffnen', 'active' => 'oasen'])
+@extends('layouts.app', ['title' => $editing ? $oasis->name.' bearbeiten' : 'Oase eröffnen', 'active' => 'oasen', 'wide' => true])
 
 @section('content')
-    <div class="flex flex-col gap-6">
+    <x-network.columns label="Hinweise">
         <div class="flex flex-col gap-2">
             <a href="{{ $editing ? route('network.oases.show', $oasis) : route('network.oases.index') }}" class="o-link self-start">Zurück</a>
             <h1 class="o-h2 m-0 text-night">{{ $editing ? $oasis->name.' bearbeiten' : 'Oase eröffnen' }}</h1>
@@ -74,5 +74,17 @@
                 </ul>
             </section>
         @endif
-    </div>
+        <x-slot:aside>
+            <x-network.side-card title="Gute Hausregeln" tone="dune">
+                <ul class="m-0 flex list-disc flex-col gap-1.5 pl-5 text-[15px] text-ink-2">
+                    <li>Kurz und konkret: drei bis fünf Punkte reichen.</li>
+                    <li>Sag, was erwünscht ist – nicht nur, was verboten ist.</li>
+                    <li>Die Community-Regeln von Oasis gelten immer zusätzlich.</li>
+                </ul>
+            </x-network.side-card>
+            <x-network.side-card title="Als Gastgeber:in" tone="night">
+                <p class="m-0 text-[15px] text-on-night-2">Du kannst Tropfen aus der Oase entfernen, die gegen die Hausregeln verstoßen, und weitere Gastgeber:innen ernennen. Rechtswidriges meldet ihr dem Moderationsteam.</p>
+            </x-network.side-card>
+        </x-slot:aside>
+    </x-network.columns>
 @endsection

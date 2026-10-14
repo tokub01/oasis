@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\Role;
 use App\Models\Concerns\HasNetwork;
+use App\Models\Concerns\HasSafety;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -67,6 +68,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     // Stage 2: profile, Tropfen, follows, oases, invitations.
     use HasNetwork;
+    use HasSafety;
     use TwoFactorAuthenticatable;
 
     /** New account objects use the same least-privilege default as the database. */

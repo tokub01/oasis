@@ -3,6 +3,7 @@
 namespace App\Actions\Network;
 
 use App\Enums\Network\OasisRole;
+use App\Events\Network\Followed;
 use App\Models\Follow;
 use App\Models\Oasis;
 use App\Models\User;
@@ -21,13 +22,19 @@ class ManageFollows
         if ($target instanceof User && $target->is($follower)) {
             throw ValidationException::withMessages(['follow' => 'Dir selbst kannst du nicht folgen.']);
         }
+        if ($target instanceof User && $follower->isBlockedWith($target)) {
+            throw ValidationException::withMessages(['follow' => 'Diese Person kann nicht gefolgt werden.']);
+        }
 
         DB::transaction(function () use ($follower, $target): void {
-            Follow::firstOrCreate([
+            $follow = Follow::firstOrCreate([
                 'follower_id' => $follower->id,
                 'followable_type' => $target->getMorphClass(),
                 'followable_id' => $target->getKey(),
             ]);
+            if ($follow->wasRecentlyCreated) {
+                event(new Followed($follower, $target));
+            }
             if ($target instanceof Oasis && ! $target->isMember($follower)) {
                 $target->members()->attach($follower->id, ['role' => OasisRole::Member->value, 'joined_at' => now()]);
             }

@@ -26,7 +26,10 @@ class PostPolicy
     /** Reply, react and carry further ("weitertragen") need a readable Tropfen that is still in place. */
     public function interact(User $user, Post $post): bool
     {
-        return $this->create($user) && $post->removed_from_oasis_at === null && $post->isVisibleTo($user);
+        return $this->create($user)
+            && $post->removed_from_oasis_at === null
+            && $post->isVisibleTo($user)
+            && ! in_array($post->user_id, $user->blockedUserIds(), true);
     }
 
     /** Authors delete their own Tropfen at any time, also read-only accounts (data minimisation). */

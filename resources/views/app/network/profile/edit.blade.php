@@ -2,10 +2,10 @@
     Edit your own profile (route network.profile.edit). Name and username are changed in the settings.
     Variables: $profile (Profile, stored or default)
 --}}
-@extends('layouts.app', ['title' => 'Profil', 'active' => 'profil'])
+@extends('layouts.app', ['title' => 'Profil', 'active' => 'profil', 'wide' => true])
 
 @section('content')
-    <div class="flex flex-col gap-6">
+    <x-network.columns label="Hinweise">
         <div class="flex flex-col gap-2">
             <p class="o-eyebrow m-0">Profil</p>
             <h1 class="o-h2 m-0 text-night">Dein Profil</h1>
@@ -55,5 +55,24 @@
             <a href="{{ route('network.stats') }}" class="o-btn o-btn-md o-btn-outline">Deine Zahlen</a>
             <a href="{{ route('network.invitations.index') }}" class="o-btn o-btn-md o-btn-outline">Menschen einladen</a>
         </div>
-    </div>
+        <x-slot:aside>
+            <x-network.side-card title="Vorschau">
+                <div class="flex items-center gap-3">
+                    <x-network.avatar :user="auth()->user()" :size="56" />
+                    <span class="flex min-w-0 flex-col leading-tight">
+                        <span class="truncate font-extrabold text-night">{{ auth()->user()->display_name }}</span>
+                        <span class="text-sm text-muted">{{ '@'.auth()->user()->username }}</span>
+                    </span>
+                </div>
+                <p class="m-0 text-[15px] text-ink-2">{{ $profile->bio ?: 'Noch keine Beschreibung.' }}</p>
+                <a href="{{ route('oasis.profil', auth()->user()->username) }}" class="o-link self-start text-[15px]">Profil ansehen</a>
+            </x-network.side-card>
+            <x-network.side-card title="Öffentlich oder nur Mitglieder?" tone="dune">
+                <ul class="m-0 flex list-disc flex-col gap-1.5 pl-5 text-[15px] text-ink-2">
+                    <li><b>Öffentlich:</b> auch Gäste ohne Konto sehen dein Profil und öffentliche Tropfen; sie erscheinen unter „Entdecken“.</li>
+                    <li><b>Nur Mitglieder:</b> nur angemeldete Mitglieder sehen dein Profil.</li>
+                </ul>
+            </x-network.side-card>
+        </x-slot:aside>
+    </x-network.columns>
 @endsection

@@ -32,6 +32,12 @@ class MollieGateway
         return Mollie::send($request);
     }
 
+    /** Webhook target, or none where Mollie cannot reach the app (see `oasis.payment.webhooks`). */
+    private function webhookUrl(): ?string
+    {
+        return config('oasis.payment.webhooks') ? route('mollie.webhook') : null;
+    }
+
     /** Create a reusable customer without exposing account data in logs. */
     public function customer(User $user): string
     {
@@ -44,7 +50,7 @@ class MollieGateway
         return $this->send(new CreatePaymentRequest(
             description: $intent->kind === 'mandate' ? 'Oasis – Zahlungsmittel ändern' : 'Oasis '.$intent->tier,
             amount: new Money('EUR', number_format($intent->amount / 100, 2, '.', '')),
-            redirectUrl: route('app.membership'), webhookUrl: route('mollie.webhook'),
+            redirectUrl: route('app.membership'), webhookUrl: $this->webhookUrl(),
             method: $method, metadata: ['intent_id' => (string) $intent->id],
             sequenceType: $intent->kind === 'gift' ? 'oneoff' : 'first', customerId: $customer,
         ), 'oasis-payment-'.$intent->id);
@@ -63,7 +69,7 @@ class MollieGateway
             customerId: $customer, amount: new Money('EUR', number_format($subscription->amount / 100, 2, '.', '')),
             interval: $subscription->rhythm === 'jahr' ? '12 months' : '1 month',
             description: 'Oasis '.$subscription->type, startDate: $subscription->paid_until,
-            mandateId: $mandate, webhookUrl: route('mollie.webhook'),
+            mandateId: $mandate, webhookUrl: $this->webhookUrl(),
         ), $key)->id;
     }
 

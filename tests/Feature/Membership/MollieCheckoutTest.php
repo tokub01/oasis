@@ -44,6 +44,19 @@ test('hosted checkout sends configured prices and a recurring first sequence', f
     ['maezen', 'jahr', 35, 'paypal', '350.00', 'paypal'],
 ]);
 
+test('the webhook URL is sent unless webhooks are switched off for a local setup', function (bool $webhooks) {
+    config()->set(['oasis.checkout_enabled' => true, 'oasis.payment.webhooks' => $webhooks]);
+    $user = User::factory()->create(['mollie_customer_id' => 'cst_checkout']);
+    Mollie::fake([CreatePaymentRequest::class => MockResponse::created(['resource' => 'payment', 'id' => 'tr_local',
+        '_links' => ['checkout' => ['href' => 'https://www.mollie.com/checkout/local']]])]);
+    $this->actingAs($user)->post(route('oasis.mitglied.checkout'), ['stufe' => 'oase', 'rhythmus' => 'monat', 'zahlart' => 'karte'])
+        ->assertRedirect('https://www.mollie.com/checkout/local');
+    Mollie::assertSent(fn ($request) => $request->payload()->get('webhookUrl') === ($webhooks ? route('mollie.webhook') : null));
+})->with([
+    'production' => [true],
+    'local' => [false],
+]);
+
 test('new customers are persisted and gifts use oneoff payments', function () {
     config()->set('oasis.checkout_enabled', true);
     $user = User::factory()->create();

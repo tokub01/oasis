@@ -173,6 +173,9 @@ return [
         'provider' => 'Mollie',
         // SEPA creditor identifier for the mandate text.
         'sepa_creditor_id' => '[GLÄUBIGER-ID]',
+        // Send a webhook URL with payments and subscriptions. Mollie rejects URLs it cannot reach (localhost),
+        // so local setups switch this off and `oasis:mollie-sync` picks up the payment status instead.
+        'webhooks' => (bool) env('MOLLIE_WEBHOOKS', true),
     ],
 
     /*

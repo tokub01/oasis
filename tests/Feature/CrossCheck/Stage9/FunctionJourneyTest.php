@@ -1,6 +1,9 @@
 <?php
 
 use App\Actions\Network\ManageFollows;
+use App\Livewire\Account\Settings;
+use App\Livewire\Membership\Overview;
+use App\Livewire\Oasis\ContentNotice;
 use App\Models\GiftMembership;
 use App\Models\Message;
 use App\Models\Notifications\NotificationPreference;
@@ -11,7 +14,9 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Livewire\Livewire;
 use Tests\Support\ChatFixtures as F;
+use Tests\Support\NetworkActions;
 use Tests\Support\NetworkFixtures as N;
 
 /*
@@ -39,15 +44,15 @@ it('journey: sign up, verify, set up a profile, post with mention and topic, get
     $this->get(URL::temporarySignedRoute('verification.verify', now()->addHour(), ['id' => $me->id, 'hash' => sha1($me->email)]));
     expect($me->fresh()->hasVerifiedEmail())->toBeTrue();
 
-    $this->put(route('network.profile.update'), ['bio' => 'Hallo!', 'visibility' => 'public', 'avatar_color' => 'spring'])->assertRedirect();
-    $this->post(route('network.follow.user', $mira))->assertRedirect();
-    $this->post(route('network.posts.store'), ['body' => 'Erster Tropfen für @mira #Anfang', 'visibility' => 'public'])->assertRedirect(route('app.home'));
+    NetworkActions::saveProfile(['bio' => 'Hallo!', 'visibility' => 'public', 'avatar_color' => 'spring'])->assertHasNoErrors();
+    NetworkActions::profile('follow', $mira)->assertHasNoErrors();
+    NetworkActions::publish(['body' => 'Erster Tropfen für @mira #Anfang', 'visibility' => 'public'])->assertHasNoErrors();
     $post = Post::where('user_id', $me->id)->sole();
 
     expect($mira->fresh()->notifications->pluck('data.kind')->sort()->values()->all())->toBe(['follow', 'mention']);
     $this->get(route('search.tags.show', 'anfang'))->assertSee('Erster Tropfen');
 
-    $this->actingAs($mira)->post(route('network.posts.store'), ['body' => 'Willkommen!', 'visibility' => 'public', 'reply_to' => $post->id]);
+    NetworkActions::publish(['body' => 'Willkommen!', 'visibility' => 'public', 'reply_to' => $post->id], $mira);
     expect($me->fresh()->notifications->pluck('data.kind')->all())->toContain('reply');
     $this->actingAs($me->fresh())->get(route('notifications.index'))->assertOk()->assertSee('Mira Sol');
 });
@@ -58,15 +63,15 @@ it('journey: trial ends → read-only everywhere, a redeemed gift restores writi
     $this->travel(2)->days();
 
     $this->actingAs($me)->get(route('app.home'))->assertOk()->assertSee('nur zum Lesen');
-    $this->post(route('network.posts.store'), ['body' => 'x', 'visibility' => 'public'])->assertForbidden();
-    $this->post(route('network.reactions.store', $post))->assertForbidden();
+    NetworkActions::publish(['body' => 'x', 'visibility' => 'public'])->assertForbidden();
+    NetworkActions::post('react', $post->id)->assertForbidden();
     $this->get(route('account.export'))->assertOk();
     $this->get(route('app.chat'))->assertSee('data-can-participate="0"', false);
 
     $gift = GiftMembership::factory()->create(['redeemed_by_user_id' => null, 'redeemed_at' => null, 'expires_at' => null]);
-    $this->post(route('app.membership.redeem'), ['code' => $gift->code])->assertRedirect(route('app.membership'));
+    Livewire::test(Overview::class)->set('code', $gift->code)->call('redeem')->assertHasNoErrors();
     expect($me->fresh()->canParticipate())->toBeTrue();
-    $this->post(route('network.posts.store'), ['body' => 'Wieder dabei', 'visibility' => 'public'])->assertRedirect();
+    NetworkActions::publish(['body' => 'Wieder dabei', 'visibility' => 'public'])->assertHasNoErrors();
 });
 
 it('journey: deleting an account leaves the network consistent', function () {
@@ -78,8 +83,8 @@ it('journey: deleting an account leaves the network consistent', function () {
     app(ManageFollows::class)->follow($leaving, $stays);
     $stays->bookmarks()->create(['post_id' => $original->id]);
 
-    $this->actingAs($leaving)->withSession(['auth.password_confirmed_at' => time()])
-        ->delete(route('account.destroy'), ['confirm' => '1'])->assertRedirect();
+    $this->withSession(['auth.password_confirmed_at' => time()]);
+    Livewire::actingAs($leaving)->test(Settings::class)->set('confirm', true)->call('deleteAccount')->assertRedirect();
     expect(User::find($leaving->id))->toBeNull();
 
     $this->actingAs($stays)->get(route('network.posts.show', $reply))->assertOk()->assertSee('nicht mehr verfügbar');
@@ -91,12 +96,13 @@ it('journey: deleting an account leaves the network consistent', function () {
 
 it('FINDING F1: deleting an account removes its uploaded images from storage (GDPR erasure)', function () {
     $leaving = N::member();
-    $this->actingAs($leaving)->post(route('network.posts.store'), [
+    NetworkActions::publish([
         'body' => 'Mit Bild', 'visibility' => 'public', 'images' => [UploadedFile::fake()->image('a.png')], 'alts' => ['A'],
-    ]);
+    ], $leaving);
     expect(Storage::disk(config('oasis.media_disk'))->allFiles())->toHaveCount(1);
 
-    $this->withSession(['auth.password_confirmed_at' => time()])->delete(route('account.destroy'), ['confirm' => '1']);
+    $this->withSession(['auth.password_confirmed_at' => time()]);
+    Livewire::actingAs($leaving)->test(Settings::class)->set('confirm', true)->call('deleteAccount');
 
     expect(Storage::disk(config('oasis.media_disk'))->allFiles())->toBe([]);
 });
@@ -104,10 +110,10 @@ it('FINDING F1: deleting an account removes its uploaded images from storage (GD
 it('FINDING F7: the export contains the own Tropfen with images, follows and bookmarks', function () {
     $me = N::member(['username' => 'exporteurin']);
     $mira = N::member(['username' => 'mira']);
-    $this->actingAs($me)->post(route('network.posts.store'), [
+    NetworkActions::publish([
         'body' => 'Mein exportierter Tropfen', 'visibility' => 'public',
         'images' => [UploadedFile::fake()->image('a.png')], 'alts' => ['Ein Bild'],
-    ]);
+    ], $me);
     app(ManageFollows::class)->follow($me, $mira);
     $me->bookmarks()->create(['post_id' => N::post($mira)->id]);
     N::post($mira, ['body' => 'Fremder Tropfen, nicht im Export']);
@@ -142,20 +148,20 @@ it('FINDING F3: deleting an account with a running paid membership is refused or
         'type' => 'oase', 'mollie_id' => 'sub_test', 'status' => 'active', 'paid_until' => now()->addMonth(),
     ]);
 
-    $response = $this->actingAs($member)->withSession(['auth.password_confirmed_at' => time()])
-        ->delete(route('account.destroy'), ['confirm' => '1']);
+    $this->withSession(['auth.password_confirmed_at' => time()]);
+    $response = Livewire::actingAs($member)->test(Settings::class)->set('confirm', true)->call('deleteAccount');
 
     // Acceptable: refuse with a clear message (account stays) – never delete silently while Mollie keeps charging.
     expect(User::find($member->id))->not->toBeNull();
-    $response->assertSessionHasErrors();
+    $response->assertHasErrors();
 });
 
 it('FINDING F4: the last host can close an oasis instead of being stuck with it', function () {
     $host = N::member();
     $oasis = N::oasis($host);
 
-    expect(collect(app('router')->getRoutes())->contains(fn ($route) => in_array('DELETE', $route->methods(), true)
-        && str_starts_with($route->uri(), 'oasen/{oasis}') && $route->uri() === 'oasen/{oasis}'))->toBeTrue();
+    NetworkActions::close($oasis, ['confirm' => true], $host)->assertRedirect(route('network.oases.index'));
+    expect($oasis->fresh())->toBeNull();
 });
 
 it('FINDING F5: profiles and oases can be reported from the app, not only Tropfen', function () {
@@ -172,17 +178,19 @@ it('FINDING F5: profiles and oases can be reported from the app, not only Tropfe
 
 it('journey: the reporter of a Tropfen does not have to type name and e-mail again', function () {
     $me = N::member(['display_name' => 'Melde Person']);
-    $this->actingAs($me)->get(route('oasis.melden', ['url' => 'https://oasis.tld/tropfen/1']))
-        ->assertSee('value="Melde Person"', false)->assertSee('value="'.$me->email.'"', false);
+    $this->actingAs($me)->get(route('oasis.melden', ['url' => 'https://oasis.tld/tropfen/1']))->assertSeeLivewire(ContentNotice::class);
+    Livewire::withQueryParams(['url' => 'https://oasis.tld/tropfen/1'])->test(ContentNotice::class)
+        ->assertSet('form.url', 'https://oasis.tld/tropfen/1')
+        ->assertSet('form.name', 'Melde Person')->assertSet('form.email', $me->email);
 });
 
 it('journey: hint preferences survive and a muted person never shows up in hints', function () {
     $me = N::member(['username' => 'ich']);
     $loud = N::member();
     NotificationPreference::create(['user_id' => $me->id, 'kinds' => ['mention' => true, 'follow' => true, 'reply' => true, 'carry' => true, 'invitation' => true, 'host' => true], 'digest_enabled' => false]);
-    $this->actingAs($me)->post(route('safety.mute.store', $loud))->assertRedirect();
+    NetworkActions::post('muteUser', $loud->id, $me)->assertHasNoErrors();
 
-    $this->actingAs($loud)->post(route('network.posts.store'), ['body' => 'Hey @ich', 'visibility' => 'public']);
+    NetworkActions::publish(['body' => 'Hey @ich', 'visibility' => 'public'], $loud);
     expect($me->fresh()->notifications)->toBeEmpty();
 });
 
@@ -193,8 +201,8 @@ it('FINDING F8: deleting the only host hands the oasis over or closes an empty o
     $member = N::member();
     app(ManageFollows::class)->follow($member, $shared);
 
-    $this->actingAs($host)->withSession(['auth.password_confirmed_at' => time()])
-        ->delete(route('account.destroy'), ['confirm' => '1'])->assertRedirect();
+    $this->withSession(['auth.password_confirmed_at' => time()]);
+    Livewire::actingAs($host)->test(Settings::class)->set('confirm', true)->call('deleteAccount')->assertRedirect();
 
     expect($shared->fresh()->isHost($member))->toBeTrue()
         ->and(Oasis::whereKey($alone->id)->exists())->toBeFalse();
@@ -207,8 +215,8 @@ it('lets a host close an oasis after confirming; its Tropfen stay with their aut
     $this->actingAs(N::member())->get(route('network.oases.close', $oasis))->assertForbidden();
 
     $this->actingAs($host)->get(route('network.oases.close', $oasis))->assertOk()->assertSee('schließen?');
-    $this->delete(route('network.oases.destroy', $oasis))->assertSessionHasErrors('confirm');
-    $this->delete(route('network.oases.destroy', $oasis), ['confirm' => '1'])->assertRedirect(route('network.oases.index'));
+    NetworkActions::close($oasis, [])->assertHasErrors('confirm');
+    NetworkActions::close($oasis, ['confirm' => '1'])->assertRedirect(route('network.oases.index'));
 
     expect(Oasis::whereKey($oasis->id)->exists())->toBeFalse()
         ->and($post->fresh()->oasis_id)->toBeNull();

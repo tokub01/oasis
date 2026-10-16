@@ -5,6 +5,7 @@ use App\Jobs\Moderation\CheckContent;
 use App\Models\Follow;
 use App\Models\Post;
 use Illuminate\Support\Facades\Queue;
+use Tests\Support\NetworkActions;
 use Tests\Support\NetworkFixtures as N;
 
 beforeEach(function () {
@@ -15,11 +16,11 @@ beforeEach(function () {
 it('publishes a question to one\'s Karawane and saves kind as question', function () {
     $author = N::member();
 
-    $this->actingAs($author)->post(route('network.posts.store'), [
+    NetworkActions::publish([
         'body' => 'Was liest du diesen Herbst?',
         'visibility' => 'public',
         'kind' => 'question',
-    ])->assertRedirect(route('app.home'));
+    ], $author)->assertHasNoErrors();
 
     $post = Post::latest('id')->first();
     expect($post->kind)->toBe(PostKind::Question)
@@ -29,10 +30,10 @@ it('publishes a question to one\'s Karawane and saves kind as question', functio
 it('defaults kind to post when not specified or invalid', function () {
     $author = N::member();
 
-    $this->actingAs($author)->post(route('network.posts.store'), [
+    NetworkActions::publish([
         'body' => 'Ein normaler Tropfen.',
         'visibility' => 'public',
-    ])->assertRedirect(route('app.home'));
+    ], $author)->assertHasNoErrors();
 
     $post = Post::latest('id')->first();
     expect($post->kind)->toBe(PostKind::Post)
@@ -44,12 +45,12 @@ it('forces replies to be regular posts even if kind=question is submitted', func
     $question = N::post($author, ['body' => 'Welches Buch empfiehlst du?', 'kind' => 'question']);
 
     $responder = N::member();
-    $this->actingAs($responder)->post(route('network.posts.store'), [
+    NetworkActions::publish([
         'body' => 'Momo von Michael Ende.',
         'visibility' => 'public',
         'reply_to' => $question->id,
         'kind' => 'question',
-    ])->assertRedirect();
+    ], $responder)->assertHasNoErrors();
 
     $reply = Post::latest('id')->first();
     expect($reply->kind)->toBe(PostKind::Post)
@@ -130,9 +131,9 @@ it('bundles followed replies in the Quelle under the origin Tropfen (up to 2 + w
     $stranger = N::member(['username' => 'fremder', 'display_name' => 'Fremder']);
 
     // I follow friendA, friendB, friendC (not stranger)
-    $this->actingAs($me)->post(route('network.follow.user', $friendA));
-    $this->actingAs($me)->post(route('network.follow.user', $friendB));
-    $this->actingAs($me)->post(route('network.follow.user', $friendC));
+    NetworkActions::profile('follow', $friendA, $me);
+    NetworkActions::profile('follow', $friendB, $me);
+    NetworkActions::profile('follow', $friendC, $me);
 
     // FriendA posts a Tropfen
     $origin = N::post($friendA, ['body' => 'Hauptbeitrag von Freund A']);
@@ -163,15 +164,15 @@ it('filters out blocked or muted users from conversation replies in the Quelle',
     $friend = N::member(['username' => 'freund']);
     $troll = N::member(['username' => 'troll']);
 
-    $this->actingAs($me)->post(route('network.follow.user', $friend));
-    $this->actingAs($me)->post(route('network.follow.user', $troll));
+    NetworkActions::profile('follow', $friend, $me);
+    NetworkActions::profile('follow', $troll, $me);
 
     $origin = N::post($friend, ['body' => 'Schöner Sonnentag']);
     N::post($troll, ['body' => 'Unangenehmer Troll-Kommentar', 'reply_to_id' => $origin->id]);
     N::post($friend, ['body' => 'Eigener Zusatzkommentar', 'reply_to_id' => $origin->id]);
 
     // Now I block the troll
-    $this->actingAs($me)->post(route('safety.block.store', $troll))->assertRedirect();
+    NetworkActions::post('blockUser', $troll->id, $me)->assertHasNoErrors();
 
     $this->actingAs($me)->get(route('app.home'))->assertOk()
         ->assertSee('Schöner Sonnentag')
@@ -222,11 +223,11 @@ it('renders sanfter Antwort-Anstoß only for mutual follows and not in Lesemodus
     $res->assertDontSee('id="quick-reply-'.$ownPost->id.'"', false);
 
     // Submitting quick-reply form creates a reply
-    $this->actingAs($me)->post(route('network.posts.store'), [
+    NetworkActions::publish([
         'reply_to' => $postFromMutual->id,
         'visibility' => 'public',
         'body' => 'Schnelle Antwort aus der Karte!',
-    ])->assertRedirect(route('network.posts.show', $postFromMutual->id).'#tropfen-'.Post::latest('id')->first()->id);
+    ], $me)->assertHasNoErrors();
 
     // In read-only mode (Lesemodus): quick-reply form is NOT shown even for mutual follow
     $readOnlyMe = N::readOnlyMember();

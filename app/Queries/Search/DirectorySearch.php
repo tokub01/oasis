@@ -18,10 +18,14 @@ class DirectorySearch
 {
     public const LIMIT = 12;
 
+    public const MIN_LENGTH = 2;
+
+    public const TAG_PATTERN = '[\p{L}\p{N}_]{2,40}';
+
     /**
      * People whose username or display name contains the term; a leading "@" is ignored for the username.
      *
-     * @param  string  $term  trimmed search term (at least SearchController::MIN_LENGTH characters)
+     * @param  string  $term  trimmed search term (at least DirectorySearch::MIN_LENGTH characters)
      * @param  User  $viewer  the verified member searching; accounts with a blockade in either direction are left out
      * @return Collection<int, User> at most LIMIT verified accounts, exact username first, then by display name
      */
@@ -49,7 +53,7 @@ class DirectorySearch
     /**
      * Oases whose name or description contains the term.
      *
-     * @param  string  $term  trimmed search term (at least SearchController::MIN_LENGTH characters)
+     * @param  string  $term  trimmed search term (at least DirectorySearch::MIN_LENGTH characters)
      * @return Collection<int, Oasis> at most LIMIT oases with members_count, alphabetical
      */
     public function oases(string $term): Collection

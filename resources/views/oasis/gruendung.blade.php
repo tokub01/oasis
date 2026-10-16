@@ -14,28 +14,7 @@
                 <p class="m-0 [max-width:32em] [font-size:clamp(18px,_1.5vw,_20px)] [line-height:1.6] text-on-night-2">@if (config('oasis.launch_date'))Oasis startet am {{ \Illuminate\Support\Carbon::parse(config('oasis.launch_date'))->format('d.m.Y') }}.@else Oasis startet bald, den Termin geben wir hier bekannt.@endif Die ersten {{ number_format(config('oasis.founding.seats'), 0, ',', '.') }} Mitglieder werden Gründungsmitglieder: mit Preisgarantie und einer Stimme in der allerersten Abstimmung.</p>
                 <p class="text-on-night-muted">Veröffentlichen wir ab dem Start</p>
             </div>
-            <form method="POST" action="{{ route('oasis.gruendung.store') }}" aria-labelledby="liste-titel" class="flex flex-col gap-[18px] [padding:clamp(28px,_3vw,_40px)] bg-sand text-ink rounded-[28px]">
-                @csrf
-                @include('oasis.forms._feedback')
-                <h2 id="liste-titel" class="m-0 text-[26px] [line-height:1.25] font-extrabold text-night">Auf die Startliste</h2>
-                <div class="flex flex-col gap-[6px]">
-                    <label for="gr-mail" class="text-[15px] font-bold">E-Mail-Adresse</label>
-                    <input id="gr-mail" type="email" autocomplete="email" placeholder="name@beispiel.tld" class="o-input min-w-0" name="email" aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}" aria-describedby="gr-mail-error" required value="{{ old('email') }}">
-                    <p id="gr-mail-error" class="o-error">@error('email'){{ $message }}@enderror</p>
-                </div>
-                <div class="flex flex-col gap-[6px]">
-                    <label for="gr-gruppe" class="text-[15px] font-bold">Mit wem willst du starten? <span class="font-medium text-muted">(optional)</span>
-                    </label>
-                    <input id="gr-gruppe" type="text" placeholder="z. B. meine WG, meine Fachschaft" class="o-input min-w-0" name="group" aria-invalid="{{ $errors->has('group') ? 'true' : 'false' }}" aria-describedby="gr-gruppe-error" value="{{ old('group') }}">
-                    <p id="gr-gruppe-error" class="o-error">@error('group'){{ $message }}@enderror</p>
-                </div>
-                <label class="flex gap-[12px] items-start text-[15px] [line-height:1.5] text-ink">
-                    <input type="checkbox" name="consent" value="1" required @checked(old('consent')) class="flex-none [width:20px] [height:20px] [margin:2px_0_0] accent-night">
-                    <span>Ich möchte per E-Mail erfahren, wann ich reinkomme. Abmelden geht jederzeit.</span>
-                </label>
-                <button type="submit" class="[min-height:56px] border-0 rounded-[999px] bg-sun text-sun-ink text-[18px] font-extrabold">Platz auf der Startliste sichern</button>
-                <p class="m-0 text-[14px] [line-height:1.5] text-muted">Kostenlos und unverbindlich. Du bekommst eine E-Mail, mit der du deine Adresse bestätigst. Mehr in der <a href="{{ route('oasis.datenschutz') }}" class="text-ink underline">Datenschutzerklärung</a>.</p>
-            </form>
+            <livewire:oasis.waitlist-signup />
         </div>
     </section>
 

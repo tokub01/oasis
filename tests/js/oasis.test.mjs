@@ -12,126 +12,18 @@ const oasisCode = fs.readFileSync(oasisJsPath, "utf8");
 
 function loadOasisScript(globals = {}) {
     const sandbox = {
-        document: { querySelectorAll: () => [] },
         navigator: {},
         ...globals,
+        document: { querySelectorAll: () => [], addEventListener: () => {}, ...globals.document },
     };
     const context = vm.createContext(sandbox);
     vm.runInContext(oasisCode, context);
-    const membershipCalc = vm.runInContext("typeof membershipCalc !== 'undefined' ? membershipCalc : null", context);
     const modules = vm.runInContext("typeof modules !== 'undefined' ? modules : null", context);
-    return { context, membershipCalc, modules };
+    return { context, modules };
 }
 
 // ---------------------------------------------------------------------------
-// 1. Pure calculation tests (membershipCalc)
-// ---------------------------------------------------------------------------
-
-test("membershipCalc: German money formatting", () => {
-    const { membershipCalc } = loadOasisScript();
-    assert.ok(membershipCalc, "membershipCalc should be defined in oasis.js");
-
-    assert.equal(membershipCalc.formatEuro(0), "0,00 €");
-    assert.equal(membershipCalc.formatEuro(5), "5,00 €");
-    assert.equal(membershipCalc.formatEuro(3), "3,00 €");
-    assert.equal(membershipCalc.formatEuro(12), "12,00 €");
-    assert.equal(membershipCalc.formatEuro(1234.5), "1.234,50 €");
-    assert.equal(membershipCalc.formatEuro(0.7983), "0,80 €");
-    assert.equal(membershipCalc.formatEuro(7.9831), "7,98 €");
-    assert.equal(membershipCalc.formatEuro(1000000), "1.000.000,00 €");
-    assert.equal(membershipCalc.formatEuro(4.166666667), "4,17 €");
-    assert.equal(membershipCalc.formatEuro(2.5), "2,50 €");
-});
-
-test("membershipCalc: VAT included (x 19 / 119)", () => {
-    const { membershipCalc } = loadOasisScript();
-    const rate = 19;
-
-    // Gross 119 € contains exactly 19 € VAT
-    assert.equal(membershipCalc.vatIncluded(119, rate), 19);
-
-    // Gross 5 € (Oase monatlich): 5 * 19 / 119 = 0.798319... €
-    const vat5 = membershipCalc.vatIncluded(5, rate);
-    assert.ok(Math.abs(vat5 - (5 * 19 / 119)) < 1e-9);
-    assert.equal(membershipCalc.formatEuro(vat5), "0,80 €");
-
-    // Gross 50 € (Oase jährlich): 50 * 19 / 119 = 7.98319... €
-    const vat50 = membershipCalc.vatIncluded(50, rate);
-    assert.ok(Math.abs(vat50 - (50 * 19 / 119)) < 1e-9);
-    assert.equal(membershipCalc.formatEuro(vat50), "7,98 €");
-
-    // Gross 3 € (Solidar monatlich): 3 * 19 / 119 = 0.47899... € -> "0,48 €"
-    const vat3 = membershipCalc.vatIncluded(3, rate);
-    assert.equal(membershipCalc.formatEuro(vat3), "0,48 €");
-
-    // Gross 30 € (Solidar jährlich): 30 * 19 / 119 = 4.7899... € -> "4,79 €"
-    const vat30 = membershipCalc.vatIncluded(30, rate);
-    assert.equal(membershipCalc.formatEuro(vat30), "4,79 €");
-
-    // Gross 12 € (Mäzen min monatlich): 12 * 19 / 119 = 1.91596... € -> "1,92 €"
-    const vat12 = membershipCalc.vatIncluded(12, rate);
-    assert.equal(membershipCalc.formatEuro(vat12), "1,92 €");
-
-    // Gross 120 € (Mäzen min jährlich): 120 * 19 / 119 = 19.1596... € -> "19,16 €"
-    const vat120 = membershipCalc.vatIncluded(120, rate);
-    assert.equal(membershipCalc.formatEuro(vat120), "19,16 €");
-});
-
-test("membershipCalc: yearly = monthly * 10 (yearMonths)", () => {
-    const { membershipCalc } = loadOasisScript();
-    const yearMonths = 10;
-
-    // Solidar (3 €)
-    assert.equal(membershipCalc.total(3, false, yearMonths), 3);
-    assert.equal(membershipCalc.total(3, true, yearMonths), 30);
-
-    // Oase (5 €)
-    assert.equal(membershipCalc.total(5, false, yearMonths), 5);
-    assert.equal(membershipCalc.total(5, true, yearMonths), 50);
-
-    // Mäzen base (12 €)
-    assert.equal(membershipCalc.total(12, false, yearMonths), 12);
-    assert.equal(membershipCalc.total(12, true, yearMonths), 120);
-
-    // Custom Mäzen (e.g. 25 €)
-    assert.equal(membershipCalc.total(25, false, yearMonths), 25);
-    assert.equal(membershipCalc.total(25, true, yearMonths), 250);
-});
-
-test("membershipCalc: Mäzen minimum 12 € validation and parsing", () => {
-    const { membershipCalc } = loadOasisScript();
-    const min = 12;
-
-    // Helper to check result without cross-vm prototype mismatch
-    const check = (actual, expectedMonthly, expectedTooLow) => {
-        assert.equal(actual.monthly, expectedMonthly);
-        assert.equal(actual.tooLow, expectedTooLow);
-    };
-
-    // Valid amounts at or above minimum
-    check(membershipCalc.parseAmount(12, min), 12, false);
-    check(membershipCalc.parseAmount("12", min), 12, false);
-    check(membershipCalc.parseAmount("15", min), 15, false);
-    check(membershipCalc.parseAmount("15.5", min), 15.5, false);
-    check(membershipCalc.parseAmount("15,50", min), 15.5, false);
-    check(membershipCalc.parseAmount(" 20,00 ", min), 20, false);
-
-    // Amounts below minimum (flagged tooLow: true, defaults to min)
-    check(membershipCalc.parseAmount(11.99, min), 12, true);
-    check(membershipCalc.parseAmount("11", min), 12, true);
-    check(membershipCalc.parseAmount("5", min), 12, true);
-    check(membershipCalc.parseAmount("0", min), 12, true);
-    check(membershipCalc.parseAmount("-5", min), 12, true);
-
-    // Invalid / empty inputs (defaults to min, not flagged as tooLow)
-    check(membershipCalc.parseAmount("", min), 12, false);
-    check(membershipCalc.parseAmount(null, min), 12, false);
-    check(membershipCalc.parseAmount(undefined, min), 12, false);
-    check(membershipCalc.parseAmount("abc", min), 12, false);
-});
-
-// ---------------------------------------------------------------------------
-// 2. Pricing toggle values & DOM module tests (minimal DOM)
+// Pricing toggle values & DOM module tests (minimal DOM)
 // ---------------------------------------------------------------------------
 
 test("pricing toggle values match PROMPT.md calculation rules", () => {
@@ -284,175 +176,36 @@ test("modules.pricing: DOM toggle interaction with minimal DOM", () => {
     assert.equal(items[11].textContent, "oder ab 120 € im Jahr");
 });
 
-test("modules.membership: summary calculation and state updates with minimal DOM", () => {
-    const { modules } = loadOasisScript();
-    assert.ok(modules.membership, "modules.membership should be defined");
+test("membership module is gone from oasis.js (moved to Livewire Checkout) and livewire:navigated initializes modules once", () => {
+    let navigatedHandler = null;
+    const button = { dataset: { oasis: "share", url: "https://get-oasis.com/@mira" }, hidden: true };
 
-    const amountInput = {
-        value: "12",
-        attributes: {},
-        listeners: {},
-        setAttribute(k, v) { this.attributes[k] = String(v); },
-        getAttribute(k) { return this.attributes[k]; },
-        addEventListener(ev, fn) { this.listeners[ev] = fn; },
-    };
-
-    const amountError = { hidden: true };
-
-    const createRadioGroup = (name) => {
-        const group = [];
-        return {
-            create(value, isChecked, dataset) {
-                const radio = {
-                    name,
-                    value,
-                    dataset,
-                    _checked: isChecked,
-                    get checked() { return this._checked; },
-                    set checked(v) {
-                        if (v) {
-                            group.forEach(other => { other._checked = false; });
-                        }
-                        this._checked = v;
-                    },
-                };
-                group.push(radio);
-                return radio;
+    const { modules, context } = loadOasisScript({
+        navigator: { share: async () => {} },
+        document: {
+            querySelectorAll(selector) {
+                return selector === "[data-oasis]" ? [button] : [];
             },
-        };
-    };
-
-    const stufeGroup = createRadioGroup("stufe");
-    const stufeInputs = {
-        solidar: stufeGroup.create("solidar", false, { label: "Solidar", monthly: "3" }),
-        oase: stufeGroup.create("oase", true, { label: "Oase", monthly: "5" }),
-        maezen: stufeGroup.create("maezen", false, { label: "Mäzen" }),
-    };
-
-    const rhythmusGroup = createRadioGroup("rhythmus");
-    const rhythmusInputs = {
-        monat: rhythmusGroup.create("monat", true, { label: "Monatlich", unit: "/ Monat", term: "Monatlich kündbar …" }),
-        jahr: rhythmusGroup.create("jahr", false, { label: "Jährlich", unit: "/ Jahr", term: "Läuft 12 Monate. Danach kannst du monatlich kündigen oder ein neues Jahr abschließen." }),
-    };
-
-    const zahlartGroup = createRadioGroup("zahlart");
-    const zahlartInputs = {
-        sepa: zahlartGroup.create("sepa", true, { label: "SEPA-Lastschrift" }),
-        paypal: zahlartGroup.create("paypal", false, { label: "PayPal" }),
-        karte: zahlartGroup.create("karte", false, { label: "Kreditkarte" }),
-    };
-
-    const outputs = {
-        stufe: [],
-        rhythmus: [],
-        zahlart: [],
-        betrag: [],
-        einheit: [],
-        ust: [],
-        laufzeit: [],
-    };
-
-    const createOutputEl = (key) => {
-        const el = { textContent: "" };
-        outputs[key].push(el);
-        return el;
-    };
-
-    createOutputEl("stufe");
-    createOutputEl("rhythmus");
-    createOutputEl("zahlart");
-    createOutputEl("betrag");
-    createOutputEl("einheit");
-    createOutputEl("ust");
-    createOutputEl("laufzeit");
-
-    const priceLabels = [
-        { dataset: { month: "5 €", year: "50 €" }, textContent: "" },
-    ];
-
-    const payContainers = [
-        { dataset: { pay: "sepa" }, hidden: false },
-        { dataset: { pay: "paypal" }, hidden: true },
-        { dataset: { pay: "karte" }, hidden: true },
-    ];
-
-    let rootChangeHandler;
-    const root = {
-        dataset: { yearMonths: "10", vatRate: "19", min: "12" },
-        querySelector(selector) {
-            if (selector === "#m-betrag") return amountInput;
-            if (selector === "[data-amount-error]") return amountError;
-            if (selector === 'input[name="stufe"]:checked') {
-                return Object.values(stufeInputs).find(i => i.checked);
-            }
-            if (selector === 'input[name="rhythmus"]:checked') {
-                return Object.values(rhythmusInputs).find(i => i.checked);
-            }
-            if (selector === 'input[name="zahlart"]:checked') {
-                return Object.values(zahlartInputs).find(i => i.checked);
-            }
-            if (selector === 'input[name="stufe"][value="maezen"]') return stufeInputs.maezen;
-            return null;
+            addEventListener(event, fn) {
+                if (event === "livewire:navigated") {
+                    navigatedHandler = fn;
+                }
+            },
         },
-        querySelectorAll(selector) {
-            const outMatch = selector.match(/\[data-out="(.+?)"\]/);
-            if (outMatch) return outputs[outMatch[1]] || [];
-            if (selector === "[data-price]") return priceLabels;
-            if (selector === "[data-pay]") return payContainers;
-            return [];
-        },
-        addEventListener(ev, fn) {
-            if (ev === "change") rootChangeHandler = fn;
-        },
-    };
+    });
 
-    // Initialize module
-    modules.membership(root);
+    assert.equal(modules.membership, undefined);
+    assert.equal(vm.runInContext("typeof membershipCalc", context), "undefined");
+    assert.equal(typeof navigatedHandler, "function");
 
-    // Initial state: Oase, monthly, SEPA (5 € / month)
-    assert.equal(outputs.stufe[0].textContent, "Oase");
-    assert.equal(outputs.rhythmus[0].textContent, "Monatlich");
-    assert.equal(outputs.betrag[0].textContent, "5,00 €");
-    assert.equal(outputs.einheit[0].textContent, "/ Monat");
-    assert.equal(outputs.ust[0].textContent, "darin 0,80 €");
-    assert.equal(outputs.zahlart[0].textContent, "SEPA-Lastschrift");
-    assert.equal(payContainers[0].hidden, false);
-    assert.equal(payContainers[1].hidden, true);
+    navigatedHandler();
+    assert.equal(button.hidden, false);
+    assert.equal(button.dataset.oasisStarted, "true");
 
-    // Switch to yearly
-    rhythmusInputs.monat.checked = false;
-    rhythmusInputs.jahr.checked = true;
-    rootChangeHandler();
-
-    assert.equal(outputs.rhythmus[0].textContent, "Jährlich");
-    assert.equal(outputs.betrag[0].textContent, "50,00 €"); // 5 * 10
-    assert.equal(outputs.einheit[0].textContent, "/ Jahr");
-    assert.equal(outputs.ust[0].textContent, "darin 7,98 €");
-    assert.equal(priceLabels[0].textContent, "50 €");
-
-    // Focus on amount input switches stufe to Mäzen
-    amountInput.listeners.focus();
-    assert.equal(stufeInputs.maezen.checked, true);
-    assert.equal(stufeInputs.oase.checked, false);
-    assert.equal(outputs.stufe[0].textContent, "Mäzen");
-    assert.equal(outputs.betrag[0].textContent, "120,00 €"); // 12 * 10
-    assert.equal(outputs.ust[0].textContent, "darin 19,16 €");
-
-    // Enter custom valid amount (25 €)
-    amountInput.value = "25";
-    amountInput.listeners.input();
-    assert.equal(outputs.betrag[0].textContent, "250,00 €"); // 25 * 10
-    assert.equal(outputs.ust[0].textContent, "darin 39,92 €");
-    assert.equal(amountError.hidden, true);
-    assert.equal(amountInput.getAttribute("aria-invalid"), "false");
-
-    // Enter invalid/too-low amount (8 €)
-    amountInput.value = "8";
-    amountInput.listeners.input();
-    // Below minimum falls back to min (12 € * 10 = 120 €) and flags error
-    assert.equal(outputs.betrag[0].textContent, "120,00 €");
-    assert.equal(amountError.hidden, false);
-    assert.equal(amountInput.getAttribute("aria-invalid"), "true");
+    // A repeated livewire:navigated skips an element that already started (it keeps its marker).
+    button.hidden = true;
+    navigatedHandler();
+    assert.equal(button.hidden, true);
 });
 
 test("modules['help-search']: FAQ filtering with minimal DOM", () => {

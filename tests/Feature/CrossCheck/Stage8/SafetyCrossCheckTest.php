@@ -1,6 +1,9 @@
 <?php
 
 use App\Actions\Network\ManageFollows;
+use App\Livewire\Notifications\Inbox;
+use App\Livewire\Safety\Bookmarks;
+use App\Livewire\Safety\SafetyOverview;
 use App\Models\Block;
 use App\Models\Bookmark;
 use App\Models\Conversation;
@@ -11,7 +14,9 @@ use App\Models\Reaction;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Livewire\Livewire;
 use Tests\Support\ChatFixtures as Chat;
+use Tests\Support\NetworkActions;
 use Tests\Support\NetworkFixtures as Network;
 
 /*
@@ -36,7 +41,7 @@ function safetyCrossCheckPair(): array
     $beta = safetyCrossCheckMember('beta');
     $oasis = Network::oasis(safetyCrossCheckMember('neutral'));
     foreach ([$alpha, $beta] as $user) {
-        test()->actingAs($user)->post(route('network.follow.oasis', $oasis))->assertRedirect();
+        NetworkActions::oasis('follow', $oasis, $user)->assertHasNoErrors();
     }
     $alphaPost = Network::post($alpha, ['body' => 'crosscheck_secret_alpha #Grenzfall', 'oasis_id' => $oasis->id]);
     $betaPost = Network::post($beta, ['body' => 'crosscheck_secret_beta #Grenzfall', 'oasis_id' => $oasis->id]);
@@ -47,7 +52,7 @@ function safetyCrossCheckPair(): array
 /** Use a fresh authenticated model after every safety write; requests must not share a stale safety memo. */
 function safetyCrossCheckBlock(User $actor, User $target): void
 {
-    test()->actingAs($actor->fresh())->post(route('safety.block.store', $target))->assertRedirect();
+    NetworkActions::post('blockUser', $target->id, $actor->fresh())->assertHasNoErrors();
 }
 
 it('removes both personal follows but preserves oasis follows and sends no block notification', function () {
@@ -105,9 +110,9 @@ it('rejects replies carries and reactions in both directions without writing any
     foreach ([[$alpha, $betaPost], [$beta, $alphaPost]] as [$viewer, $hidden]) {
         $this->actingAs($viewer->fresh())->get(route('network.posts.carry', $hidden))->assertForbidden();
         foreach (['reply_to', 'carried'] as $field) {
-            $this->post(route('network.posts.store'), ['body' => 'Versuch', 'visibility' => 'public', $field => $hidden->id])->assertForbidden();
+            NetworkActions::publish(['body' => 'Versuch', 'visibility' => 'public', $field => $hidden->id])->assertForbidden();
         }
-        $this->post(route('network.reactions.store', $hidden))->assertForbidden();
+        NetworkActions::post('react', $hidden->id)->assertForbidden();
     }
     expect(Post::count())->toBe($postCount)->and(Reaction::count())->toBe(0);
 });
@@ -117,8 +122,8 @@ it('rejects refollowing in both directions at the action and HTTP boundaries', f
     safetyCrossCheckBlock($alpha, $beta);
     foreach ([[$alpha, $beta], [$beta, $alpha]] as [$viewer, $hidden]) {
         expect(fn () => app(ManageFollows::class)->follow($viewer->fresh(), $hidden->fresh()))->toThrow(ValidationException::class);
-        $response = $this->actingAs($viewer->fresh())->postJson(route('network.follow.user', $hidden));
-        expect($response->status())->toBeIn([404, 422]);
+        $response = NetworkActions::profile('follow', $hidden, $viewer->fresh());
+        $response->assertNotFound();
     }
     expect(Follow::where('followable_type', $alpha->getMorphClass())->count())->toBe(0);
 });
@@ -150,16 +155,16 @@ it('hides blocked people and posts from member search and topic lists in both di
 it('hides existing hints and suppresses new mentions across either side of a block', function () {
     [$alpha, $beta, $oasis] = safetyCrossCheckPair();
     foreach ([[$alpha, $beta], [$beta, $alpha]] as [$author, $recipient]) {
-        $this->actingAs($author)->post(route('network.posts.store'), [
+        NetworkActions::publish([
             'body' => 'Vor Block @'.$recipient->username, 'visibility' => 'public',
-        ])->assertRedirect();
+        ], $author)->assertHasNoErrors();
     }
     expect($alpha->notifications()->count())->toBe(1)->and($beta->notifications()->count())->toBe(1);
     safetyCrossCheckBlock($alpha, $beta);
     foreach ([[$alpha, $beta], [$beta, $alpha]] as [$viewer, $hidden]) {
-        $response = $this->actingAs($viewer->fresh())->get(route('notifications.index'))->assertOk()->assertDontSee('Vor Block');
-        expect($response->viewData('groups'))->toBe([]);
-        $this->post(route('network.posts.store'), ['body' => 'Nach Block @'.$hidden->username, 'visibility' => 'public'])->assertRedirect();
+        $this->actingAs($viewer->fresh())->get(route('notifications.index'))->assertOk()->assertDontSee('Vor Block');
+        Livewire::actingAs($viewer->fresh())->test(Inbox::class)->assertViewHas('groups', []);
+        NetworkActions::publish(['body' => 'Nach Block @'.$hidden->username, 'visibility' => 'public'])->assertHasNoErrors();
     }
     expect($alpha->notifications()->count())->toBe(1)->and($beta->notifications()->count())->toBe(1);
 });
@@ -170,7 +175,7 @@ it('refuses host role changes across a block in both directions', function () {
     $oasis->members()->updateExistingPivot($beta->id, ['role' => 'host']);
     safetyCrossCheckBlock($alpha, $beta);
     foreach ([[$alpha, $beta], [$beta, $alpha]] as [$viewer, $hidden]) {
-        $this->actingAs($viewer->fresh())->putJson(route('network.oases.role', [$oasis, $hidden]), ['role' => 'member'])->assertUnprocessable();
+        NetworkActions::role($oasis, $hidden, 'member', $viewer->fresh())->assertHasErrors('role');
         expect($oasis->isHost($hidden))->toBeTrue();
     }
 });
@@ -178,12 +183,12 @@ it('refuses host role changes across a block in both directions', function () {
 it('keeps another accounts block intact and restores access only after both blocks are lifted', function () {
     [$alpha, $beta, $oasis, $alphaPost, $betaPost] = safetyCrossCheckPair();
     safetyCrossCheckBlock($alpha, $beta);
-    $this->actingAs($beta->fresh())->delete(route('safety.block.destroy', $alpha))->assertRedirect();
+    Livewire::actingAs($beta->fresh())->test(SafetyOverview::class)->call('unblock', $alpha->id)->assertHasNoErrors();
     expect($alpha->fresh()->isBlockedWith($beta))->toBeTrue();
     safetyCrossCheckBlock($beta, $alpha);
-    $this->actingAs($alpha->fresh())->delete(route('safety.block.destroy', $beta))->assertRedirect();
+    Livewire::actingAs($alpha->fresh())->test(SafetyOverview::class)->call('unblock', $beta->id)->assertHasNoErrors();
     $this->actingAs($alpha->fresh())->get(route('network.posts.show', $betaPost))->assertNotFound();
-    $this->actingAs($beta->fresh())->delete(route('safety.block.destroy', $alpha))->assertRedirect();
+    Livewire::actingAs($beta->fresh())->test(SafetyOverview::class)->call('unblock', $alpha->id)->assertHasNoErrors();
     $this->actingAs($alpha->fresh())->get(route('network.posts.show', $betaPost))->assertOk();
     expect(Follow::where('followable_type', $alpha->getMorphClass())->count())->toBe(0);
 });
@@ -193,8 +198,8 @@ it('mutes only the callers lists and replies while leaving the profile readable 
     $parent = Network::post(safetyCrossCheckMember('mute_thread'));
     $reply = Network::post($beta, ['body' => 'Stumme Antwort', 'reply_to_id' => $parent->id]);
     $before = $beta->notifications()->count();
-    $this->actingAs($alpha)->post(route('safety.mute.store', $beta))->assertRedirect();
-    $this->post(route('safety.mute.store', $beta))->assertRedirect();
+    NetworkActions::post('muteUser', $beta->id, $alpha)->assertHasNoErrors();
+    NetworkActions::post('muteUser', $beta->id, $alpha)->assertHasNoErrors();
     expect(Mute::count())->toBe(1)->and($beta->notifications()->count())->toBe($before);
     expect($alpha->fresh()->mutedUserIds())->toContain($beta->id)->and($beta->fresh()->mutedUserIds())->toBe([]);
     expect($alpha->fresh()->isBlockedWith($beta))->toBeFalse();
@@ -204,9 +209,9 @@ it('mutes only the callers lists and replies while leaving the profile readable 
         $this->actingAs($beta->fresh())->get($url)->assertOk()->assertSee('crosscheck_secret_alpha');
     }
     $this->actingAs($alpha->fresh())->get(route('network.posts.show', $parent))->assertOk()->assertDontSee($reply->body);
-    $this->actingAs($beta->fresh())->delete(route('safety.mute.destroy', $alpha))->assertRedirect();
+    Livewire::actingAs($beta->fresh())->test(SafetyOverview::class)->call('unmute', $alpha->id)->assertHasNoErrors();
     expect(Mute::count())->toBe(1);
-    $this->actingAs($alpha->fresh())->delete(route('safety.mute.destroy', $beta))->assertRedirect();
+    Livewire::actingAs($alpha->fresh())->test(SafetyOverview::class)->call('unmute', $beta->id)->assertHasNoErrors();
     $this->actingAs($alpha->fresh())->get(route('network.oases.show', $oasis))->assertOk()->assertSee('crosscheck_secret_beta');
 });
 
@@ -215,14 +220,14 @@ it('keeps bookmarks private idempotent and undeletable by another account', func
     $author = safetyCrossCheckMember('bookmark_author');
     $post = Network::post($author, ['body' => 'Nur in meiner Merkliste']);
     $before = $author->notifications()->count();
-    $this->actingAs($owner)->post(route('safety.bookmarks.store', $post))->assertRedirect();
-    $this->post(route('safety.bookmarks.store', $post))->assertRedirect();
+    Livewire::actingAs($owner)->test(Bookmarks::class)->call('bookmark', $post->id)->assertHasNoErrors();
+    Livewire::actingAs($owner)->test(Bookmarks::class)->call('bookmark', $post->id)->assertHasNoErrors();
     expect(Bookmark::count())->toBe(1)->and($author->notifications()->count())->toBe($before);
-    $this->get(route('safety.bookmarks'))->assertOk()->assertSee($post->body);
+    $this->actingAs($owner)->get(route('safety.bookmarks'))->assertOk()->assertSee($post->body);
     $this->actingAs($author)->get(route('safety.bookmarks', ['user_id' => $owner->id]))->assertOk()->assertDontSee($post->body);
-    $this->delete(route('safety.bookmarks.destroy', $post), ['user_id' => $owner->id])->assertRedirect();
+    Livewire::actingAs($author)->test(Bookmarks::class)->call('unbookmark', $post->id)->assertHasNoErrors();
     expect(Bookmark::where('user_id', $owner->id)->where('post_id', $post->id)->count())->toBe(1);
-    $this->actingAs($owner)->delete(route('safety.bookmarks.destroy', $post))->assertRedirect();
+    Livewire::actingAs($owner)->test(Bookmarks::class)->call('unbookmark', $post->id)->assertHasNoErrors();
     expect(Bookmark::count())->toBe(0);
 });
 
@@ -230,7 +235,7 @@ it('hides bookmarks after deletion removal or a blockade', function (string $cha
     $owner = safetyCrossCheckMember('bookmark_reader');
     $author = safetyCrossCheckMember('bookmark_hidden');
     $post = Network::post($author, ['body' => 'Verborgene Merkliste '.$change]);
-    $this->actingAs($owner)->post(route('safety.bookmarks.store', $post))->assertRedirect();
+    Livewire::actingAs($owner)->test(Bookmarks::class)->call('bookmark', $post->id)->assertHasNoErrors();
     match ($change) {
         'deleted' => $post->delete(),
         'removed' => $post->forceFill(['removed_from_oasis_at' => now()])->save(),
@@ -245,11 +250,11 @@ it('cannot forge safety or bookmark ownership with submitted user IDs', function
     $victim = safetyCrossCheckMember('victim');
     $target = safetyCrossCheckMember('target');
     $post = Network::post($target);
-    $this->actingAs($caller)->post(route('safety.block.store', $target), ['user_id' => $victim->id])->assertRedirect();
-    $this->post(route('safety.mute.store', $target), ['user_id' => $victim->id])->assertRedirect();
+    NetworkActions::post('blockUser', $target->id, $caller)->assertHasNoErrors();
+    NetworkActions::post('muteUser', $target->id, $caller)->assertHasNoErrors();
     expect(Block::where('user_id', $victim->id)->count())->toBe(0)->and(Mute::where('user_id', $victim->id)->count())->toBe(0);
-    $this->delete(route('safety.block.destroy', $target))->assertRedirect();
-    $this->actingAs($caller->fresh())->post(route('safety.bookmarks.store', $post), ['user_id' => $victim->id])->assertRedirect();
+    Livewire::actingAs($caller)->test(SafetyOverview::class)->call('unblock', $target->id)->assertHasNoErrors();
+    Livewire::actingAs($caller->fresh())->test(Bookmarks::class)->call('bookmark', $post->id)->assertHasNoErrors();
     expect(Bookmark::where('user_id', $victim->id)->count())->toBe(0);
     expect(Bookmark::where('user_id', $caller->id)->count())->toBe(1);
 });
@@ -259,10 +264,11 @@ it('requires login and verified email for private safety lists and bookmark writ
     foreach (['safety.index', 'safety.bookmarks'] as $route) {
         $this->get(route($route))->assertRedirect(route('login'));
     }
-    $this->post(route('safety.bookmarks.store', $post))->assertRedirect(route('login'));
-    $this->actingAs(User::factory()->unverified()->create())->get(route('safety.index'))->assertRedirect(route('verification.notice'));
+    Livewire::test(Bookmarks::class)->assertForbidden();
+    $unverified = User::factory()->unverified()->create();
+    $this->actingAs($unverified)->get(route('safety.index'))->assertRedirect(route('verification.notice'));
     $this->get(route('safety.bookmarks'))->assertRedirect(route('verification.notice'));
-    $this->post(route('safety.bookmarks.store', $post))->assertRedirect(route('verification.notice'));
+    Livewire::actingAs($unverified)->test(Bookmarks::class)->assertForbidden();
 });
 
 it('does not reveal a blocked original inside a third parties carried Tropfen', function () {
@@ -284,22 +290,22 @@ it('rejects attempts to bookmark a currently unreadable Tropfen without storing 
     } else {
         safetyCrossCheckBlock($author, $owner);
     }
-    $response = $this->actingAs($owner->fresh())->post(route('safety.bookmarks.store', $post));
-    expect($response->status())->toBeIn([403, 404]);
+    $component = Livewire::actingAs($owner->fresh())->test(Bookmarks::class)->call('bookmark', $post->id);
+    $component->assertNotFound();
     expect(Bookmark::where('user_id', $owner->id)->count())->toBe(0);
 })->with(['removed', 'blocked']);
 
 it('keeps muted mention hints one-sided without notifying anyone about the mute itself', function () {
     $alpha = safetyCrossCheckMember('mention_alpha');
     $beta = safetyCrossCheckMember('mention_beta');
-    $this->actingAs($alpha)->post(route('safety.mute.store', $beta))->assertRedirect();
+    NetworkActions::post('muteUser', $beta->id, $alpha)->assertHasNoErrors();
     expect($alpha->notifications()->count())->toBe(0)->and($beta->notifications()->count())->toBe(0);
-    $this->actingAs($beta->fresh())->post(route('network.posts.store'), [
+    NetworkActions::publish([
         'body' => 'Hallo @'.$alpha->username, 'visibility' => 'public',
-    ])->assertRedirect();
-    $this->actingAs($alpha->fresh())->post(route('network.posts.store'), [
+    ], $beta->fresh())->assertHasNoErrors();
+    NetworkActions::publish([
         'body' => 'Hallo @'.$beta->username, 'visibility' => 'public',
-    ])->assertRedirect();
+    ], $alpha->fresh())->assertHasNoErrors();
     expect($alpha->notifications()->count())->toBe(0)->and($beta->notifications()->count())->toBe(1);
 });
 
@@ -349,13 +355,16 @@ it('paginates bookmarks by bookmark order without repeating posts when saved ord
     $posts = collect(range(1, 21))->map(fn ($i) => Network::post($author, ['body' => 'Gemerkter Seiteneintrag '.$i]));
     $this->actingAs($viewer);
     foreach ($posts->reverse() as $post) {
-        $this->post(route('safety.bookmarks.store', $post))->assertRedirect();
+        Livewire::actingAs($viewer)->test(Bookmarks::class)->call('bookmark', $post->id)->assertHasNoErrors();
     }
-    $first = $this->get(route('safety.bookmarks'))->assertOk()->viewData('posts');
+    $first = Livewire::actingAs($viewer)->test(Bookmarks::class)->viewData('posts');
     $firstIds = collect($first->items())->pluck('id')->all();
     expect($firstIds)->toHaveCount(20);
     expect($first->nextPageUrl())->not->toBeNull();
-    $second = $this->get($first->nextPageUrl())->assertOk()->viewData('posts');
+    $second = Livewire::actingAs($viewer)
+        ->withQueryParams(['cursor' => $first->nextCursor()->encode()])
+        ->test(Bookmarks::class)
+        ->viewData('posts');
     $secondIds = collect($second->items())->pluck('id')->all();
     expect(array_intersect($firstIds, $secondIds))->toBe([]);
     expect($secondIds)->toBe([$posts->last()->id]);

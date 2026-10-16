@@ -19,15 +19,19 @@ TOTP two-factor flows. Oasis owns the validation actions and Blade views. No soc
 | GET/POST `/passwort-bestaetigen` | `password.confirm` / `password.confirm.store` | Recent-password confirmation |
 | GET/POST `/zwei-faktor-anmeldung` | `two-factor.login` / `two-factor.login.store` | TOTP or recovery challenge |
 | GET `/app` | `app.home` | Authenticated, verified app landing page |
-| GET `/app/einstellungen` | `app.settings` | Authenticated, verified account settings |
-| PUT `/app/konto/profil` | `user-profile-information.update` | Display name and email changes |
-| PUT `/app/konto/passwort` | `user-password.update` | Current-password-protected password change |
-| GET `/app/konto/export` | `account.export` | Download the signed-in user's profile JSON |
-| DELETE `/app/konto` | `account.destroy` | Delete the signed-in user after recent password confirmation |
+| GET `/app/einstellungen` | `app.settings` | Authenticated, verified account settings (`App\Livewire\Account\Settings`: profile, password, 2FA, account deletion) |
+| PUT `/app/konto/profil` | `user-profile-information.update` | Display name and email changes (Fortify endpoint; UI uses `Settings::updateProfile`) |
+| PUT `/app/konto/passwort` | `user-password.update` | Current-password-protected password change (Fortify endpoint; UI uses `Settings::updatePassword`) |
+| GET `/app/konto/export` | `account.export` | Download the signed-in user's profile ZIP (`ExportAccountController`) |
 
-Fortify's remaining `two-factor.*` management routes retain its default `/user/...` URLs. They require authentication
-and recent password confirmation. Setup stays pending until the user submits a valid authenticator code. Recovery
-codes are consumed once. The UI always uses named routes.
+On `/app/einstellungen`, the Livewire 4 component `App\Livewire\Account\Settings` invokes the Fortify actions
+(`UpdatesUserProfileInformation`, `UpdatesUserPasswords`, `EnableTwoFactorAuthentication`,
+`ConfirmTwoFactorAuthentication`, `DisableTwoFactorAuthentication`, `GenerateNewRecoveryCodes`) and
+`App\Actions\Account\DeleteAccount` directly. Sensitive actions (2FA changes and account deletion) verify recent
+password confirmation (`auth.password_confirmed_at` within `auth.password_timeout`, default 10800s) and redirect to
+`route('password.confirm')` when expired. Account deletion additionally validates explicit checkbox consent on the server.
+Setup stays pending until the user submits a valid authenticator code.
+Recovery codes are consumed once. The UI always uses named routes.
 
 `config/fortify.php` defines features, paths and redirects; `App\Providers\FortifyServiceProvider` connects actions,
 views and limiters. `routes/app.php` is included from `routes/web.php`. Public marketing routes stay in

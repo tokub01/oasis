@@ -8,8 +8,9 @@ use Illuminate\View\View;
 /**
  * Shows the confirmation page after a successful form submission.
  *
- * Each form controller redirects here with the flash key `oasis.submitted.<form>`. Without that key (someone opens
- * the URL directly) the page is a 404, so a confirmation is never shown for something that did not happen.
+ * Each form component (app/Livewire/Oasis) redirects here with the flash key `oasis.submitted.<form>`. Without that
+ * key (someone opens the URL directly) the page is a 404, so a confirmation is never shown for something that did not
+ * happen.
  * One route per form is registered in routes/oasis.php with the form name as route default.
  */
 class ConfirmationController extends Controller

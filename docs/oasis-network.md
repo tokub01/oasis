@@ -1,7 +1,8 @@
 # Oasis core network (stage 2)
 
 Profiles, Tropfen, the Quelle, following, quiet reactions, oases, invitation links and the member/host statistics.
-Everything renders server-side and works without JavaScript (plain forms and links).
+Class-based Livewire 4 components render these pages and handle interactions without full page loads.
+Internal links use `wire:navigate`; JavaScript is required for component actions.
 
 ## Data model (`database/migrations/2026_10_12_100000_create_network_tables.php`)
 
@@ -41,15 +42,15 @@ Tropfen keep their (dangling) reference, stay replies/carries and show "nicht me
 - **Reports**: "Melden" on a Tropfen opens the existing Art. 16 DSA form prefilled with its URL.
 - **Invitations**: `/einladung/{token}` stores the token in the session; on `Registered` the new account and the
   inviter follow each other (`NetworkServiceProvider`). Group trials ("Gemeinsam starten") belong to stage 1.
-- **Rate limit**: `throttle:network-posts`, 10 Tropfen per minute and account.
+- **Rate limit**: `Compose::publish` enforces 10 attempts per minute and account; live tone checks have a separate 30/min budget.
 
 ## Routes (`routes/network.php`, names `network.*`)
 
 Guests: `/tropfen/{id}`, `/tropfen/{id}/bild/{image}`, `/oasen/{slug}`, `/einladung/{token}`, `/profil/{handle}`
 (route `oasis.profil`; real members first, sample profiles of the guest preview as fallback while
 `oasis.demo_pages` is on). Members: `/app` (Quelle, `app.home`), `/app/entdecken`, `/app/oasen`, `/app/oasen/neu`,
-`/oasen/{slug}/bearbeiten|statistik`, `/app/profil`, `/app/statistik`, `/app/einladen`, plus the POST/PUT/DELETE
-actions for Tropfen, reactions, follows, oases and roles.
+`/oasen/{slug}/bearbeiten|statistik`, `/app/profil`, `/app/statistik`, `/app/einladen`, all served through `Route::livewire` with their existing names.
+Writes are authorized Livewire methods; the replaced POST/PUT/DELETE routes have been removed.
 
 ## Statistics
 
@@ -63,10 +64,11 @@ Charts are tables with CSS bars (`x-network.week-chart`), readable by screen rea
 
 ## Views and components
 
-`resources/views/app/home.blade.php` (Quelle), `resources/views/app/network/**`, components `x-network.post-card`,
-`x-network.compose`, `x-network.feed`, `x-network.avatar`, `x-network.stat`, `x-network.week-chart`.
-`app/network/frame.blade.php` renders guest-readable pages in the app shell for members and in the website layout
-(with a sign-up hint) for guests.
+`app/Livewire/Network/**` and `resources/views/livewire/network/**` contain the class-based pages.
+`NetworkPage` selects the app shell or public website layout and rechecks verified access for private pages.
+Shared Blade components remain `x-network.post-card`, `x-network.compose`, `x-network.feed`, `x-network.avatar`,
+`x-network.stat` and `x-network.week-chart`. The composer adapter mounts a separate `Compose` component.
+Cursor pagination uses `WithPagination`; creating a Tropfen refreshes its containing page via `post-published`.
 
 ## Tests
 
@@ -83,7 +85,7 @@ Charts are tables with CSS bars (`x-network.week-chart`), readable by screen rea
 - **Members-only switch**: when hosts switch an oasis to members-only, all its Tropfen (incl. replies) become
   members-only in the same transaction (`ManageOasis::update`); switching back does not publish them again.
   Already downloaded public content cannot be recalled; public image responses were cacheable for one day.
-- **Closing an oasis**: hosts close it via a confirmation page (`/oasen/{slug}/schliessen`, `DELETE /oasen/{slug}`);
+- **Closing an oasis**: hosts close it via a confirmation page (`/oasen/{slug}/schliessen`, `OasisClose::close`);
   Tropfen stay with their authors without an oasis, memberships and follows are removed.
 - **Account deletion** (`App\Actions\Account\DeleteAccount`): oases where the account is the only host get the
   longest member as host or are closed when empty; uploaded images are removed from the media disk after the commit.
@@ -98,11 +100,33 @@ Charts are tables with CSS bars (`x-network.week-chart`), readable by screen rea
   URL ranges take precedence over mention/topic tokens, so paths and fragments are not split into internal links.
 - **Read before carrying**: when the original Tropfen contains such a link, `network.posts.carry` shows
   “Hast du den Link gelesen? Weitertragen heißt: Du stehst dafür ein.”, the destinations and the required
-  “Ich habe den Inhalt gelesen” checkbox. Its HTML `form` attribute associates it with the compose form without JS.
-  `PostRequest` validates `link_read` as accepted against the original Tropfen's body, including direct POSTs.
+  “Ich habe den Inhalt gelesen” checkbox. The checkbox belongs to the reactive composer.
+  `PostInput` validates `link_read` as accepted against the original Tropfen's body on every publish action.
   New posts, replies and carries without external links need no confirmation. Acceptance is a submission check,
   not evidence that a person visited or read a page, and is not stored as a separate tracking record.
 - **No previews or tracking**: `App\Support\Network\TextLinks` only parses text; it never resolves or fetches URLs.
   The check does not assess the truth or trustworthiness of linked content.
-- **Tests**: `tests/Feature/Network/ReadBeforeCarryTest.php` covers validation, accessible form association,
-  error/old-input handling, dangerous input, URL/token overlap and punctuation; outbound HTTP is prohibited.
+- **Tests**: `tests/Feature/Network/ReadBeforeCarryTest.php` covers validation, accessible labels,
+  validation and retained component input, dangerous input, URL/token overlap and punctuation; outbound HTTP is prohibited.
+
+## Stage 12: Livewire boundaries
+
+- `Compose` uses `WithFileUploads`, validates images/alt texts with `PostInput`, and delegates publication to
+  `PublishPost`. Selected images are checked immediately against the same type, size, dimension and count rules;
+  individual files can be removed while keeping their descriptions aligned. Temporary-upload configuration is unchanged.
+  Tone feedback while typing uses only the local `WordListCheck`; unpublished drafts never go to the language model.
+  `ContentAssessor` runs on submission, with explicit confirmation required for a tone warning.
+  Valid publishing attempts consume the 10/min budget, including the attempt producing a tone warning and its
+  confirmation; invalid payloads do not. Exhaustion appears as an inline form error.
+- `InteractsWithPosts` supplies `react`, `unreact`, `bookmark`, `unbookmark`, `blockUser`, `muteUser`, `unmuteUser`,
+  `deletePost` and `removePostFromOasis`. Every method resolves the current verified actor and fresh target;
+  participation, visibility, ownership and host policies apply before the existing domain action is called.
+  Hosts render the locked `postStatus` with `role="status"` and query their lists again after writes.
+- Bound post/oasis/profile/invitation IDs and handles are locked. Public properties contain editable values and
+  identifiers; foreign emails, invitation secrets and Eloquent records are never serialized into component state.
+- `OasisForm`, `OasisClose`, `ProfileEdit`, `ProfileShow`, `OasisShow` and `Invitations` reauthorize every action.
+  `ManageReaction` and `UpdateProfile` hold persistence previously performed by controllers.
+- `PostImageController` deliberately remains a visibility-checked binary HTTP endpoint. All other network/search
+  controllers, obsolete network FormRequests and their old page views were removed.
+- Existing regression tests invoke real components through `Tests\Support\NetworkActions`; additional Livewire tests
+  cover locked context, revoked permissions, posting budgets and live tone confirmation.

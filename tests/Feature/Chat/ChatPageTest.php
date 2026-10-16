@@ -29,7 +29,7 @@ it('links "Nachrichten" in the app navigation and marks it as current on the cha
 
     $this->actingAs($user)->get('/app')->assertSee('href="'.route('app.chat').'"', false);
     $html = $this->actingAs($user)->get('/app/nachrichten')->getContent();
-    expect($html)->toMatch('#href="'.preg_quote(route('app.chat'), '#').'"\s+aria-current="page"#');
+    expect($html)->toMatch('#href="'.preg_quote(route('app.chat'), '#').'"\s+(?:wire:navigate\s+)?aria-current="page"#');
 });
 
 it('tells the chat UI whether the account may write', function () {

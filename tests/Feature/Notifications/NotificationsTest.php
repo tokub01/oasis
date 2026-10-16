@@ -9,6 +9,8 @@ use App\Enums\Network\OasisRole;
 use App\Enums\Notifications\NoticeKind;
 use App\Events\Network\Followed;
 use App\Events\Network\PostPublished;
+use App\Livewire\Notifications\Inbox;
+use App\Livewire\Notifications\Settings;
 use App\Mail\Notifications\DailyDigest;
 use App\Models\Block;
 use App\Models\Mute;
@@ -18,12 +20,12 @@ use App\Support\Network\Mentions;
 use App\Support\Notifications\HintPresentation;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Notifications\DatabaseNotification;
-use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Livewire\Livewire;
 use Tests\Support\NetworkFixtures as Fixtures;
 
 // Integration tests use real network actions, Laravel database notifications and the independent Codex database.
@@ -151,14 +153,17 @@ it('shows calendar groups, pagination and owner-scoped read actions for read-onl
     $hints = $recipient->notifications()->get();
     $hints[0]->forceFill(['created_at' => now()->subDay()])->save();
     $hints[1]->forceFill(['created_at' => now()->subWeeks(2)])->save();
-    $this->actingAs($recipient)->get(route('notifications.index'))->assertOk()->assertSee('Heute')->assertSee('Ungelesen')->assertSee('page=2', false);
-    $this->get(route('notifications.index', ['page' => 2]))->assertOk()->assertSee('Diese Woche')->assertSee('Früher');
-    $this->post(route('notifications.read', $hints[2]->id))->assertRedirect();
+    $this->actingAs($recipient)->get(route('notifications.index'))->assertOk()->assertSeeLivewire(Inbox::class)
+        ->assertSee('Heute')->assertSee('Ungelesen');
+    Livewire::withQueryParams(['page' => 2])->test(Inbox::class)->assertSee('Diese Woche')->assertSee('Früher');
+    Livewire::test(Inbox::class)->call('markRead', $hints[2]->id)->assertSee('Der Hinweis ist gelesen.');
     expect($hints[2]->fresh()->read_at)->not->toBeNull();
-    $this->actingAs($actor)->post(route('notifications.read', $hints[3]->id))->assertNotFound();
-    $this->actingAs($recipient)->post(route('notifications.read-all'))->assertRedirect();
+    $this->actingAs($actor);
+    Livewire::test(Inbox::class)->call('markRead', $hints[3]->id)->assertStatus(404);
+    expect($hints[3]->fresh()->read_at)->toBeNull();
+    $this->actingAs($recipient);
+    Livewire::test(Inbox::class)->call('markAllRead')->assertSee('Alle Hinweise sind gelesen.')->assertDontSee('Ungelesen');
     expect($recipient->unreadNotifications()->count())->toBe(0);
-    $this->get(route('notifications.index'))->assertOk()->assertDontSee('Ungelesen');
     $this->travelBack();
 });
 
@@ -187,17 +192,18 @@ it('hides stale hints after content removal, actor deletion and safety changes',
 
 it('stores six independent preferences and keeps email opt-in off by default', function () {
     $user = Fixtures::member();
-    $this->actingAs($user)->get(route('notifications.settings'))->assertOk()->assertSee('Hinweise einstellen');
+    $this->actingAs($user)->get(route('notifications.settings'))->assertOk()->assertSeeLivewire(Settings::class)->assertSee('Hinweise einstellen');
     expect(NotificationPreference::count())->toBe(0);
-    $this->put(route('notifications.settings.update'), ['kinds' => ['follow' => 1, 'mention' => 0], 'digest_enabled' => 1])->assertRedirect(route('notifications.settings'));
+    Livewire::test(Settings::class)->set('kinds.follow', true)->set('kinds.mention', false)->set('digest', true)
+        ->call('save')->assertHasNoErrors()->assertSee('Deine Hinweis-Einstellungen sind gespeichert.');
     $preference = NotificationPreference::where('user_id', $user->id)->sole();
     expect($preference->enabled(NoticeKind::Follow))->toBeTrue();
     expect($preference->enabled(NoticeKind::Mention))->toBeFalse();
     expect($preference->digest_enabled)->toBeTrue();
     expect($preference->kinds)->toHaveCount(6);
-    $this->put(route('notifications.settings.update'), ['digest_enabled' => 'invalid'])->assertSessionHasErrors('digest_enabled');
-    $this->put(route('notifications.settings.update'), [])->assertRedirect();
-    expect($preference->fresh()->digest_enabled)->toBeFalse();
+    Livewire::test(Settings::class)->set('kinds.follow', 'invalid')->call('save')->assertHasErrors('kinds.follow');
+    Livewire::test(Settings::class)->set('digest', false)->set('kinds.unknown', true)->call('save')->assertHasNoErrors();
+    expect($preference->fresh()->digest_enabled)->toBeFalse()->and($preference->fresh()->kinds)->not->toHaveKey('unknown');
 });
 
 it('requires authentication and verification on every notification page', function () {
@@ -342,15 +348,7 @@ it('keeps plain pagination links even if an earlier Livewire component changed t
     foreach (range(1, 21) as $i) {
         app(SendHint::class)->handle($recipient, $actor, NoticeKind::Follow, 'plain-pagination:'.$i);
     }
-    $originalView = Paginator::$defaultView;
-    try {
-        Paginator::defaultView('livewire::tailwind');
-        $this->actingAs($recipient)->get(route('notifications.index'))->assertOk()
-            ->assertSee('page=2', false)->assertDontSee('wire:click', false);
-        $response = $this->get(route('notifications.index', ['page' => 2]))->assertOk();
-        expect($response->viewData('hints')->currentPage())->toBe(2);
-        expect($response->viewData('hints')->count())->toBe(1);
-    } finally {
-        Paginator::defaultView($originalView);
-    }
+    $this->actingAs($recipient);
+    Livewire::test(Inbox::class)->assertViewHas('hints', fn ($hints) => $hints->currentPage() === 1 && $hints->count() === 20)
+        ->call('nextPage')->assertViewHas('hints', fn ($hints) => $hints->currentPage() === 2 && $hints->count() === 1);
 });

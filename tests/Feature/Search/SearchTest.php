@@ -1,6 +1,8 @@
 <?php
 
+use App\Livewire\Search\Index;
 use App\Models\User;
+use Livewire\Livewire;
 use Tests\Support\NetworkFixtures as N;
 
 /* Stage 8 search: people, oases and Tropfen for members, public #Thema pages, visibility and blockades. */
@@ -22,7 +24,7 @@ it('finds people by name or handle, exact handle first, only visible and verifie
     $partial = N::member(['username' => 'mirabelle', 'display_name' => 'Anna Mirabelle']);
     User::factory()->unverified()->create(['username' => 'mira_unverified']);
 
-    $people = $this->actingAs($me)->get(route('search.index', ['q' => '@Mira']))->assertOk()->viewData('people');
+    $people = Livewire::actingAs($me)->withQueryParams(['q' => '@Mira'])->test(Index::class)->viewData('people');
 
     expect($people->pluck('username')->all())->toBe(['mira', 'mirabelle']);
 });
@@ -38,9 +40,9 @@ it('finds oases and Tropfen, newest first, with LIKE wildcards taken literally',
 
     $this->actingAs($me)->get(route('search.index', ['q' => 'tomaten']))->assertOk()
         ->assertSeeInOrder(['Neuer Tropfen über Tomaten', 'Alter Tropfen über Tomaten'])->assertDontSee('Nichts davon');
-    expect($this->get(route('search.index', ['q' => '0%']))->viewData('posts')->pluck('body')->all())->toBe(['100% Kompost'])
-        ->and($this->get(route('search.index', ['q' => '%']))->viewData('posts'))->toBeNull()
-        ->and($this->get(route('search.index', ['q' => 'garten']))->viewData('oases')->pluck('name')->all())->toBe(['Stadtgarten']);
+    expect(Livewire::withQueryParams(['q' => '0%'])->test(Index::class)->viewData('posts')->pluck('body')->all())->toBe(['100% Kompost'])
+        ->and(Livewire::withQueryParams(['q' => '%'])->test(Index::class)->viewData('posts'))->toBeNull()
+        ->and(Livewire::withQueryParams(['q' => 'garten'])->test(Index::class)->viewData('oases')->pluck('name')->all())->toBe(['Stadtgarten']);
 });
 
 it('never shows Tropfen, profiles or oases the member may not read', function () {
@@ -50,7 +52,7 @@ it('never shows Tropfen, profiles or oases the member may not read', function ()
     N::post($author, ['body' => 'Versteckt geheim', 'removed_from_oasis_at' => now()]);
     N::oasis($author, ['name' => 'Geheimkreis', 'visibility' => 'members']);
 
-    $response = $this->actingAs($me)->get(route('search.index', ['q' => 'geheim']))->assertOk();
+    $response = Livewire::actingAs($me)->withQueryParams(['q' => 'geheim'])->test(Index::class)->assertOk();
     expect($response->viewData('posts')->items())->toBe([])
         ->and($response->viewData('oases')->pluck('name')->all())->toBe(['Geheimkreis']); // members may read members-only oases
 });

@@ -38,8 +38,12 @@ function bindSetup(ctx, onReady) {
         }
         showError(error, '');
         try {
-            ctx.storedIdentity = await whileBusy(form, () => setUpIdentity(ctx.api, ctx.session, passphrase));
+            const stored = await whileBusy(form, () => setUpIdentity(ctx.api, ctx.session, passphrase));
             form.reset();
+            if (!stored) {
+                return;
+            }
+            ctx.storedIdentity = stored;
             ctx.announce('Deine Chat-Schlüssel sind eingerichtet.');
             onReady();
         } catch (failure) {
@@ -62,8 +66,11 @@ function bindUnlock(ctx, onReady) {
         }
         showError(error, '');
         try {
-            await whileBusy(form, () => unlockStoredIdentity(ctx.session, ctx.storedIdentity, passphrase));
+            const unlocked = await whileBusy(form, () => unlockStoredIdentity(ctx.session, ctx.storedIdentity, passphrase));
             form.reset();
+            if (!unlocked) {
+                return;
+            }
             ctx.announce('Nachrichten entsperrt.');
             onReady();
         } catch (failure) {

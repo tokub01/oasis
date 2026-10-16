@@ -1,8 +1,12 @@
 <?php
 
 use App\Actions\Network\ManageFollows;
+use App\Livewire\Notifications\Inbox;
+use App\Livewire\Notifications\Settings;
 use App\Models\Post;
 use App\Models\User;
+use Livewire\Livewire;
+use Tests\Support\NetworkActions;
 use Tests\Support\NetworkFixtures as N;
 
 /*
@@ -14,7 +18,7 @@ beforeEach(fn () => $this->withoutVite());
 /** Publish a Tropfen through the real endpoint. */
 function publish(User $author, array $input): Post
 {
-    test()->actingAs($author)->post(route('network.posts.store'), $input + ['visibility' => 'public'])->assertRedirect();
+    NetworkActions::publish($input + ['visibility' => 'public'], $author)->assertHasNoErrors();
 
     return Post::where('user_id', $author->id)->latest('id')->firstOrFail();
 }
@@ -83,10 +87,9 @@ it('does not leak the text of Tropfen the recipient may no longer read', functio
 it('respects switched-off hint kinds', function () {
     $me = N::member();
     $this->actingAs($me)->get(route('notifications.settings'))->assertOk();
-    $this->put(route('notifications.settings.update'), [
-        'kinds' => ['follow' => '0', 'reply' => '1', 'carry' => '1', 'mention' => '1', 'invitation' => '1', 'host' => '1'],
-        'digest_enabled' => '0',
-    ])->assertRedirect(route('notifications.settings'));
+    Livewire::test(Settings::class)
+        ->set('kinds', ['follow' => false, 'reply' => true, 'carry' => true, 'mention' => true, 'invitation' => true, 'host' => true])
+        ->set('digest', false)->call('save')->assertHasNoErrors();
 
     app(ManageFollows::class)->follow(N::member(), $me);
     expect($me->fresh()->notifications)->toBeEmpty();
@@ -97,9 +100,11 @@ it('lets nobody mark someone else\'s hint as read', function () {
     publish(N::member(), ['body' => 'Hey @besitzerin']);
     $hint = $me->fresh()->notifications->sole();
 
-    $this->actingAs(N::member())->post(route('notifications.read', $hint->id))->assertNotFound();
+    $this->actingAs(N::member());
+    Livewire::test(Inbox::class)->call('markRead', $hint->id)->assertStatus(404);
     expect($hint->fresh()->read_at)->toBeNull();
-    $this->actingAs($me)->post(route('notifications.read', $hint->id))->assertRedirect();
+    $this->actingAs($me);
+    Livewire::test(Inbox::class)->call('markRead', $hint->id)->assertHasNoErrors();
     expect($hint->fresh()->read_at)->not->toBeNull();
 });
 

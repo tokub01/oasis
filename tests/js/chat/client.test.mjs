@@ -250,5 +250,49 @@ test('Realtime stays disabled without a key and subscribes via Reverb when confi
     assert.equal(enabled.echo.options.wssPort, 8080);
     assert.equal(enabled.echo.options.forceTLS, true);
     assert.deepEqual(enabled.echo.options.enabledTransports, ['ws', 'wss']);
-    enabled.echo.disconnect();
+    enabled.disconnect();
+    assert.equal(enabled.enabled, false);
+    assert.equal(enabled.current, null);
+});
+
+
+test('unlock finishing after a navigation lock never restores the private identity', async () => {
+    const identity = await createIdentity();
+    const stored = { locked_identity: await lockIdentity(identity, 'richtige passphrase', FAST_KDF), public_keys: await exportPublicKeys(identity) };
+    const session = new ChatSession('1');
+    const pending = unlockStoredIdentity(session, stored, 'richtige passphrase');
+    session.lock();
+
+    assert.equal(await pending, false);
+    assert.equal(session.unlocked, false);
+    assert.equal(session.identity, null);
+});
+
+test('identity setup finishing after navigation cannot reopen the abandoned session', async () => {
+    const session = new ChatSession('1');
+    let finishSave;
+    let startedSave;
+    const saving = new Promise((resolve) => { startedSave = resolve; });
+    const api = { saveIdentity: () => { startedSave(); return new Promise((resolve) => { finishSave = resolve; }); } };
+    const pending = setUpIdentity(api, session, 'Palme Regen Kompass Tee');
+    await saving;
+    session.lock();
+    finishSave({ data: { id: '1' } });
+
+    assert.equal(await pending, null);
+    assert.equal(session.unlocked, false);
+});
+
+test('Realtime teardown leaves the watched channel and disconnects the transport exactly once', async () => {
+    const { Realtime } = await import('../../../resources/js/chat/client/realtime.js');
+    const realtime = new Realtime({ key: '', csrfToken: '' });
+    const calls = [];
+    realtime.echo = { leave: (channel) => calls.push(channel), disconnect: () => calls.push('disconnect') };
+    realtime.current = 'conversation.42';
+
+    realtime.disconnect();
+    realtime.disconnect();
+
+    assert.deepEqual(calls, ['conversation.42', 'disconnect']);
+    assert.equal(realtime.enabled, false);
 });

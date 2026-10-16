@@ -1,7 +1,7 @@
 /*
- * Oasis website: small progressive enhancements. Every page stays usable
- * without JavaScript; a module only runs on elements with a matching
- * data-oasis="<name>" attribute.
+ * Oasis website: small page modules. A module only runs on elements with a
+ * matching data-oasis="<name>" attribute. Interactive app screens are Livewire
+ * components; these modules cover the few purely client-side helpers.
  */
 
 const modules = {};
@@ -33,43 +33,52 @@ modules.pricing = (root) => {
 };
 
 // --- Profil / Einladungen: share or copy a link ------------------------------
-// The button is rendered `hidden` and only shown when sharing or copying works.
+// The button is rendered `hidden` and only shown when sharing or copying works. The buttons live inside Livewire
+// components, whose re-renders reset `hidden`; revealing is therefore safe to repeat, and the click is handled once
+// for the whole document (below) instead of being bound to each button.
 modules.share = (button) => {
-    const url = button.dataset.url;
-    if (!navigator.share && !navigator.clipboard) {
-        return;
+    if (navigator.share || navigator.clipboard) {
+        button.hidden = false;
     }
-
-    button.addEventListener("click", async () => {
-        try {
-            if (navigator.share) {
-                await navigator.share({ url });
-            } else {
-                await navigator.clipboard.writeText(url);
-                button.setAttribute("aria-label", "Link kopiert");
-                const label = button.querySelector ? button.querySelector("[data-share-label]") : null;
-                if (label) {
-                    const original = label.textContent;
-                    label.textContent = "Kopiert!";
-                    setTimeout(() => {
-                        label.textContent = original;
-                        button.setAttribute("aria-label", original);
-                    }, 2000);
-                } else if (button.innerHTML !== undefined && button.innerHTML) {
-                    const originalHtml = button.innerHTML;
-                    button.innerHTML = '<span class="text-xs font-bold text-spring-text">Kopiert!</span>';
-                    setTimeout(() => {
-                        button.innerHTML = originalHtml;
-                        button.setAttribute("aria-label", "Profil teilen");
-                    }, 2000);
-                }
-            }
-        } catch {
-            // The person cancelled the share sheet; nothing to do.
-        }
-    });
-    button.hidden = false;
 };
+
+// Shares the button's data-url natively, or copies it and briefly confirms "Kopiert!".
+const shareLink = async (button) => {
+    const url = button.dataset.url;
+    try {
+        if (navigator.share) {
+            await navigator.share({ url });
+        } else {
+            await navigator.clipboard.writeText(url);
+            button.setAttribute("aria-label", "Link kopiert");
+            const label = button.querySelector ? button.querySelector("[data-share-label]") : null;
+            if (label) {
+                const original = label.textContent;
+                label.textContent = "Kopiert!";
+                setTimeout(() => {
+                    label.textContent = original;
+                    button.setAttribute("aria-label", original);
+                }, 2000);
+            } else if (button.innerHTML !== undefined && button.innerHTML) {
+                const originalHtml = button.innerHTML;
+                button.innerHTML = '<span class="text-xs font-bold text-spring-text">Kopiert!</span>';
+                setTimeout(() => {
+                    button.innerHTML = originalHtml;
+                    button.setAttribute("aria-label", "Profil teilen");
+                }, 2000);
+            }
+        }
+    } catch {
+        // The person cancelled the share sheet; nothing to do.
+    }
+};
+
+document.addEventListener("click", (event) => {
+    const button = event.target.closest?.('[data-oasis="share"]');
+    if (button) {
+        shareLink(button);
+    }
+});
 
 // --- Hilfe: filter the FAQ on the page ---------------------------------------
 // The search form is rendered with `hidden` and only shown here, so there is
@@ -113,121 +122,23 @@ modules["help-search"] = (form) => {
 };
 // --- /Hilfe ----------------------------------------------------------------
 
-// --- Mitglied werden: membership summary ------------------------------------
-// Pure calculations (kept free of DOM access so they can be tested in Node).
-const membershipCalc = {
-    // German money format: 1234.5 -> "1.234,50 €"
-    formatEuro(amount) {
-        const cents = Math.round(amount * 100);
-        const euros = Math.floor(cents / 100)
-            .toString()
-            .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-        return `${euros},${String(cents % 100).padStart(2, "0")} €`;
-    },
-    // Mäzen amount from the raw input; below the minimum (or invalid) counts as the minimum.
-    parseAmount(raw, min) {
-        const text = String(raw ?? "").trim();
-        const value = Number(text.replace(",", "."));
-        const valid = text !== "" && !Number.isNaN(value);
-        return {
-            monthly: valid && value >= min ? Math.round(value * 100) / 100 : min,
-            tooLow: valid && value < min,
-        };
-    },
-    // A year costs `yearMonths` monthly contributions.
-    total(monthly, yearly, yearMonths) {
-        return yearly ? monthly * yearMonths : monthly;
-    },
-    // VAT contained in a gross amount, e.g. 19 % -> amount × 19 / 119.
-    vatIncluded(amount, rate) {
-        return (amount * rate) / (100 + rate);
-    },
-};
-
-modules.membership = (root) => {
-    const { formatEuro, parseAmount, total, vatIncluded } = membershipCalc;
-    const yearMonths = Number(root.dataset.yearMonths);
-    const vatRate = Number(root.dataset.vatRate);
-    const min = Number(root.dataset.min);
-    const amountInput = root.querySelector("#m-betrag");
-    const amountError = root.querySelector("[data-amount-error]");
-    const checked = (name) => root.querySelector(`input[name="${name}"]:checked`);
-    const out = (key, text) => {
-        root.querySelectorAll(`[data-out="${key}"]`).forEach((el) => {
-            el.textContent = text;
-        });
-    };
-
-    const update = () => {
-        const tier = checked("stufe");
-        const rhythm = checked("rhythmus");
-        const payment = checked("zahlart");
-        const yearly = rhythm.value === "jahr";
-        const amount = parseAmount(amountInput.value, min);
-
-        amountError.hidden = !amount.tooLow;
-        amountInput.setAttribute("aria-invalid", String(amount.tooLow));
-
-        const monthly = tier.value === "maezen" ? amount.monthly : Number(tier.dataset.monthly);
-        const sum = total(monthly, yearly, yearMonths);
-
-        root.querySelectorAll("[data-price]").forEach((el) => {
-            el.textContent = yearly ? el.dataset.year : el.dataset.month;
-        });
-        root.querySelectorAll("[data-pay]").forEach((el) => {
-            el.hidden = el.dataset.pay !== payment.value;
-        });
-
-        out("stufe", tier.dataset.label);
-        out("rhythmus", rhythm.dataset.label);
-        out("zahlart", payment.dataset.label);
-        out("betrag", formatEuro(sum));
-        out("einheit", rhythm.dataset.unit);
-        out("ust", `darin ${formatEuro(vatIncluded(sum, vatRate))}`);
-        out("laufzeit", rhythm.dataset.term);
-    };
-
-    const pickMaezen = () => {
-        const maezen = root.querySelector('input[name="stufe"][value="maezen"]');
-        if (maezen) maezen.checked = true;
-    };
-
-    amountInput.addEventListener("focus", () => {
-        pickMaezen();
-        update();
+// Livewire's SPA navigation (wire:navigate) swaps the page without re-running this script, so modules start on
+// every `livewire:navigated` event, which Livewire also fires after the first page load. The marker keeps an
+// element that survives a navigation from being set up twice.
+const startModules = () => {
+    document.querySelectorAll("[data-oasis]").forEach((root) => {
+        if (root.dataset.oasisStarted) {
+            return;
+        }
+        root.dataset.oasisStarted = "true";
+        modules[root.dataset.oasis]?.(root);
     });
-    amountInput.addEventListener("input", () => {
-        pickMaezen();
-        update();
-    });
-    root.addEventListener("change", update);
-    update();
 };
-// --- /Mitglied werden -------------------------------------------------------
 
+document.addEventListener("livewire:navigated", startModules);
 
-// --- Oasis forms: cancellation ---------------------------------------------
-// Markup: the cancellation <form data-oasis="cancellation"> with radios [name="type"] and
-// [name="timing"], the wrapper [data-reason-field], and fields [name="reason"], [name="effective_date"].
-// Shows and requires the reason only for an extraordinary cancellation, and requires the date only when
-// "Zu einem bestimmten Datum" is chosen.
-// Without JS: all fields stay visible; CancellationFormRequest enforces the same rules on the server.
-modules.cancellation = (form) => {
-    const reasonField = form.querySelector("[data-reason-field]");
-    const reason = form.querySelector('[name="reason"]');
-    const date = form.querySelector('[name="effective_date"]');
-    const update = () => {
-        const extraordinary = form.querySelector('[name="type"]:checked')?.value === "ausserordentlich";
-        reasonField.hidden = !extraordinary;
-        reason.required = extraordinary;
-        reason.disabled = !extraordinary;
-        date.required = form.querySelector('[name="timing"]:checked')?.value === "datum";
-    };
-    form.addEventListener("change", update);
-    update();
-};
-// --- End Oasis forms -------------------------------------------------------
-
-document.querySelectorAll("[data-oasis]").forEach((root) => {
-    modules[root.dataset.oasis]?.(root);
+// A Livewire re-render morphs a component in place and resets its markup (including the start marker), so modules
+// inside components start again after every update; modules must therefore be safe to run twice on an element.
+document.addEventListener("livewire:init", () => {
+    window.Livewire.hook("morphed", startModules);
 });

@@ -140,27 +140,7 @@
                 <h2 id="orga-titel" class="m-0 o-display font-medium [font-size:clamp(30px,_3.2vw,_46px)] [line-height:1.12] [letter-spacing:-0.015em] text-night">Mit vielen auf einmal umziehen?</h2>
                 <p class="m-0 [max-width:30em] text-[18px] [line-height:1.6] text-ink-2">Hochschulgruppen, Vereine und Initiativen: Schreibt uns, dann planen wir euren Start gemeinsam, mit eigener Oase und Gastgeber:innen aus euren Reihen.</p>
             </div>
-            <form method="POST" action="{{ route('oasis.gemeinsam.store') }}" aria-label="Anfrage für Organisationen" class="flex flex-col gap-[18px] [padding:32px] bg-paper border border-dune-line rounded-[28px]">
-                @csrf
-                @include('oasis.forms._feedback')
-                <div class="flex flex-col gap-[6px]">
-                    <label for="orga-name" class="text-[15px] font-bold">Name der Organisation</label>
-                    <input id="orga-name" type="text" placeholder="z. B. Fachschaft Biologie" class="o-input min-w-0" name="organisation" aria-invalid="{{ $errors->has('organisation') ? 'true' : 'false' }}" aria-describedby="orga-name-error" required value="{{ old('organisation') }}">
-                    <p id="orga-name-error" class="o-error">@error('organisation'){{ $message }}@enderror</p>
-                </div>
-                <div class="flex flex-col gap-[6px]">
-                    <label for="orga-anzahl" class="text-[15px] font-bold">Wie viele Leute ungefähr?</label>
-                    <input id="orga-anzahl" type="number" min="2" placeholder="z. B. 40" class="o-input min-w-0" name="people" aria-invalid="{{ $errors->has('people') ? 'true' : 'false' }}" aria-describedby="orga-anzahl-error" required value="{{ old('people') }}">
-                    <p id="orga-anzahl-error" class="o-error">@error('people'){{ $message }}@enderror</p>
-                </div>
-                <div class="flex flex-col gap-[6px]">
-                    <label for="orga-mail" class="text-[15px] font-bold">E-Mail für Rückfragen</label>
-                    <input id="orga-mail" type="email" placeholder="name@beispiel.tld" class="o-input min-w-0" name="email" aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}" aria-describedby="orga-mail-error" required value="{{ old('email') }}">
-                    <p id="orga-mail-error" class="o-error">@error('email'){{ $message }}@enderror</p>
-                </div>
-                <button type="submit" class="[min-height:52px] border-0 rounded-[999px] bg-night text-on-night text-[17px] font-extrabold">Anfrage senden</button>
-                <p class="m-0 text-[14px] [line-height:1.5] text-muted">Wir nutzen deine Angaben nur, um dir zu antworten. Mehr in der <a href="{{ route('oasis.datenschutz') }}" class="text-ink underline">Datenschutzerklärung</a>.</p>
-            </form>
+            <livewire:oasis.organisation-enquiry />
         </div>
     </section>
 

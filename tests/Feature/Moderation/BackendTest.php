@@ -8,6 +8,10 @@ use App\Enums\Moderation\ComplaintStatus;
 use App\Enums\Moderation\EventType;
 use App\Enums\Moderation\Outcome;
 use App\Enums\Role;
+use App\Livewire\Moderation\CaseDetail;
+use App\Livewire\Moderation\ComplaintForm;
+use App\Livewire\Moderation\ComplaintReview;
+use App\Livewire\Moderation\Roles;
 use App\Mail\Moderation\ComplaintResult;
 use App\Mail\Moderation\DecisionNotice;
 use App\Models\ContentReport;
@@ -17,8 +21,13 @@ use App\Models\ModerationDecision;
 use App\Models\ModerationEvent;
 use App\Models\User;
 use App\Queries\Moderation\TransparencyQuery;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
+use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
+use Livewire\Features\SupportTesting\Testable;
+use Livewire\Livewire;
+use Tests\Support\PublicForms;
 
 /* Backend acceptance and regression tests: identity, state transitions, second reviewer, audit and retention. */
 beforeEach(function () {
@@ -53,9 +62,44 @@ function moderationDecided(?User $staff = null): ModerationDecision
 }
 
 /** A signed link's recipient selects a stored email without exposing that email in the URL. */
-function moderationComplaintUrl(ModerationDecision $decision, string $route = 'store', string $recipient = 'reporter'): string
+function moderationComplaintUrl(ModerationDecision $decision, string $recipient = 'reporter'): string
 {
-    return URL::signedRoute('moderation.complaint.'.$route, ['decision' => $decision->id, 'recipient' => $recipient]);
+    return URL::signedRoute('moderation.complaint.create', ['decision' => $decision->id, 'recipient' => $recipient]);
+}
+
+/** The complaint form as opened from a signed link, with a freshly bound decision like the route's (the `signed` middleware itself is covered by the GET tests). */
+function moderationComplaintForm(ModerationDecision $decision, string $recipient = 'reporter'): Testable
+{
+    return Livewire::withQueryParams(['recipient' => $recipient])->test(ComplaintForm::class, ['decision' => $decision->fresh()]);
+}
+
+/** Submit a complaint through the signed-link form. */
+function moderationComplain(ModerationDecision $decision, string $reason, string $recipient = 'reporter'): Testable
+{
+    return moderationComplaintForm($decision, $recipient)->set('reason', $reason)->call('submit');
+}
+
+/** Fill the case page's decision form as a staff member would and submit it. */
+function moderationDecide(ModerationCase $case, array $data, ?User $staff = null): Testable
+{
+    $page = Livewire::actingAs($staff ?? moderationStaff())->test(CaseDetail::class, ['case' => $case]);
+    foreach ($data as $field => $value) {
+        $page->set('decision.'.$field, $value);
+    }
+
+    return $page->call('decide');
+}
+
+/** Fill the complaint review as a staff member would; with "overturned" the other fields form the new decision. */
+function moderationReview(ModerationComplaint $complaint, array $data, ?User $staff = null): Testable
+{
+    $page = Livewire::actingAs($staff ?? moderationStaff())->test(ComplaintReview::class, ['complaint' => $complaint])
+        ->set('result', $data['result']);
+    foreach (Arr::except($data, 'result') as $field => $value) {
+        $page->set($data['result'] === 'overturned' ? 'decision.'.$field : $field, $value);
+    }
+
+    return $page->call('review');
 }
 
 it('defaults new accounts to members and prevents mass assigned role elevation', function () {
@@ -95,10 +139,15 @@ it('bootstraps roles by operator command and rejects unknown accounts and values
 
 it('lets only admins change roles through the validated endpoint', function () {
     $target = User::factory()->create();
-    $this->actingAs(moderationStaff())->put(route('moderation.roles.update', $target), ['role' => 'admin'])->assertForbidden();
-    $this->actingAs(moderationStaff(Role::Admin))->put(route('moderation.roles.update', $target), ['role' => 'moderator'])->assertRedirect();
+    Livewire::actingAs(moderationStaff())->test(Roles::class)->assertForbidden();
+    $admin = moderationStaff(Role::Admin);
+    $roles = Livewire::actingAs($admin)->test(Roles::class)->assertSet('roles.'.$target->id, 'member');
+    $roles->set('roles.'.$target->id, 'moderator')->call('save', $target->id)->assertHasNoErrors()->assertSee('wurde geändert');
     expect($target->fresh()->role)->toBe(Role::Moderator);
-    $this->put(route('moderation.roles.update', $target), ['role' => 'root'])->assertSessionHasErrors('role');
+    $roles->set('roles.'.$target->id, 'root')->call('save', $target->id)->assertHasErrors('roles.'.$target->id);
+    // Admins cannot change their own role here, so nobody locks themselves out.
+    $roles->set('roles.'.$admin->id, 'member')->call('save', $admin->id)->assertForbidden();
+    expect($admin->fresh()->role)->toBe(Role::Admin);
 });
 
 it('opens one case and audit event automatically for a content report', function () {
@@ -115,7 +164,7 @@ it('opens one case and audit event automatically for a content report', function
 });
 
 it('opens the case from the public HTTP report flow and sends receipts', function () {
-    $this->post(route('oasis.melden.store'), ['url' => 'https://example.tld/a', 'reason' => 'Verstoß',
+    PublicForms::submit('melden', ['url' => 'https://example.tld/a', 'reason' => 'Verstoß',
         'name' => 'Melder', 'email' => 'notice@example.tld', 'truthful' => '1'])->assertRedirect();
     expect(ModerationCase::count())->toBe(1);
     expect(ModerationEvent::first()->type)->toBe(EventType::Opened);
@@ -126,12 +175,12 @@ it('assigns only staff and records the same transaction state change', function 
     $case = moderationReport()->moderationCase;
     $staff = moderationStaff();
     $assignee = moderationStaff();
-    $this->actingAs($staff)->post(route('moderation.cases.assign', $case), ['assigned_to' => $assignee->id])->assertRedirect();
+    $page = Livewire::actingAs($staff)->test(CaseDetail::class, ['case' => $case])->assertSet('assigned_to', $staff->id);
+    $page->set('assigned_to', $assignee->id)->call('assign')->assertHasNoErrors()->assertSee('Der Fall wurde zugewiesen.');
     expect($case->fresh()->assigned_to)->toBe($assignee->id);
     expect($case->fresh()->status)->toBe(CaseStatus::InReview);
     expect($case->events()->where('type', 'assigned')->sole()->actor_id)->toBe($staff->id);
-    $this->post(route('moderation.cases.assign', $case), ['assigned_to' => User::factory()->create()->id])
-        ->assertSessionHasErrors('assigned_to');
+    $page->set('assigned_to', User::factory()->create()->id)->call('assign')->assertHasErrors('assigned_to');
     expect($case->events()->where('type', 'assigned')->count())->toBe(1);
 });
 
@@ -139,7 +188,7 @@ it('saves a reasoned human decision with audit and separate reporter and affecte
     $case = moderationReport()->moderationCase;
     $affected = User::factory()->create(['email' => 'affected@example.tld']);
     $case->update(['subject_user_id' => $affected->id]);
-    $this->actingAs(moderationStaff())->post(route('moderation.cases.decide', $case), moderationDecisionData())->assertRedirect();
+    moderationDecide($case, moderationDecisionData())->assertHasNoErrors()->assertSee('Die Entscheidung wurde gespeichert und mitgeteilt.');
     $decision = $case->decisions()->sole();
     expect($decision->automated)->toBeFalse();
     expect($decision->notified_at)->not->toBeNull();
@@ -154,11 +203,16 @@ it('saves a reasoned human decision with audit and separate reporter and affecte
 
 it('rejects incomplete German validation and repeated initial decisions', function () {
     $case = moderationReport()->moderationCase;
-    $this->actingAs(moderationStaff())->post(route('moderation.cases.decide', $case), ['outcome' => 'bad'])
-        ->assertSessionHasErrors(['outcome', 'facts', 'ground', 'rule_reference', 'explanation']);
+    $staff = moderationStaff();
+    moderationDecide($case, ['outcome' => 'bad'], $staff)
+        ->assertHasErrors(['decision.outcome', 'decision.facts', 'decision.ground', 'decision.rule_reference', 'decision.explanation'])
+        ->assertSee('Bitte fülle das Feld Tatsachen aus.');
     expect($case->decisions()->count())->toBe(0);
-    $this->post(route('moderation.cases.decide', $case), moderationDecisionData())->assertRedirect();
-    $this->post(route('moderation.cases.decide', $case), moderationDecisionData())->assertForbidden();
+    $page = moderationDecide($case, moderationDecisionData(), $staff)->assertHasNoErrors();
+    foreach (moderationDecisionData() as $field => $value) {
+        $page->set('decision.'.$field, $value);
+    }
+    $page->call('decide')->assertForbidden();
     expect($case->decisions()->count())->toBe(1);
 });
 
@@ -188,21 +242,23 @@ it('retains committed decisions after a mail transport failure and can retry', f
 it('requires signed links and never exposes full reasons to a reporter', function () {
     $decision = moderationDecided();
     $this->get(route('moderation.complaint.create', $decision))->assertForbidden();
-    $this->post(route('moderation.complaint.store', $decision), ['reason' => 'Nein'])->assertForbidden();
-    $this->get(moderationComplaintUrl($decision, 'create'))->assertOk()->assertDontSee('PRIVATE-EXPLANATION')->assertDontSee('PRIVATE-FACTS');
-    $this->get(moderationComplaintUrl($decision, 'create').'&recipient=subject')->assertForbidden();
+    $this->get(moderationComplaintUrl($decision))->assertOk()->assertSeeLivewire(ComplaintForm::class)
+        ->assertDontSee('PRIVATE-EXPLANATION')->assertDontSee('PRIVATE-FACTS')->assertDontSee('reporter@example.tld');
+    $this->get(moderationComplaintUrl($decision).'&recipient=subject')->assertForbidden();
+    Livewire::test(ComplaintForm::class, ['decision' => $decision])->assertForbidden();
 });
 
 it('accepts a guest complaint with stored identity and opens its audit trail', function () {
     $decision = moderationDecided();
-    $this->post(moderationComplaintUrl($decision), ['reason' => 'Bitte erneut prüfen.', 'email' => 'attacker@example.tld'])
-        ->assertOk()->assertViewIs('moderation.complaint.thanks');
+    expect(fn () => moderationComplaintForm($decision)->set('recipient', 'subject'))->toThrow(CannotUpdateLockedPropertyException::class);
+    moderationComplain($decision, 'Bitte erneut prüfen.')->assertHasNoErrors()->assertSet('submitted', true)
+        ->assertSee('Danke, dein Widerspruch ist da.');
     $complaint = ModerationComplaint::sole();
     expect($complaint->submitted_by)->toBeNull();
     expect($complaint->submitter_email)->toBe('reporter@example.tld');
     expect($decision->case->fresh()->status)->toBe(CaseStatus::ComplaintOpen);
     expect($decision->case->events()->where('type', 'complaint_received')->sole()->data['complaint_id'])->toBe($complaint->id);
-    $this->post(moderationComplaintUrl($decision), ['reason' => 'Duplicate'])->assertSessionHasErrors('reason');
+    moderationComplain($decision, 'Duplicate')->assertHasErrors('reason');
 });
 
 it('lets only the affected signed in account use the account complaint route', function () {
@@ -211,7 +267,8 @@ it('lets only the affected signed in account use the account complaint route', f
     $decision->case->update(['subject_user_id' => $affected->id]);
     $this->actingAs(User::factory()->create())->get(route('moderation.complaint.account', $decision))->assertForbidden();
     $this->actingAs($affected)->get(route('moderation.complaint.account', $decision))->assertOk()->assertSee('PRIVATE-EXPLANATION');
-    $this->post(route('moderation.complaint.account.store', $decision), ['reason' => 'Bitte prüfen'])->assertOk();
+    Livewire::actingAs($affected)->test(ComplaintForm::class, ['decision' => $decision->fresh(), 'via' => 'account'])
+        ->set('reason', 'Bitte prüfen')->call('submit')->assertHasNoErrors()->assertSet('submitted', true);
     expect(ModerationComplaint::sole()->submitted_by)->toBe($affected->id);
 });
 
@@ -220,58 +277,59 @@ it('keeps the full six month complaint window after notice and expires it afterw
     $decision->update(['decided_at' => now()->subYear(), 'notified_at' => now()]);
     $deadline = $decision->fresh()->notified_at->copy()->addMonthsNoOverflow(6);
     $this->travelTo($deadline);
-    $this->get(moderationComplaintUrl($decision, 'create'))->assertOk();
+    $this->get(moderationComplaintUrl($decision))->assertOk();
+    $form = moderationComplaintForm($decision)->set('reason', 'Zu spät');
     $this->travelTo($deadline->copy()->addSecond());
-    $this->post(moderationComplaintUrl($decision), ['reason' => 'Zu spät'])->assertForbidden();
+    $form->call('submit')->assertForbidden();
+    expect(ModerationComplaint::count())->toBe(0);
 });
 
 it('rate limits public complaint posts independently of validation', function () {
     $decision = moderationDecided();
+    $form = moderationComplaintForm($decision);
     for ($attempt = 0; $attempt < 5; $attempt++) {
-        $this->post(moderationComplaintUrl($decision), ['reason' => ''])->assertSessionHasErrors('reason');
+        $form->set('reason', '')->call('submit')->assertHasErrors(['reason' => 'required']);
     }
-    $this->post(moderationComplaintUrl($decision), ['reason' => 'Valid'])->assertStatus(429)->assertSee('Zu viele Beschwerden');
+    $form->set('reason', 'Valid')->call('submit')->assertHasErrors('reason')->assertSee('Zu viele Beschwerden');
+    expect(ModerationComplaint::count())->toBe(0);
 });
 
 it('denies the original moderator and admin from deciding their own complaint', function (Role $role) {
     $staff = moderationStaff($role);
     $decision = moderationDecided($staff);
-    $this->post(moderationComplaintUrl($decision), ['reason' => 'Widerspruch'])->assertOk();
+    moderationComplain($decision, 'Widerspruch')->assertHasNoErrors();
     $complaint = ModerationComplaint::sole();
-    $this->actingAs($staff)->post(route('moderation.complaints.decide', $complaint), ['result' => 'upheld', 'explanation' => 'Bestätigt'])
-        ->assertForbidden();
+    moderationReview($complaint, ['result' => 'upheld', 'explanation' => 'Bestätigt'], $staff)->assertForbidden();
     expect($complaint->fresh()->status)->toBe(ComplaintStatus::Open);
 })->with([Role::Moderator, Role::Admin]);
 
 it('upholds a complaint with a second person and sends the reasoned result', function () {
     $decision = moderationDecided();
-    $this->post(moderationComplaintUrl($decision), ['reason' => 'Widerspruch'])->assertOk();
+    moderationComplain($decision, 'Widerspruch')->assertHasNoErrors();
     $complaint = ModerationComplaint::sole();
     $reviewer = moderationStaff();
-    $this->actingAs($reviewer)->post(route('moderation.complaints.decide', $complaint), ['result' => 'upheld', 'explanation' => 'Die Entscheidung bleibt bestehen.'])
-        ->assertRedirect();
+    moderationReview($complaint, ['result' => 'upheld', 'explanation' => 'Die Entscheidung bleibt bestehen.'], $reviewer)->assertHasNoErrors();
     expect($complaint->fresh()->reviewed_by)->toBe($reviewer->id);
     expect($complaint->fresh()->status)->toBe(ComplaintStatus::Upheld);
     expect($decision->case->fresh()->status)->toBe(CaseStatus::Closed);
     expect($decision->case->decisions()->count())->toBe(1);
     Mail::assertSent(ComplaintResult::class, fn ($mail) => str_contains($mail->render(), 'Die Entscheidung bleibt bestehen.'));
-    $this->post(route('moderation.complaints.decide', $complaint), ['result' => 'upheld', 'explanation' => 'Erneut'])->assertForbidden();
+    moderationReview($complaint, ['result' => 'upheld', 'explanation' => 'Erneut'], $reviewer)->assertForbidden();
 });
 
 it('overturns by superseding the original decision without rewriting its history', function () {
     $decision = moderationDecided();
-    $this->post(moderationComplaintUrl($decision), ['reason' => 'Widerspruch'])->assertOk();
+    moderationComplain($decision, 'Widerspruch')->assertHasNoErrors();
     $complaint = ModerationComplaint::sole();
-    $this->actingAs(moderationStaff())->post(route('moderation.complaints.decide', $complaint),
-        moderationDecisionData(['result' => 'overturned', 'outcome' => 'no_action', 'explanation' => 'Kein Regelverstoß']))->assertRedirect();
+    moderationReview($complaint, moderationDecisionData(['result' => 'overturned', 'outcome' => 'no_action', 'explanation' => 'Kein Regelverstoß']), moderationStaff())->assertHasNoErrors();
     $replacement = $decision->case->decisions()->latest('id')->first();
     expect($replacement->supersedes_decision_id)->toBe($decision->id);
     expect($replacement->is_complaint_review)->toBeTrue();
     expect($replacement->outcome)->toBe(Outcome::NoAction);
     expect($decision->fresh()->outcome)->toBe(Outcome::ContentRemoved);
     expect($complaint->fresh()->status)->toBe(ComplaintStatus::Overturned);
-    $this->get(moderationComplaintUrl($decision, 'create'))->assertForbidden();
-    $this->get(moderationComplaintUrl($replacement, 'create'))->assertOk();
+    $this->get(moderationComplaintUrl($decision))->assertForbidden();
+    $this->get(moderationComplaintUrl($replacement))->assertOk();
     Mail::assertSent(ComplaintResult::class);
     Mail::fake();
     app(NotifyDecision::class)->handle($decision);
@@ -337,9 +395,8 @@ it('counts period decisions and complaints and median initial decision time with
     $decision = app(DecideCase::class)->handle($one, moderationStaff(), moderationDecisionData());
     $this->travelTo($start->copy()->addHours(3));
     app(DecideCase::class)->handle($two, moderationStaff(), moderationDecisionData(['outcome' => 'no_action', 'ground' => 'illegal_content']));
-    $this->post(moderationComplaintUrl($decision), ['reason' => 'Widerspruch'])->assertOk();
-    $this->actingAs(moderationStaff())->post(route('moderation.complaints.decide', ModerationComplaint::sole()),
-        moderationDecisionData(['result' => 'overturned', 'outcome' => 'no_action']))->assertRedirect();
+    moderationComplain($decision, 'Widerspruch')->assertHasNoErrors();
+    moderationReview(ModerationComplaint::sole(), moderationDecisionData(['result' => 'overturned', 'outcome' => 'no_action']), moderationStaff())->assertHasNoErrors();
     $result = app(TransparencyQuery::class)->forPeriod($start, $start->copy()->addDay());
     expect($result['notices_received'])->toBe(2);
     expect($result['decisions_by_outcome'])->toBe(['content_removed' => 1, 'no_action' => 2]);
@@ -356,17 +413,14 @@ it('accepts both parties complaints and keeps the case open until both receive a
     $decision = moderationDecided($original);
     $affected = User::factory()->create();
     $decision->case->update(['subject_user_id' => $affected->id]);
-    $this->post(moderationComplaintUrl($decision), ['reason' => 'Meldende Person widerspricht'])->assertOk();
-    $this->post(moderationComplaintUrl($decision, 'store', 'subject'), ['reason' => 'Betroffene Person widerspricht'])->assertOk();
+    moderationComplain($decision, 'Meldende Person widerspricht')->assertHasNoErrors();
+    moderationComplain($decision, 'Betroffene Person widerspricht', 'subject')->assertHasNoErrors();
     $complaints = ModerationComplaint::orderBy('id')->get();
     expect($complaints)->toHaveCount(2);
-    $this->actingAs(moderationStaff())->post(route('moderation.complaints.decide', $complaints[0]),
-        moderationDecisionData(['result' => 'overturned', 'outcome' => 'no_action']))->assertRedirect();
+    moderationReview($complaints[0], moderationDecisionData(['result' => 'overturned', 'outcome' => 'no_action']), moderationStaff())->assertHasNoErrors();
     expect($decision->case->fresh()->status)->toBe(CaseStatus::ComplaintOpen);
-    $this->actingAs($original)->post(route('moderation.complaints.decide', $complaints[1]),
-        ['result' => 'upheld', 'explanation' => 'Bestätigt'])->assertForbidden();
-    $this->actingAs(moderationStaff())->post(route('moderation.complaints.decide', $complaints[1]),
-        ['result' => 'upheld', 'explanation' => 'Historische Entscheidung geprüft'])->assertRedirect();
+    moderationReview($complaints[1], ['result' => 'upheld', 'explanation' => 'Bestätigt'], $original)->assertForbidden();
+    moderationReview($complaints[1], ['result' => 'upheld', 'explanation' => 'Historische Entscheidung geprüft'], moderationStaff())->assertHasNoErrors();
     expect($decision->case->fresh()->status)->toBe(CaseStatus::Closed);
     expect($decision->case->fresh()->latestDecision->outcome)->toBe(Outcome::NoAction);
 });

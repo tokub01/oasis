@@ -1,11 +1,13 @@
 <?php
 
+use App\Livewire\Membership\Withdraw;
 use App\Mail\Membership\MembershipWithdrawnMail;
 use App\Models\MembershipPayment;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Services\Membership\MollieGateway;
 use Illuminate\Support\Facades\Mail;
+use Livewire\Livewire;
 
 test('withdrawal confirmation renders for subscriptions within 14 days', function () {
     $user = User::factory()->create([
@@ -24,6 +26,7 @@ test('withdrawal confirmation renders for subscriptions within 14 days', functio
     $this->actingAs($user)
         ->get(route('app.membership.withdraw.confirm'))
         ->assertOk()
+        ->assertSeeLivewire(Withdraw::class)
         ->assertSee('Mitgliedschaft widerrufen')
         ->assertSee('14 Tagen')
         ->assertSee('Jetzt widerrufen');
@@ -83,8 +86,9 @@ test('submitting withdrawal terminates subscription immediately, refunds invoice
     $gateway->shouldReceive('refund')->once()->with('tr_paid123', 500);
     $this->app->instance(MollieGateway::class, $gateway);
 
-    $this->actingAs($user)
-        ->post(route('app.membership.withdraw'))
+    Livewire::actingAs($user)
+        ->test(Withdraw::class)
+        ->call('withdraw')
         ->assertRedirect(route('app.membership'))
         ->assertSessionHas('status', 'Dein Widerruf wurde erfolgreich erfasst. Deine Mitgliedschaft wurde mit sofortiger Wirkung beendet.');
 

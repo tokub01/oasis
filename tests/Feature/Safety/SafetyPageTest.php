@@ -3,6 +3,8 @@
 use App\Actions\Safety\ManageBlock;
 use App\Actions\Safety\ManageBookmark;
 use App\Actions\Safety\ManageMute;
+use App\Livewire\Safety\SafetyOverview;
+use Livewire\Livewire;
 use Tests\Support\NetworkFixtures as Fixtures;
 
 it('requires authentication for safety pages', function (): void {
@@ -24,6 +26,7 @@ it('renders safety overview with blocked and muted accounts', function (): void 
     $this->actingAs($alice)
         ->get(route('safety.index'))
         ->assertOk()
+        ->assertSeeLivewire(SafetyOverview::class)
         ->assertSee('Bob')
         ->assertSee('@bob')
         ->assertSee('Blockade aufheben')
@@ -32,30 +35,34 @@ it('renders safety overview with blocked and muted accounts', function (): void 
         ->assertSee('Nicht mehr stummschalten');
 });
 
-it('allows unblocking via POST /app/sicherheit/block/{user} DELETE', function (): void {
+it('allows unblocking via SafetyOverview Livewire component', function (): void {
     $alice = Fixtures::member(['username' => 'alice']);
     $bob = Fixtures::member(['username' => 'bob', 'display_name' => 'Bob']);
 
     app(ManageBlock::class)->block($alice, $bob);
     expect($alice->hasBlocked($bob))->toBeTrue();
 
-    $this->actingAs($alice)
-        ->delete(route('safety.block.destroy', $bob))
-        ->assertSessionHas('status', 'Blockade von Bob aufgehoben.');
+    Livewire::actingAs($alice)
+        ->test(SafetyOverview::class)
+        ->call('unblock', $bob->id)
+        ->assertSet('status', 'Blockade von Bob aufgehoben.')
+        ->assertSee('Blockade von Bob aufgehoben.');
 
     expect($alice->fresh()->hasBlocked($bob))->toBeFalse();
 });
 
-it('allows unmuting via POST /app/sicherheit/mute/{user} DELETE', function (): void {
+it('allows unmuting via SafetyOverview Livewire component', function (): void {
     $alice = Fixtures::member(['username' => 'alice']);
     $bob = Fixtures::member(['username' => 'bob', 'display_name' => 'Bob']);
 
     app(ManageMute::class)->mute($alice, $bob);
     expect($alice->hasMuted($bob))->toBeTrue();
 
-    $this->actingAs($alice)
-        ->delete(route('safety.mute.destroy', $bob))
-        ->assertSessionHas('status', 'Stummschaltung von Bob aufgehoben.');
+    Livewire::actingAs($alice)
+        ->test(SafetyOverview::class)
+        ->call('unmute', $bob->id)
+        ->assertSet('status', 'Stummschaltung von Bob aufgehoben.')
+        ->assertSee('Stummschaltung von Bob aufgehoben.');
 
     expect($alice->fresh()->hasMuted($bob))->toBeFalse();
 });

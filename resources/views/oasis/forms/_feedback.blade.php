@@ -1,6 +1,6 @@
 {{--
     Shared German validation summary and honeypot for all five public Oasis forms.
-    $errors: Illuminate\Support\ViewErrorBag supplied by web middleware; no JavaScript is needed.
+    Included inside the Livewire form components; $errors is the component's error bag (fields as form.<name>).
     The off-screen website field must remain empty and outside the keyboard tab sequence.
 --}}
 @if ($errors->any())
@@ -15,5 +15,5 @@
 @endif
 <div class="o-hp" aria-hidden="true">
     <label for="website">Bitte dieses Feld leer lassen</label>
-    <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+    <input id="website" wire:model="form.website" type="text" tabindex="-1" autocomplete="off">
 </div>

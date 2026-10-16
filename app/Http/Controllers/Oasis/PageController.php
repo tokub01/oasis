@@ -12,28 +12,6 @@ use Illuminate\View\View;
  */
 class PageController extends Controller
 {
-    /**
-     * "Mitglied werden" (checkout).
-     *
-     * Returns 404 while `oasis.checkout_enabled` is false: without a payment provider there must be no order
-     * button at all, so nobody can place a sham order (§ 312j BGB button only makes sense with a real checkout).
-     */
-    public function membership(): View
-    {
-        abort_unless(config('oasis.checkout_enabled'), 404);
-
-        $user = auth()->user();
-        $trialDaysLeft = $user?->trial_ends_at?->isFuture()
-            ? (int) ceil(now()->diffInDays($user->trial_ends_at))
-            : null;
-        $trialEndDate = $user?->trial_ends_at?->timezone('Europe/Berlin')->format('d.m.Y');
-
-        return view('oasis.mitglied', [
-            'trialDaysLeft' => $trialDaysLeft,
-            'trialEndDate' => $trialEndDate,
-        ]);
-    }
-
     /** "Transparenz": published monthly figures and member votes (see PublicTransparency). */
     public function transparency(PublicTransparency $transparency): View
     {

@@ -1,5 +1,8 @@
 <?php
 
+use App\Livewire\Membership\Cancel;
+use App\Livewire\Membership\Checkout;
+use App\Livewire\Membership\Overview;
 use App\Mail\Membership\MembershipCancelledMail;
 use App\Models\GiftMembership;
 use App\Models\MembershipPayment;
@@ -8,6 +11,7 @@ use App\Models\User;
 use App\Services\Membership\MollieMembershipService;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Mail;
+use Livewire\Livewire;
 use Mollie\Api\Fake\MockResponse;
 use Mollie\Api\Fake\SequenceMockResponse;
 use Mollie\Api\Http\Requests\CancelSubscriptionRequest;
@@ -26,8 +30,15 @@ test('hosted checkout sends configured prices and a recurring first sequence', f
     $user = User::factory()->create(['mollie_customer_id' => 'cst_checkout']);
     Mollie::fake([CreatePaymentRequest::class => MockResponse::created(['resource' => 'payment', 'id' => 'tr_checkout', 'status' => 'open',
         '_links' => ['checkout' => ['href' => 'https://www.mollie.com/checkout/test']]])]);
-    $this->actingAs($user)->post(route('oasis.mitglied.checkout'), ['stufe' => $tier, 'rhythmus' => $rhythm,
-        'betrag' => $custom, 'zahlart' => $method])->assertRedirect('https://www.mollie.com/checkout/test');
+    $checkout = Livewire::actingAs($user)->test(Checkout::class);
+    if ($custom !== null) {
+        $checkout->set('betrag', (string) $custom);
+    }
+    $checkout->set('stufe', $tier)
+        ->set('rhythmus', $rhythm)
+        ->set('zahlart', $method)
+        ->call('checkout')
+        ->assertRedirect('https://www.mollie.com/checkout/test');
     $intent = MembershipPayment::sole();
     expect($intent->status)->toBe('open');
     expect($user->fresh()->hasActiveMembership())->toBeFalse();
@@ -49,7 +60,12 @@ test('the webhook URL is sent unless webhooks are switched off for a local setup
     $user = User::factory()->create(['mollie_customer_id' => 'cst_checkout']);
     Mollie::fake([CreatePaymentRequest::class => MockResponse::created(['resource' => 'payment', 'id' => 'tr_local',
         '_links' => ['checkout' => ['href' => 'https://www.mollie.com/checkout/local']]])]);
-    $this->actingAs($user)->post(route('oasis.mitglied.checkout'), ['stufe' => 'oase', 'rhythmus' => 'monat', 'zahlart' => 'karte'])
+    Livewire::actingAs($user)
+        ->test(Checkout::class)
+        ->set('stufe', 'oase')
+        ->set('rhythmus', 'monat')
+        ->set('zahlart', 'karte')
+        ->call('checkout')
         ->assertRedirect('https://www.mollie.com/checkout/local');
     Mollie::assertSent(fn ($request) => $request->payload()->get('webhookUrl') === ($webhooks ? route('mollie.webhook') : null));
 })->with([
@@ -72,7 +88,11 @@ test('new customers are persisted and gifts use oneoff payments', function () {
         CreatePaymentRequest::class => MockResponse::created(['resource' => 'payment', 'id' => 'tr_gift',
             '_links' => ['checkout' => ['href' => 'https://www.mollie.com/checkout/gift']]]),
     ]);
-    $this->actingAs($user)->post(route('app.membership.gift.checkout'), ['tier' => 'solidar'])->assertRedirect('https://www.mollie.com/checkout/gift');
+    Livewire::actingAs($user)
+        ->test(Overview::class)
+        ->set('tier', 'solidar')
+        ->call('buyGift')
+        ->assertRedirect('https://www.mollie.com/checkout/gift');
     expect($user->fresh()->mollie_customer_id)->toBe('cst_new');
     Mollie::assertSent(fn ($request) => $request->getRequest() instanceof CreatePaymentRequest
         && $request->payload()->get('amount')['value'] === '30.00' && $request->payload()->get('sequenceType') === 'oneoff');
@@ -157,8 +177,9 @@ test('yearly cancellation retains the paid year and repeated cancellation sends 
         GetSubscriptionRequest::class => MockResponse::ok(['resource' => 'subscription', 'id' => 'sub_year', 'status' => 'active']),
         CancelSubscriptionRequest::class => MockResponse::ok(['resource' => 'subscription', 'id' => 'sub_year', 'status' => 'canceled']),
     ]);
-    $this->actingAs($user)->post(route('app.membership.cancel'))->assertRedirect();
-    $this->post(route('app.membership.cancel'))->assertRedirect();
+    $component = Livewire::actingAs($user)->test(Cancel::class);
+    $component->call('cancel')->assertRedirect(route('app.membership'));
+    $component->call('cancel')->assertRedirect(route('app.membership'));
     expect($sub->fresh()->ends_at->toDateString())->toBe(now()->addMonths(11)->toDateString());
     expect($user->fresh()->hasActiveMembership())->toBeTrue();
     Mail::assertSent(MembershipCancelledMail::class);

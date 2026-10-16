@@ -1,10 +1,12 @@
 <?php
 
+use App\Livewire\Account\Settings;
 use App\Models\User;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
+use Livewire\Livewire;
 
 /* Privacy endpoints and profile/password settings, including recent-password enforcement. */
 beforeEach(function () {
@@ -28,21 +30,29 @@ it('downloads only the authenticated users allowlisted data without secrets', fu
     expect($json)->not->toContain('private-secret', 'private-codes', $other->username);
 });
 
-it('requires authentication for export and deletion', function () {
+it('requires authentication for export and settings', function () {
     $this->get(route('account.export'))->assertRedirect(route('login'));
-    $this->delete(route('account.destroy'))->assertRedirect(route('login'));
+    $this->get(route('app.settings'))->assertRedirect(route('login'));
 });
 
 it('keeps export available before email verification', function () {
     $this->actingAs(User::factory()->unverified()->create())->get(route('account.export'))->assertOk();
 });
 
-it('requires a recent password confirmation before deleting', function () {
+it('requires a recent password confirmation before deleting via Livewire Settings', function () {
     $user = User::factory()->create();
-    $this->actingAs($user)->delete(route('account.destroy'))->assertRedirect(route('password.confirm'));
+
+    Livewire::actingAs($user)
+        ->test(Settings::class)
+        ->set('confirm', true)->call('deleteAccount')
+        ->assertRedirect(route('password.confirm'));
     $this->assertDatabaseHas('users', ['id' => $user->id]);
-    $this->withSession(['auth.password_confirmed_at' => now()->subSeconds(config('auth.password_timeout') + 1)->timestamp])
-        ->delete(route('account.destroy'))->assertRedirect(route('password.confirm'));
+
+    $this->withSession(['auth.password_confirmed_at' => now()->subSeconds(config('auth.password_timeout') + 1)->timestamp]);
+    Livewire::actingAs($user)
+        ->test(Settings::class)
+        ->set('confirm', true)->call('deleteAccount')
+        ->assertRedirect(route('password.confirm'));
     $this->assertDatabaseHas('users', ['id' => $user->id]);
 });
 
@@ -53,7 +63,14 @@ it('confirms the password then deletes only the current account and invalidates 
     $this->actingAs($user)->post(route('password.confirm'), ['password' => 'wrong'])
         ->assertSessionHasErrors('password');
     $this->post(route('password.confirm'), ['password' => 'password'])->assertRedirect();
-    $this->delete(route('account.destroy'))->assertRedirect(route('oasis.home'))->assertSessionHas('status');
+
+    $this->withSession(['auth.password_confirmed_at' => now()->timestamp]);
+    Livewire::actingAs($user)
+        ->test(Settings::class)
+        ->set('confirm', true)->call('deleteAccount')
+        ->assertRedirect(route('oasis.home'))
+        ->assertSessionHas('status', 'Dein Konto wurde gelöscht.');
+
     $this->assertGuest();
     $this->assertDatabaseMissing('users', ['id' => $user->id]);
     $this->assertDatabaseMissing('password_reset_tokens', ['email' => $user->email]);
@@ -63,10 +80,13 @@ it('confirms the password then deletes only the current account and invalidates 
 
 it('updates the display name and reverifies an email change without changing consent or birth date', function () {
     $user = User::factory()->create();
-    $this->actingAs($user)->put(route('user-profile-information.update'), [
-        'display_name' => 'New Name', 'email' => 'NEW@example.tld', 'birth_date' => '2020-01-01',
-        'username' => 'admin', 'terms_accepted_at' => null,
-    ])->assertRedirect();
+    Livewire::actingAs($user)
+        ->test(Settings::class)
+        ->set('display_name', 'New Name')
+        ->set('email', 'NEW@example.tld')
+        ->call('updateProfile')
+        ->assertHasNoErrors()
+        ->assertSee('Dein Profil ist gespeichert.');
     $updated = $user->fresh();
     expect($updated->email)->toBe('new@example.tld');
     expect($updated->display_name)->toBe('New Name');
@@ -80,24 +100,58 @@ it('updates the display name and reverifies an email change without changing con
 it('keeps verification for a display name change and rejects duplicate emails', function () {
     $user = User::factory()->create();
     $other = User::factory()->create();
-    $this->actingAs($user)->put(route('user-profile-information.update'), [
-        'display_name' => 'Changed', 'email' => $user->email,
-    ])->assertRedirect();
+    Livewire::actingAs($user)
+        ->test(Settings::class)
+        ->set('display_name', 'Changed')
+        ->set('email', $user->email)
+        ->call('updateProfile')
+        ->assertHasNoErrors();
     expect($user->fresh()->email_verified_at)->not->toBeNull();
     Notification::assertNothingSent();
-    $this->put(route('user-profile-information.update'), ['display_name' => 'Changed', 'email' => $other->email])
-        ->assertSessionHasErrors('email', errorBag: 'updateProfileInformation');
+    Livewire::actingAs($user)
+        ->test(Settings::class)
+        ->set('display_name', 'Changed')
+        ->set('email', $other->email)
+        ->call('updateProfile')
+        ->assertHasErrors(['email']);
 });
 
 it('requires the current password and ten characters for password changes', function () {
     $user = User::factory()->create();
-    $input = ['current_password' => 'wrong', 'password' => 'new-long-password',
-        'password_confirmation' => 'new-long-password'];
-    $this->actingAs($user)->put(route('user-password.update'), $input)
-        ->assertSessionHasErrors('current_password', errorBag: 'updatePassword');
-    $this->put(route('user-password.update'), array_replace($input, [
-        'current_password' => 'password', 'password' => 'short', 'password_confirmation' => 'short',
-    ]))->assertSessionHasErrors('password', errorBag: 'updatePassword');
-    $this->put(route('user-password.update'), array_replace($input, ['current_password' => 'password']))->assertRedirect();
+    Livewire::actingAs($user)
+        ->test(Settings::class)
+        ->set('current_password', 'wrong')
+        ->set('password', 'new-long-password')
+        ->set('password_confirmation', 'new-long-password')
+        ->call('updatePassword')
+        ->assertHasErrors(['current_password']);
+    Livewire::actingAs($user)
+        ->test(Settings::class)
+        ->set('current_password', 'password')
+        ->set('password', 'short')
+        ->set('password_confirmation', 'short')
+        ->call('updatePassword')
+        ->assertHasErrors(['password']);
+    Livewire::actingAs($user)
+        ->test(Settings::class)
+        ->set('current_password', 'password')
+        ->set('password', 'new-long-password')
+        ->set('password_confirmation', 'new-long-password')
+        ->call('updatePassword')
+        ->assertHasNoErrors()
+        ->assertSet('current_password', '')
+        ->assertSet('password', '')
+        ->assertSet('password_confirmation', '')
+        ->assertSee('Dein Passwort ist geändert.');
     expect(Hash::check('new-long-password', $user->fresh()->password))->toBeTrue();
+});
+
+it('requires explicit deletion consent even with a recently confirmed password', function () {
+    $user = User::factory()->create();
+    $this->withSession(['auth.password_confirmed_at' => time()]);
+
+    Livewire::actingAs($user)->test(Settings::class)->call('deleteAccount')->assertHasErrors('confirm');
+
+    $this->assertModelExists($user);
+    $this->assertAuthenticatedAs($user);
 });

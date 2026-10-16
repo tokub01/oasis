@@ -6,8 +6,7 @@
                `reacted` for the viewer)
       link     bool  link the time to the Tropfen page (default true; false on the Tropfen page itself)
 
-    Shows "leise Zahlen" (reactions/replies) only to the author. All actions are plain forms/links and work without
-    JavaScript; buttons a viewer may not use are not rendered at all (guests get a sign-up hint instead).
+    Shows "leise Zahlen" (reactions/replies) only to the author. Actions call the surrounding Livewire component through InteractsWithPosts; buttons a viewer may not use are not rendered at all (guests get a sign-up hint instead).
 --}}
 @props(['post', 'link' => true])
 
@@ -21,25 +20,25 @@
 
 <article id="tropfen-{{ $post->id }}" {{ $attributes->class('flex flex-col gap-3 rounded-[24px] border border-paper-line bg-paper p-[22px]') }}>
     @if ($post->replyTo)
-        <p class="m-0 text-sm text-muted">Antwort an <a href="{{ route('network.posts.show', $post->replyTo) }}" class="text-night underline underline-offset-4">{{ '@'.$post->replyTo->author->username }}</a></p>
+        <p class="m-0 text-sm text-muted">Antwort an <a wire:navigate href="{{ route('network.posts.show', $post->replyTo) }}" class="text-night underline underline-offset-4">{{ '@'.$post->replyTo->author->username }}</a></p>
     @elseif ($post->reply_to_id !== null)
         <p class="m-0 text-sm text-muted">Antwort auf einen Tropfen, der nicht mehr verfügbar ist</p>
     @endif
 
     <header class="flex items-center gap-3">
-        <a href="{{ route('oasis.profil', $post->author->username) }}" class="flex-none no-underline" tabindex="-1">
+        <a wire:navigate href="{{ route('oasis.profil', $post->author->username) }}" class="flex-none no-underline" tabindex="-1">
             <x-network.avatar :user="$post->author" />
         </a>
         <div class="flex min-w-0 flex-col leading-[1.35]">
-            <a href="{{ route('oasis.profil', $post->author->username) }}" class="text-base font-extrabold text-ink no-underline">{{ $post->author->display_name }}</a>
+            <a wire:navigate href="{{ route('oasis.profil', $post->author->username) }}" class="text-base font-extrabold text-ink no-underline">{{ $post->author->display_name }}</a>
             <span class="text-sm text-muted">
                 {{ '@'.$post->author->username }}
                 @if ($post->oasis)
-                    · in <a href="{{ route('network.oases.show', $post->oasis) }}" class="text-muted underline underline-offset-4">{{ $post->oasis->name }}</a>
+                    · in <a wire:navigate href="{{ route('network.oases.show', $post->oasis) }}" class="text-muted underline underline-offset-4">{{ $post->oasis->name }}</a>
                 @endif
                 ·
                 @if ($link)
-                    <a href="{{ $postUrl }}" class="text-muted underline underline-offset-4"><time datetime="{{ $post->created_at->toIso8601String() }}">{{ $post->created_at->locale('de')->diffForHumans() }}</time></a>
+                    <a wire:navigate href="{{ $postUrl }}" class="text-muted underline underline-offset-4"><time datetime="{{ $post->created_at->toIso8601String() }}">{{ $post->created_at->locale('de')->diffForHumans() }}</time></a>
                 @else
                     <time datetime="{{ $post->created_at->toIso8601String() }}">{{ $post->created_at->locale('de')->isoFormat('D. MMMM YYYY, HH:mm') }}</time>
                 @endif
@@ -69,7 +68,7 @@
     @if ($post->images->isNotEmpty())
         <div @class(['grid gap-2', 'grid-cols-2' => $post->images->count() > 1])>
             @foreach ($post->images as $image)
-                <img src="{{ route('network.images.show', [$post, $image->id]) }}" alt="{{ $image->alt }}"
+                <img wire:key="post-card-1-{{ $post->id }}-{{ $image->id }}" src="{{ route('network.images.show', [$post, $image->id]) }}" alt="{{ $image->alt }}"
                      width="{{ $image->width }}" height="{{ $image->height }}" loading="lazy"
                      class="h-auto w-full rounded-2xl bg-dune object-cover">
             @endforeach
@@ -80,7 +79,7 @@
         @if ($carried && $carried->isVisibleTo($viewer))
             {{-- No outer link: the text may contain @/# links, and links must not be nested. --}}
             <div class="flex flex-col gap-1 rounded-2xl border border-dune-line p-4 text-ink">
-                <a href="{{ route('network.posts.show', $carried) }}" class="text-sm font-bold text-night no-underline">{{ $carried->author->display_name }} <span class="font-medium text-muted">{{ '@'.$carried->author->username }}</span></a>
+                <a wire:navigate href="{{ route('network.posts.show', $carried) }}" class="text-sm font-bold text-night no-underline">{{ $carried->author->display_name }} <span class="font-medium text-muted">{{ '@'.$carried->author->username }}</span></a>
                 <span class="line-clamp-4 whitespace-pre-line"><x-network.rich-text :text="$carried->body" /></span>
             </div>
         @else
@@ -116,18 +115,18 @@
                     {{ $post->isQuestion() ? 'Antworten aus der Karawane' : 'Gesprächsverlauf' }}
                 </span>
                 @if ($post->has_more_replies || ($post->replies_count ?? 0) > $post->conversationReplies->count())
-                    <a href="{{ $postUrl }}#antworten" class="text-xs font-bold text-night underline underline-offset-4">weitere Antworten</a>
+                    <a wire:navigate href="{{ $postUrl }}#antworten" class="text-xs font-bold text-night underline underline-offset-4">weitere Antworten</a>
                 @endif
             </div>
             <div class="flex flex-col gap-2.5">
                 @foreach ($post->conversationReplies as $reply)
-                    <div class="flex items-start gap-2.5 text-sm">
-                        <a href="{{ route('oasis.profil', $reply->author->username) }}" class="flex-none no-underline" tabindex="-1">
+                    <div wire:key="post-card-2-{{ $post->id }}-{{ $reply->id }}" class="flex items-start gap-2.5 text-sm">
+                        <a wire:navigate href="{{ route('oasis.profil', $reply->author->username) }}" class="flex-none no-underline" tabindex="-1">
                             <x-network.avatar :user="$reply->author" :size="32" />
                         </a>
                         <div class="flex min-w-0 flex-col leading-snug">
                             <div class="flex items-baseline gap-1.5">
-                                <a href="{{ route('oasis.profil', $reply->author->username) }}" class="font-bold text-ink no-underline hover:underline">
+                                <a wire:navigate href="{{ route('oasis.profil', $reply->author->username) }}" class="font-bold text-ink no-underline hover:underline">
                                     {{ $reply->author->display_name }}
                                 </a>
                                 <span class="text-xs text-muted">{{ '@'.$reply->author->username }}</span>
@@ -140,51 +139,49 @@
                 @endforeach
             </div>
             @if ($post->has_more_replies || ($post->replies_count ?? 0) > $post->conversationReplies->count())
-                <a href="{{ $postUrl }}#antworten" class="self-start text-xs font-bold text-night underline underline-offset-4">weitere Antworten</a>
+                <a wire:navigate href="{{ $postUrl }}#antworten" class="self-start text-xs font-bold text-night underline underline-offset-4">weitere Antworten</a>
             @endif
         </div>
     @endif
 
     <footer class="flex flex-wrap items-center gap-1.5 text-muted">
         @if ($canInteract)
-            <a href="{{ $postUrl }}#antworten" class="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-night no-underline">
+            <a wire:navigate href="{{ $postUrl }}#antworten" class="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-night no-underline">
                 <x-oasis.icon name="reply" :size="20" /><span>Antworten</span>
             </a>
-            <a href="{{ route('network.posts.carry', $post) }}" class="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-night no-underline">
+            <a wire:navigate href="{{ route('network.posts.carry', $post) }}" class="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-night no-underline">
                 <x-oasis.icon name="repost" :size="20" /><span>Weitertragen</span>
             </a>
             @if ($post->reacted)
-                <form method="POST" action="{{ route('network.reactions.destroy', $post) }}">
-                    @csrf @method('DELETE')
-                    <button type="submit" aria-pressed="true" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-none bg-transparent px-3 text-sun-text">
+                <form wire:submit="unreact({{ $post->id }})">
+
+                    <button type="submit" wire:loading.attr="disabled" aria-pressed="true" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-none bg-transparent px-3 text-sun-text">
                         <x-oasis.icon name="heart" :size="20" /><span>Reagiert</span>
                     </button>
                 </form>
             @else
-                <form method="POST" action="{{ route('network.reactions.store', $post) }}">
-                    @csrf
-                    <button type="submit" aria-pressed="false" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-none bg-transparent px-3 text-night">
+                <form wire:submit="react({{ $post->id }})">
+                    <button type="submit" wire:loading.attr="disabled" aria-pressed="false" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-none bg-transparent px-3 text-night">
                         <x-oasis.icon name="heart" :size="20" /><span>Reagieren</span>
                     </button>
                 </form>
             @endif
         @elseif (! $viewer)
-            <span class="text-sm">Antworten und Reagieren nur für Mitglieder · <a href="{{ route('register') }}" class="text-night underline underline-offset-4">{{ config('oasis.trial_days') }} Tage testen</a></span>
+            <span class="text-sm">Antworten und Reagieren nur für Mitglieder · <a wire:navigate href="{{ route('register') }}" class="text-night underline underline-offset-4">{{ config('oasis.trial_days') }} Tage testen</a></span>
         @endif
 
         @if ($viewer)
             @if ($bookmarked)
-                <form method="POST" action="{{ route('safety.bookmarks.destroy', $post) }}">
-                    @csrf @method('DELETE')
-                    <button type="submit" aria-pressed="true" aria-label="Aus Merkliste entfernen" title="Aus Merkliste entfernen" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-none bg-transparent px-3 text-spring-text">
+                <form wire:submit="unbookmark({{ $post->id }})">
+
+                    <button type="submit" wire:loading.attr="disabled" aria-pressed="true" aria-label="Aus Merkliste entfernen" title="Aus Merkliste entfernen" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-none bg-transparent px-3 text-spring-text">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="flex-none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
                         <span>Gemerkt</span>
                     </button>
                 </form>
             @else
-                <form method="POST" action="{{ route('safety.bookmarks.store', $post) }}">
-                    @csrf
-                    <button type="submit" aria-pressed="false" aria-label="Tropfen merken" title="Tropfen merken" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-none bg-transparent px-3 text-night">
+                <form wire:submit="bookmark({{ $post->id }})">
+                    <button type="submit" wire:loading.attr="disabled" aria-pressed="false" aria-label="Tropfen merken" title="Tropfen merken" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-none bg-transparent px-3 text-night">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="flex-none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
                         <span>Merken</span>
                     </button>
@@ -194,9 +191,8 @@
 
         <span class="ml-auto flex flex-wrap items-center gap-1.5">
             @can('removeFromOasis', $post)
-                <form method="POST" action="{{ route('network.posts.remove', $post) }}">
-                    @csrf
-                    <button type="submit" class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Aus Oase entfernen</button>
+                <form wire:submit="removePostFromOasis({{ $post->id }})">
+                    <button type="submit" wire:loading.attr="disabled" class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Aus Oase entfernen</button>
                 </form>
             @endcan
             @can('delete', $post)
@@ -204,23 +200,22 @@
                     <summary class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Löschen</summary>
                     <div class="absolute right-0 bottom-full z-10 mb-2 flex flex-col gap-2 rounded-2xl border border-paper-line bg-paper p-3 shadow-lg text-xs whitespace-nowrap">
                         <span class="font-bold text-night">Wirklich löschen?</span>
-                        <form method="POST" action="{{ route('network.posts.destroy', $post) }}">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="o-btn o-btn-sm bg-sun text-sun-ink text-xs font-bold w-full">Löschen bestätigen</button>
+                        <form wire:submit="deletePost({{ $post->id }})">
+
+                            <button type="submit" wire:loading.attr="disabled" class="o-btn o-btn-sm bg-sun text-sun-ink text-xs font-bold w-full">Löschen bestätigen</button>
                         </form>
                     </div>
                 </details>
             @else
                 @if ($viewer && $viewer->id !== $post->author->id)
                     @if ($viewer->hasMuted($post->author))
-                        <form method="POST" action="{{ route('safety.mute.destroy', $post->author) }}">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Nicht mehr stumm</button>
+                        <form wire:submit="unmuteUser({{ $post->author->id }})">
+
+                            <button type="submit" wire:loading.attr="disabled" class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Nicht mehr stumm</button>
                         </form>
                     @else
-                        <form method="POST" action="{{ route('safety.mute.store', $post->author) }}">
-                            @csrf
-                            <button type="submit" class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Stumm</button>
+                        <form wire:submit="muteUser({{ $post->author->id }})">
+                            <button type="submit" wire:loading.attr="disabled" class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Stumm</button>
                         </form>
                     @endif
                     <details class="relative inline-block">
@@ -228,32 +223,20 @@
                         <div class="absolute right-0 bottom-full z-10 mb-2 flex flex-col gap-2 rounded-2xl border border-paper-line bg-paper p-3 shadow-lg text-xs whitespace-nowrap">
                             <span class="font-bold text-night">Wirklich blockieren?</span>
                             <span class="text-ink-2 max-w-[200px] whitespace-normal">Ihr verliert gegenseitige Follows.</span>
-                            <form method="POST" action="{{ route('safety.block.store', $post->author) }}">
-                                @csrf
-                                <button type="submit" class="o-btn o-btn-sm bg-night text-on-night text-xs font-bold w-full">Blockieren bestätigen</button>
+                            <form wire:submit="blockUser({{ $post->author->id }})">
+                                <button type="submit" wire:loading.attr="disabled" class="o-btn o-btn-sm bg-night text-on-night text-xs font-bold w-full">Blockieren bestätigen</button>
                             </form>
                         </div>
                     </details>
-                    <a href="{{ route('oasis.melden', ['url' => $postUrl]) }}" class="o-link px-2 text-sm">Melden</a>
+                    <a wire:navigate href="{{ route('oasis.melden', ['url' => $postUrl]) }}" class="o-link px-2 text-sm">Melden</a>
                 @elseif ($viewer)
-                    <a href="{{ route('oasis.melden', ['url' => $postUrl]) }}" class="o-link px-2 text-sm">Melden</a>
+                    <a wire:navigate href="{{ route('oasis.melden', ['url' => $postUrl]) }}" class="o-link px-2 text-sm">Melden</a>
                 @endif
             @endcan
         </span>
     </footer>
 
     @if ($link && $canInteract && $viewer && $viewer->id !== $post->author->id && $viewer->followsMutually($post->author))
-        <form method="POST" action="{{ route('network.posts.store') }}" class="mt-1 flex items-center gap-2 rounded-2xl border border-dune-line bg-sand/40 p-2">
-            @csrf
-            <input type="hidden" name="reply_to" value="{{ $post->id }}">
-            <input type="hidden" name="visibility" value="{{ $post->visibility->value }}">
-            @if ($post->oasis)
-                <input type="hidden" name="oasis" value="{{ $post->oasis->slug }}">
-            @endif
-            <label for="quick-reply-{{ $post->id }}" class="sr-only">Antworten an {{ '@'.$post->author->username }}</label>
-            <input id="quick-reply-{{ $post->id }}" type="text" name="body" maxlength="{{ \App\Models\Post::MAX_LENGTH }}" required
-                   placeholder="Antworten …" class="o-input flex-1 bg-paper py-2 text-sm" />
-            <button type="submit" class="o-btn o-btn-sm o-btn-dark flex-none">Antworten</button>
-        </form>
+        <div id="quick-reply-{{ $post->id }}"><x-network.compose :reply-to="$post" :images="false" /></div>
     @endif
 </article>

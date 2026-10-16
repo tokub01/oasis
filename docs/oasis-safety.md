@@ -7,7 +7,7 @@ Blockieren, Stummschalten und private Merkliste für das Oasis-Netzwerk.
 - **Ruhig & ohne Suchtmechanik**: Keine Zähler-Badges für Merklisten, keine Push-Spirale, keine öffentlichen Zähler, wer was gemerkt hat.
 - **Leise Schutzmaßnahmen**: Blockierte oder stummgeschaltete Personen werden zu keinem Zeitpunkt benachrichtigt.
 - **Konsequente Nicht-Existenz**: Bei einer Blockade existieren die beiden Konten füreinander schlicht nicht mehr (404 Not Found für Profile und Tropfen).
-- **Vollständige Zugänglichkeit**: Funktioniert ohne JavaScript über Standard-Formulare mit CSRF-Schutz und barrierefreie HTML5-Elemente (`role="status"`, zugängliche Namen für Bildschirmleser).
+- **Vollständige Zugänglichkeit**: Livewire-Aktionen benötigen JavaScript und bleiben durch Web-Session/CSRF und erneute Autorisierung geschützt; Rückmeldungen nutzen barrierefreie HTML5-Elemente (`role="status"`, zugängliche Namen für Bildschirmleser).
 
 ---
 
@@ -48,8 +48,8 @@ Das Trait wird von `App\Models\User` verwendet und stellt standardisierte Method
    - `PostPolicy::view` verweigert die Sichtbarkeit bei Blockaden.
    - `PostPolicy::interact` verweigert Antworten, Weitertragen und Reaktionen bei Blockaden.
 
-3. **`App\Http\Controllers\Network\ProfileController`**:
-   - `show`: Gibt `404 Not Found` zurück, wenn zwischen Profilinhaber:in und Betrachter:in eine Blockade vorliegt.
+3. **`App\Livewire\Network\ProfileShow`**:
+   - `render`: Gibt `404 Not Found` zurück, wenn zwischen Profilinhaber:in und Betrachter:in eine Blockade vorliegt.
 
 4. **`App\Actions\Network\ManageFollows`**:
    - `follow`: Wirft `ValidationException`, wenn die Zielperson blockiert ist oder den Aufrufer blockiert hat.
@@ -70,30 +70,26 @@ Das Trait wird von `App\Models\User` verwendet und stellt standardisierte Method
 
 ---
 
-## 4. Routen (`routes/safety.php`)
+## 4. Routen (`routes/safety.php`) & Livewire-Komponenten (Stage 12)
 
-Alle Sicherheits-Routen erfordern ein authentifiziertes, bestätigtes Konto (`middleware(['auth', 'verified'])`):
+Alle Sicherheits-Routen erfordern ein authentifiziertes, bestätigtes Konto (`middleware(['auth', 'verified'])`) und werden als klassenbasierte Livewire-4-Vollseitenkomponenten über `Route::livewire` ausgeliefert:
 
-- `GET  /app/sicherheit` (`safety.index`): Übersicht blockierter und stummgeschalteter Konten mit Aufheben-Optionen.
-- `POST /app/sicherheit/block/{user}` (`safety.block.store`): Konto blockieren.
-- `DELETE /app/sicherheit/block/{user}` (`safety.block.destroy`): Blockade aufheben.
-- `POST /app/sicherheit/mute/{user}` (`safety.mute.store`): Konto stummschalten.
-- `DELETE /app/sicherheit/mute/{user}` (`safety.mute.destroy`): Stummschaltung aufheben.
-- `GET  /app/gemerkt` (`safety.bookmarks`): Private Merkliste (neueste zuerst).
-- `POST /app/gemerkt/{post}` (`safety.bookmarks.store`): Tropfen merken.
-- `DELETE /app/gemerkt/{post}` (`safety.bookmarks.destroy`): Tropfen aus Merkliste entfernen.
+- `GET /app/sicherheit` (`safety.index`) → `App\Livewire\Safety\SafetyOverview`: Übersicht blockierter und stummgeschalteter Konten mit direkten Livewire-Aktionen (`unblock(int $userId)`, `unmute(int $userId)`).
+- `GET /app/gemerkt` (`safety.bookmarks`) → `App\Livewire\Safety\Bookmarks`: Private Merkliste (neueste zuerst) mit `App\Livewire\Concerns\InteractsWithPosts` für Live-Interaktionen im Feed (inkl. `bookmark` / `unbookmark`).
+
+Blockieren, Stummschalten und Merken aus Feeds oder Profilen heraus laufen direkt über Livewire-Aktionen (`InteractsWithPosts` bzw. Profil-Komponente) auf Basis der bestehenden Domain-Actions (`ManageBlock`, `ManageMute`, `ManageBookmark`).
 
 ---
 
 ## 5. Benutzeroberfläche & Komponenten
 
 - **`post-card.blade.php`**:
-  - Knopf "Merken" / "Gemerkt" für Mitglieder mit diskretem Lesezeichen-Icon.
+  - Knopf "Merken" / "Gemerkt" für Mitglieder mit diskretem Lesezeichen-Icon (`wire:submit="bookmark(...)"` / `wire:submit="unbookmark(...)"`).
   - Aktionen "Stumm" / "Nicht mehr stumm", "Blockieren" und "Melden" in der Fußzeile (nur für fremde Beiträge).
-- **`profile/show.blade.php`**:
+- **Profil-Ansicht**:
   - Knöpfe "Stummschalten" / "Nicht mehr stumm" und "Blockieren" für angemeldete Mitglieder im Kopfbereich fremder Profile.
-- **`safety/index.blade.php`**:
-  - Übersichtliche Listen für blockierte und stummgeschaltete Konten mit Zählern, Avataren, Namen und Aktionen zum Aufheben.
+- **`resources/views/livewire/safety/safety-overview.blade.php`**:
+  - Übersichtliche Listen für blockierte und stummgeschaltete Konten mit Zählern, Avataren, Namen (`wire:navigate`), `wire:key` pro Zeile und Aktionen zum Aufheben (`wire:click="unblock(...)"`, `wire:click="unmute(...)"`).
   - Zweispaltiges Layout (`x-network.columns`, `'wide' => true`) mit erklärenden Infokarten.
-- **`safety/bookmarks.blade.php`**:
-  - Darstellung über `<x-network.feed>` mit Hinweisen zur privaten Natur der Lesezeichen.
+- **`resources/views/livewire/safety/bookmarks.blade.php`**:
+  - Darstellung über `<x-network.feed>` mit `wire:key` pro Beitrag und Hinweisen zur privaten Natur der Lesezeichen.

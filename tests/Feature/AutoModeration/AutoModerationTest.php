@@ -12,6 +12,7 @@ use App\Models\Post;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
+use Tests\Support\NetworkActions;
 use Tests\Support\NetworkFixtures as N;
 
 /* Stage 10: automated content check (Laravel AI SDK → Mistral, faked here), nudge, reporting, holding, release. */
@@ -36,8 +37,7 @@ function moderator(): User
 
 it('publishes clean Tropfen without a case and records the check', function () {
     ContentCheckAgent::fake([verdict()]);
-    $this->actingAs(N::member())->post(route('network.posts.store'), ['body' => 'Schöner Tag heute', 'visibility' => 'public'])
-        ->assertRedirect(route('app.home'));
+    NetworkActions::publish(['body' => 'Schöner Tag heute', 'visibility' => 'public'], N::member())->assertHasNoErrors();
 
     $check = ContentCheck::sole();
     expect($check->status)->toBe('checked')->and($check->flagged)->toBeFalse()->and($check->source)->toBe('ai')
@@ -48,12 +48,10 @@ it('asks "Nochmal lesen?" before an insulting Tropfen and reports it when sent a
     ContentCheckAgent::fake([verdict(['insult' => 0.9], 'Direkte Beleidigung einer Person.')]);
     $me = N::member();
 
-    $this->actingAs($me)->post(route('network.posts.store'), ['body' => 'Du bist ein Idiot', 'visibility' => 'public'])
-        ->assertSessionHasErrors('body')->assertSessionHas('tone_nudge', true);
+    NetworkActions::publish(['body' => 'Du bist ein Idiot', 'visibility' => 'public'], $me)->assertHasErrors('body')->assertSet('toneNudge', true);
     expect(Post::count())->toBe(0);
 
-    $this->post(route('network.posts.store'), ['body' => 'Du bist ein Idiot', 'visibility' => 'public', 'tone_confirmed' => '1'])
-        ->assertRedirect(route('app.home'));
+    NetworkActions::publish(['body' => 'Du bist ein Idiot', 'visibility' => 'public', 'tone_confirmed' => '1'])->assertHasNoErrors();
     $post = Post::sole();
     $case = ModerationCase::sole();
 
@@ -69,7 +67,7 @@ it('asks "Nochmal lesen?" before an insulting Tropfen and reports it when sent a
 it('holds clearly sexual Tropfen for review, tells the author and lets only author and staff see them', function () {
     ContentCheckAgent::fake([verdict(['sexual' => 0.95], 'Sexuell expliziter Inhalt.')]);
     $author = N::member();
-    $this->actingAs($author)->post(route('network.posts.store'), ['body' => 'expliziter Text', 'visibility' => 'public']);
+    NetworkActions::publish(['body' => 'expliziter Text', 'visibility' => 'public'], $author);
     $post = Post::sole();
 
     expect($post->held_at)->not->toBeNull()->and(ModerationCase::sole()->priority->value)->toBe('urgent');
@@ -85,7 +83,7 @@ it('holds clearly sexual Tropfen for review, tells the author and lets only auth
 
 it('makes a held Tropfen visible again when a human decides "no action", and says so in the decision mail', function () {
     ContentCheckAgent::fake([verdict(['sexual' => 0.95])]);
-    $this->actingAs(N::member())->post(route('network.posts.store'), ['body' => 'Aktzeichnung im Museum', 'visibility' => 'public']);
+    NetworkActions::publish(['body' => 'Aktzeichnung im Museum', 'visibility' => 'public'], N::member());
     $case = ModerationCase::sole();
     $staff = moderator();
 
@@ -100,7 +98,7 @@ it('makes a held Tropfen visible again when a human decides "no action", and say
 
 it('shows the automated detection with scores and reason in the moderation case', function () {
     ContentCheckAgent::fake([verdict(['threat' => 0.8], 'Androhung von Gewalt.')]);
-    $this->actingAs(N::member())->post(route('network.posts.store'), ['body' => 'Ich finde dich', 'visibility' => 'public', 'tone_confirmed' => '1']);
+    NetworkActions::publish(['body' => 'Ich finde dich', 'visibility' => 'public', 'tone_confirmed' => '1'], N::member());
     $case = ModerationCase::sole();
 
     $this->actingAs(moderator())->get(route('moderation.cases.show', $case))->assertOk()
@@ -112,8 +110,8 @@ it('never blocks posting when the model fails: the word list nudges and the job 
     ContentCheckAgent::fake(fn () => throw new RuntimeException('Mistral down'));
     $this->actingAs(N::member());
 
-    $this->post(route('network.posts.store'), ['body' => 'Du Arschloch', 'visibility' => 'public'])->assertSessionHasErrors('body');
-    $this->post(route('network.posts.store'), ['body' => 'Ganz normaler Satz', 'visibility' => 'public'])->assertRedirect(route('app.home'));
+    NetworkActions::publish(['body' => 'Du Arschloch', 'visibility' => 'public'])->assertHasErrors('body');
+    NetworkActions::publish(['body' => 'Ganz normaler Satz', 'visibility' => 'public'])->assertHasNoErrors();
     // The job could not reach the model; with a synchronous queue its failure handler lets the word list decide.
     expect(Post::count())->toBe(1)->and(ContentCheck::sole()->source)->toBe('wordlist');
 });
@@ -131,7 +129,7 @@ it('lets the word list decide after the last retry so nothing stays unchecked', 
 it('checks profile and oasis texts when they change', function () {
     ContentCheckAgent::fake([verdict(['hate' => 0.9], 'Hetze.'), verdict()]);
     $me = N::member();
-    $this->actingAs($me)->put(route('network.profile.update'), ['bio' => 'hetzerischer Text', 'visibility' => 'public', 'avatar_color' => 'sun']);
+    NetworkActions::saveProfile(['bio' => 'hetzerischer Text', 'visibility' => 'public', 'avatar_color' => 'sun'], $me);
 
     $case = ModerationCase::sole();
     expect($case->subject_url)->toBe(route('oasis.profil', $me->username))->and($case->subject_user_id)->toBe($me->id);
@@ -153,7 +151,7 @@ it('re-queues unchecked Tropfen in the sweep', function () {
 it('uses only the word list when the AI check is switched off', function () {
     config(['oasis.moderation.enabled' => false]);
     ContentCheckAgent::fake();
-    $this->actingAs(N::member())->post(route('network.posts.store'), ['body' => 'Friedlich', 'visibility' => 'public']);
+    NetworkActions::publish(['body' => 'Friedlich', 'visibility' => 'public'], N::member());
 
     ContentCheckAgent::assertNeverPrompted();
     expect(ContentCheck::sole()->source)->toBe('wordlist');

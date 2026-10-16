@@ -56,7 +56,7 @@
                 @forelse ($cases as $case)
                     <tr wire:key="case-{{ $case->id }}" class="border-t border-paper-line align-top">
                         <td class="px-4 py-3">
-                            <a href="{{ route('moderation.cases.show', $case) }}" class="font-bold text-night underline underline-offset-4">#{{ $case->id }}</a>
+                            <a href="{{ route('moderation.cases.show', $case) }}" wire:navigate class="font-bold text-night underline underline-offset-4">#{{ $case->id }}</a>
                             @if ($case->priority === \App\Enums\Moderation\Priority::Urgent)
                                 <span class="ml-2 rounded-full bg-sun px-2 py-0.5 text-xs font-extrabold text-sun-ink">{{ $case->priority->label() }}</span>
                             @endif

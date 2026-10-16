@@ -1,0 +1,94 @@
+<?php
+
+namespace App\Livewire\Network;
+
+use App\Actions\Network\ManageFollows;
+use App\Actions\Safety\ManageMute;
+use App\Models\User;
+use App\Queries\Network\PostFeed;
+use App\Support\DemoProfiles;
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Gate;
+use Livewire\Attributes\Locked;
+
+/** Public-readable member profile with safety-aware follows and feature-flagged demo fallback. */
+class ProfileShow extends NetworkPage
+{
+    #[Locked]
+    public string $handle;
+
+    /** Complete the authorized action, then leave a page whose target is no longer readable. */
+    public function blockUser(int $userId): void
+    {
+        parent::blockUser($userId);
+        $this->redirectRoute('app.home', navigate: true);
+    }
+
+    /** Bind the existing handle URI; it cannot be replaced by a browser-side update. */
+    public function mount(string $handle): void
+    {
+        $this->handle = mb_strtolower($handle);
+    }
+
+    /** Resolve the current profile and recheck visibility and bidirectional blocks. */
+    private function target(): ?User
+    {
+        $user = User::where('username', $this->handle)->whereNotNull('email_verified_at')->with('profile')->first();
+        if ($user) {
+            abort_if(auth()->user()?->isBlockedWith($user) ?? false, 404);
+            abort_unless($user->profileOrDefault()->isVisibleTo(auth()->user()), 404);
+        }
+
+        return $user;
+    }
+
+    /** Follow only a verified visible profile while entitled to participate. */
+    public function follow(): void
+    {
+        $actor = $this->actor();
+        Gate::authorize('participate');
+        $target = $this->target();
+        abort_unless($target !== null, 404);
+        app(ManageFollows::class)->follow($actor, $target);
+        $this->postStatus = 'Du folgst jetzt '.$target->display_name.'.';
+    }
+
+    /** Remove only the current account's follow, including in read-only mode. */
+    public function unfollow(): void
+    {
+        $actor = $this->actor();
+        $target = $this->target();
+        abort_unless($target !== null, 404);
+        app(ManageFollows::class)->unfollow($actor, $target);
+        $this->postStatus = 'Du folgst '.$target->display_name.' nicht mehr.';
+    }
+
+    /** Undo only the current account's mute for this visible profile. */
+    public function unmute(): void
+    {
+        $actor = $this->actor();
+        $target = $this->target();
+        abort_unless($target !== null, 404);
+        app(ManageMute::class)->unmute($actor, $target);
+        $this->postStatus = 'Stummschaltung aufgehoben.';
+    }
+
+    /** Real profiles use the same visibility query as before; demo profiles remain available behind their flag. */
+    public function render(): View
+    {
+        $member = $this->target();
+        if (! $member) {
+            abort_unless(config('oasis.demo_pages'), 404);
+            $profile = DemoProfiles::find($this->handle);
+            abort_unless($profile !== null, 404);
+
+            return view('livewire.network.profile-demo', ['handle' => $this->handle, 'profile' => $profile])
+                ->layout('layouts.oasis', ['title' => 'Profil', 'noindex' => true]);
+        }
+
+        return $this->page('livewire.network.profile-show', ['member' => $member, 'profile' => $member->profileOrDefault(),
+            'posts' => app(PostFeed::class)->byAuthor($member, auth()->user()),
+            'followers' => $member->followers()->count(), 'oases' => $member->oases()->orderBy('name')->get()->filter->isVisibleTo(auth()->user()),
+            'following' => auth()->user()?->follows($member) ?? false], $member->display_name.' (@'.$member->username.')', 'profil', true);
+    }
+}

@@ -1,10 +1,11 @@
 <?php
 
-use App\Http\Controllers\Search\SearchController;
+use App\Livewire\Search\Index;
+use App\Livewire\Search\Tag;
 use Illuminate\Support\Facades\Route;
 
-/* Stage 8 search (docs/oasis-search.md): member search and public #Thema pages. */
+/** Live search and public topic pages retain their original URLs and initial-request rate limit. */
 Route::name('search.')->group(function () {
-    Route::get('/themen/{tag}', [SearchController::class, 'tag'])->middleware('throttle:search')->name('tags.show');
-    Route::get('/app/suche', [SearchController::class, 'index'])->middleware(['auth', 'verified', 'throttle:search'])->name('index');
+    Route::livewire('/themen/{tag}', Tag::class)->middleware('throttle:search')->name('tags.show');
+    Route::livewire('/app/suche', Index::class)->middleware(['auth', 'verified', 'throttle:search'])->name('index');
 });

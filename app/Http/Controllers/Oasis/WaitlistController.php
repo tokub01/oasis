@@ -3,43 +3,16 @@
 namespace App\Http\Controllers\Oasis;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Oasis\WaitlistFormRequest;
-use App\Mail\Oasis\WaitlistConfirmation;
 use App\Models\WaitlistEntry;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
- * Handles the public founding waitlist and its signed double-opt-in links in routes/oasis.php.
- * Consent is recorded before confirmation; only a signed confirmation admits the address to the start list.
+ * The signed double-opt-in links of the founding start list (sign-up: App\Livewire\Oasis\WaitlistSignup).
+ * Only a signed confirmation admits an address to the start list; unsubscribing needs a signed POST.
  */
 class WaitlistController extends Controller
 {
-    /**
-     * Keep an existing entry unchanged, or create it safely, then request double opt-in.
-     * A uniform redirect avoids disclosing whether an address is already confirmed.
-     */
-    public function store(WaitlistFormRequest $request): RedirectResponse
-    {
-        $entry = WaitlistEntry::firstOrCreate(
-            ['email' => $request->validated('email')],
-            [
-                ...$request->safe()->only(['group']),
-                'consented_at' => now(),
-                'token' => Str::random(64),
-            ],
-        );
-
-        if ($entry->confirmed_at === null) {
-            Mail::to($entry->email)->send(new WaitlistConfirmation($entry));
-        }
-
-        return redirect()->route('oasis.bestaetigung.gruendung')->with('oasis.submitted.gruendung', true);
-    }
-
     /**
      * Confirm a signed waitlist entry without replacing its original confirmation time.
      *

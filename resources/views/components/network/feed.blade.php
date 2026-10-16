@@ -9,13 +9,13 @@
 
 <div {{ $attributes->class('flex flex-col gap-4') }}>
     @forelse ($posts as $post)
-        <x-network.post-card :post="$post" />
+        <x-network.post-card :post="$post" wire:key="post-{{ $post->id }}" />
     @empty
         <p class="m-0 rounded-[20px] border-2 border-dashed border-dune-line p-6 text-center text-ink-2">{{ $empty }}</p>
     @endforelse
 
     @if ($posts->hasMorePages())
-        <a href="{{ $posts->nextPageUrl() }}" class="o-btn o-btn-md o-btn-outline self-center">Ältere Tropfen</a>
+        <button type="button" wire:click="setPage('{{ $posts->nextCursor()->encode() }}', 'cursor')" wire:loading.attr="disabled" class="o-btn o-btn-md o-btn-outline self-center">Ältere Tropfen</button>
     @elseif ($posts->isNotEmpty())
         <div class="flex flex-col gap-1 rounded-[20px] border-2 border-dashed border-spring p-6 text-center">
             <span class="font-bold text-spring-text">Du bist auf dem neuesten Stand.</span>

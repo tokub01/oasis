@@ -33,7 +33,13 @@ Quellen: [Laravel-Mollie](https://github.com/mollie/laravel-mollie/tree/v4.1.2),
 
 ## Checkout, Mandate und wiederkehrende Zahlungen
 
-`POST /mitglied-werden/checkout` prüft Stufe, Rhythmus, Zahlungsmittel und den optionalen Mäzen-Betrag.
+Die öffentliche Seite `/mitglied-werden` (`oasis.mitglied`) läuft als Livewire-4-Vollseitenkomponente
+`App\Livewire\Membership\Checkout` (`Route::livewire`). Stufe (`stufe`), Zahlungsrhythmus (`rhythmus`),
+Zahlungsmittel (`zahlungsmittel`) und der freie Mäzen-Betrag (`betrag`) werden reaktiv per `wire:model.live`
+gebunden; die Live-Zusammenfassung (inkl. Jahresrabatt aus zehn Monatsbeiträgen und 19 % USt.-Anteil) wird direkt
+in der Komponente berechnet und ersetzt das frühere JavaScript-Modul `membership` in `resources/js/oasis.js`.
+`startCheckout()` prüft Authentifizierung, E-Mail-Bestätigung sowie Tarifdaten und startet für externe
+Mollie-Weiterleitungen den Checkout per `$this->redirect($checkoutUrl, navigate: false)`.
 Monatliche Beiträge sind 3/5/ab 12 Euro. Jahresbeiträge werden aus zehn Monatsbeiträgen berechnet und decken zwölf
 Monate ab. Der tatsächliche Betrag in Cent und der Rhythmus werden dauerhaft gespeichert; spätere Preisänderungen
 verändern bestehende Abos nicht. MRR verwendet diese Beträge und teilt Jahresbeträge durch zwölf.
@@ -62,20 +68,24 @@ Der eindeutige Zahlungsindex und `processed_at` verhindern doppelte Gutscheine u
 nach und gleicht Kündigungen im Dashboard ab. Der Scheduler führt ihn alle zehn Minuten ohne Überlappung aus.
 Fehlgeschlagene Zahlungen verlängern `paid_until` nicht; nach Ablauf endet die Schreibberechtigung.
 
-## Kündigung, Widerruf und Verwaltung
+## Kündigung, Widerruf und Verwaltung (Livewire 4, Stage 12)
 
-- Die bestehende Kündigung über Bestätigungsseite und „Jetzt kündigen“ stoppt weitere Mollie-Abbuchungen sofort.
-  `ends_at` entspricht dem gespeicherten bezahlten Periodenende; ein Jahresvertrag erhält kein erfundenes Monatsende.
-  Bestätigung und Betreiberkopie werden weiterhin per E-Mail verschickt.
-- Der Widerruf innerhalb der bestehenden 14-Tage-Regel beendet den Zugang sofort und erstattet bezahlte Zahlungen
-  über die Mollie Refund API. Der stabile Refund-Schlüssel und der lokale Erstattungsstatus verhindern Doppelzahlungen.
-  Bei einem API-Fehler erhält der Betreiber eine konkrete Aufgabe zur manuellen Erstattung.
-- Mollie besitzt kein entsprechendes gehostetes Kundenportal. `/app/mitgliedschaft/portal` zeigt die eigenen Zahlungen
-  und eine CSRF-geschützte Zahlungsartänderung. Eine neue `first`-Zahlung über einen Euro richtet ein neues Mandat ein;
-  nach erfolgreichem Austausch wird der Euro erstattet. Der Hinweis steht direkt am Formular.
-- Rechnungen unter `/app/mitgliedschaft/rechnungen/{payment}` sind ausschließlich für den Zahler erreichbar. Sie zeigen
-  Betrag, enthaltene Umsatzsteuer, Zahlungsreferenz und gespeicherte Rechnungsdaten. Der Browser kann sie drucken oder
-  als PDF speichern. Adressdaten werden übernommen, soweit die Zahlungsart sie zurückliefert.
+Alle internen Mitgliedschaftsseiten unter `routes/membership.php` sind klassenbasierte Livewire-4-Komponenten:
+
+- `/app/mitgliedschaft` (`app.membership`) → `App\Livewire\Membership\Overview`: Übersicht über Status, Gründungsplatz,
+  Zahlungen, Gutschein-Einlösung (`redeem(RedeemGiftMembership)`) und Geschenkkauf (`buyGift(MollieMembershipService)`,
+  externer Redirect zu Mollie mit `navigate: false`).
+- `/app/mitgliedschaft/portal` (`app.membership.portal`) → `App\Livewire\Membership\Portal`: zeigt die eigenen Zahlungen
+  und die Zahlungsartänderung (`updatePaymentMethod(MollieMembershipService)`). Eine neue `first`-Zahlung über einen Euro
+  richtet ein neues Mandat ein; nach erfolgreichem Austausch wird der Euro erstattet. Der Hinweis steht direkt am Formular.
+- `/app/mitgliedschaft/kuendigen` (`app.membership.cancel.confirm`) → `App\Livewire\Membership\Cancel`: Bestätigungsseite
+  und `cancel(CancelMembership)`. Stoppt weitere Mollie-Abbuchungen sofort; `ends_at` entspricht dem gespeicherten
+  bezahlten Periodenende; Bestätigung und Betreiberkopie werden per E-Mail verschickt.
+- `/app/mitgliedschaft/widerrufen` (`app.membership.withdraw.confirm`) → `App\Livewire\Membership\Withdraw`:
+  Bestätigungsseite und `withdraw(WithdrawMembership)` innerhalb der 14-Tage-Regel. Beendet den Zugang sofort und
+  erstattet bezahlte Zahlungen über die Mollie Refund API.
+- Rechnungen unter `/app/mitgliedschaft/rechnungen/{payment}` (`app.membership.invoice`, `InvoiceController`) und der
+  Webhook `POST /mollie/webhook` (`mollie.webhook`, `MollieWebhookController`) bleiben dedizierte HTTP-Controller.
 
 ## Geschenke und Gründungsplätze
 
@@ -95,5 +105,11 @@ ohne externe API-Aufrufe. Bezahlte Restlaufzeiten zählen weiterhin als Zugang; 
 ## Verifikation
 
 Mitgliedschaftstests liegen in `tests/Feature/Membership`, angepasste unabhängige Regressionen in
-`tests/Feature/CrossCheck/Stage9`. SDK-Fakes verhindern echte API-Aufrufe. Codex verwendet ausschließlich die
-Testdatenbank `testing_codex` und führt Prüfungen im Sail-Container aus.
+`tests/Feature/CrossCheck/Stage9` und `tests/Feature/CrossCheck/Stage11`. SDK-Fakes verhindern echte API-Aufrufe.
+
+### Stage 12 completion
+
+The live Mäzen summary and checkout consistently accept whole euros, matching the existing service contract.
+Fractional, empty and invalid custom amounts display an inline error; fixed-price tiers ignore a previously
+entered custom amount. No silent rounding occurs before starting Mollie checkout. Replaced client-side membership
+calculation tests now exercise the real `Checkout` component, including all tiers, annual billing and included VAT.

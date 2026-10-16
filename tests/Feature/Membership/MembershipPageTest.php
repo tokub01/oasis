@@ -1,9 +1,11 @@
 <?php
 
+use App\Livewire\Membership\Overview;
 use App\Models\GiftMembership;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Support\Carbon;
+use Livewire\Livewire;
 
 test('membership page requires authentication and email verification', function () {
     $this->get(route('app.membership'))->assertRedirect(route('login'));
@@ -101,5 +103,6 @@ test('membership overview offers withdrawal through the end of day fourteen', fu
     Subscription::create(['user_id' => $user->id, 'type' => 'oase', 'status' => 'active',
         'paid_until' => now()->addMonth(), 'created_at' => now()->subDays($days)->startOfDay()->addHours(10)]);
 
-    $this->actingAs($user)->get(route('app.membership'))->assertOk()->assertViewHas('isEligibleForWithdrawal', $eligible);
+    $this->actingAs($user)->get(route('app.membership'))->assertOk()->assertSeeLivewire(Overview::class);
+    Livewire::actingAs($user)->test(Overview::class)->assertViewHas('isEligibleForWithdrawal', $eligible);
 })->with([[14, true], [15, false]]);

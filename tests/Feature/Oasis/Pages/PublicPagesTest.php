@@ -214,5 +214,5 @@ it('does not invent transparency figures and calculates published coverage from 
 
 it('marks the active main-navigation link on each matching page', function ($page) {
     $response = $this->get(route('oasis.'.$page))->assertOk();
-    expect($response->getContent())->toContain('href="'.route('oasis.'.$page).'" aria-current="page"');
+    expect($response->getContent())->toContain('href="'.route('oasis.'.$page).'" wire:navigate aria-current="page"');
 })->with(['funktionen', 'preise', 'transparenz', 'manifest', 'gemeinsam']);

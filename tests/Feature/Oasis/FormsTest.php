@@ -15,6 +15,7 @@ use App\Models\CancellationRequest;
 use App\Models\WaitlistEntry;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
+use Tests\Support\PublicForms;
 
 beforeEach(function () {
     Mail::fake();
@@ -46,8 +47,8 @@ dataset('oasis forms', [
 ]);
 
 it('stores a valid submission and sends the required mail', function ($page, $table, $data, $required, $mail, $count) {
-    $this->post(route('oasis.'.$page.'.store'), $data)
-        ->assertSessionHasNoErrors()
+    PublicForms::submit($page, $data)
+        ->assertHasNoErrors()
         ->assertRedirect(route('oasis.bestaetigung.'.$page));
 
     $this->assertDatabaseCount($table, 1);
@@ -71,30 +72,30 @@ it('stores a valid submission and sends the required mail', function ($page, $ta
 })->with('oasis forms');
 
 it('rejects missing required fields without storage or mail', function ($page, $table, $data, $required) {
-    $this->post(route('oasis.'.$page.'.store'), [])->assertSessionHasErrors($required);
+    $empty = array_map(fn ($value) => is_string($value) ? '' : false, $data);
+    PublicForms::submit($page, $empty)->assertHasErrors(array_map(fn ($field) => 'form.'.$field, $required));
     $this->assertDatabaseCount($table, 0);
     Mail::assertNothingSent();
 })->with('oasis forms');
 
 it('rejects invalid email addresses with a German error', function ($page, $table, $data) {
-    $this->post(route('oasis.'.$page.'.store'), [...$data, 'email' => 'invalid'])
-        ->assertSessionHasErrors(['email' => 'Bitte gib eine gültige E-Mail-Adresse ein.']);
+    PublicForms::submit($page, [...$data, 'email' => 'invalid'])
+        ->assertHasErrors(['form.email' => 'Bitte gib eine gültige E-Mail-Adresse ein.']);
     $this->assertDatabaseCount($table, 0);
     Mail::assertNothingSent();
 })->with('oasis forms');
 
 it('rejects the honeypot without storing anything or sending mail', function ($page, $table, $data) {
-    $this->post(route('oasis.'.$page.'.store'), [...$data, 'website' => 'https://spam.tld'])
-        ->assertSessionHasErrors('website');
+    PublicForms::submit($page, [...$data, 'website' => 'https://spam.tld'])->assertHasErrors('form.website');
     $this->assertDatabaseCount($table, 0);
     Mail::assertNothingSent();
 })->with('oasis forms');
 
 it('throttles submissions', function ($page, $table) {
     for ($attempt = 0; $attempt < 6; $attempt++) {
-        $this->post(route('oasis.'.$page.'.store'), [])->assertSessionHasErrors();
+        PublicForms::submit($page, [])->assertHasErrors()->assertHasNoErrors('throttle');
     }
-    $this->post(route('oasis.'.$page.'.store'), [])->assertStatus(429);
+    PublicForms::submit($page, [])->assertHasErrors('throttle')->assertHasNoErrors('form.email');
     $this->assertDatabaseCount($table, 0);
     Mail::assertNothingSent();
 })->with('oasis forms');
@@ -104,21 +105,21 @@ it('does not display a submission confirmation before a submission', function ($
 })->with('oasis forms');
 
 it('requires the extraordinary reason and the requested cancellation date', function () {
-    $this->post(route('oasis.kuendigen.store'), [
+    PublicForms::submit('kuendigen', [
         'name' => 'Test Person', 'email' => 'person@example.tld', 'contract' => 'Oasis-Mitgliedschaft',
         'type' => 'ausserordentlich', 'timing' => 'datum',
-    ])->assertSessionHasErrors(['reason', 'effective_date']);
+    ])->assertHasErrors(['form.reason', 'form.effective_date']);
     $this->assertDatabaseCount('cancellation_requests', 0);
     Mail::assertNothingSent();
 });
 
 it('stores extraordinary cancellation content and renders its timestamp in the receipt', function () {
     $this->freezeTime();
-    $this->post(route('oasis.kuendigen.store'), [
+    PublicForms::submit('kuendigen', [
         'name' => 'Test Person', 'email' => 'person@example.tld', 'contract' => 'Oasis-Mitgliedschaft',
         'type' => 'ausserordentlich', 'reason' => 'Important reason', 'timing' => 'datum',
         'effective_date' => now()->addMonth()->format('Y-m-d'), 'username' => '@person',
-    ])->assertSessionHasNoErrors();
+    ])->assertHasNoErrors();
     $this->assertDatabaseHas('cancellation_requests', ['reason' => 'Important reason']);
     expect(CancellationRequest::sole()->effective_date->format('Y-m-d'))->toBe(now()->addMonth()->format('Y-m-d'));
     $html = (new CancellationReceipt(CancellationRequest::first()))->render();
@@ -128,26 +129,26 @@ it('stores extraordinary cancellation content and renders its timestamp in the r
 });
 
 it('ignores inapplicable cancellation fields', function () {
-    $this->post(route('oasis.kuendigen.store'), [
+    PublicForms::submit('kuendigen', [
         'name' => 'Test Person', 'email' => 'person@example.tld', 'contract' => 'Oasis-Mitgliedschaft',
         'type' => 'ordentlich', 'timing' => 'naechst', 'reason' => 'Not applicable', 'effective_date' => 'invalid',
-    ])->assertSessionHasNoErrors();
+    ])->assertHasNoErrors();
     $this->assertDatabaseHas('cancellation_requests', ['reason' => null, 'effective_date' => null]);
 });
 
 it('rejects invalid cancellation selections and dates', function () {
-    $this->post(route('oasis.kuendigen.store'), [
+    PublicForms::submit('kuendigen', [
         'name' => 'Test Person', 'email' => 'person@example.tld', 'contract' => 'Other contract',
         'type' => 'invalid', 'timing' => 'datum', 'effective_date' => 'not-a-date',
-    ])->assertSessionHasErrors(['contract', 'type', 'effective_date']);
+    ])->assertHasErrors(['form.contract', 'form.type', 'form.effective_date']);
     Mail::assertNothingSent();
 });
 
 it('accepts an optional withdrawal date and renders the receipt', function () {
-    $this->post(route('oasis.widerrufen.store'), [
+    PublicForms::submit('widerrufen', [
         'name' => 'Test Person', 'email' => 'person@example.tld', 'contract' => 'Oasis-Mitgliedschaft',
         'contracted_on' => '2026-10-01',
-    ])->assertSessionHasNoErrors();
+    ])->assertHasNoErrors();
     Mail::assertSent(WithdrawalReceipt::class, function ($mail) {
         expect($mail->render())->toContain('01.10.2026', 'Oasis-Mitgliedschaft');
 
@@ -156,35 +157,35 @@ it('accepts an optional withdrawal date and renders the receipt', function () {
 });
 
 it('rejects a malformed optional withdrawal date', function () {
-    $this->post(route('oasis.widerrufen.store'), [
+    PublicForms::submit('widerrufen', [
         'name' => 'Test Person', 'email' => 'person@example.tld', 'contract' => 'Oasis-Mitgliedschaft',
         'contracted_on' => 'not-a-date',
-    ])->assertSessionHasErrors('contracted_on');
+    ])->assertHasErrors('form.contracted_on');
     $this->assertDatabaseCount('withdrawal_requests', 0);
     Mail::assertNothingSent();
 });
 
 it('rejects non-http report links and missing declarations', function () {
-    $this->post(route('oasis.melden.store'), [
+    PublicForms::submit('melden', [
         'url' => 'ftp://example.tld/post', 'reason' => 'Illegal content', 'name' => 'Person',
         'email' => 'person@example.tld', 'truthful' => '0',
-    ])->assertSessionHasErrors(['url', 'truthful']);
+    ])->assertHasErrors(['form.url', 'form.truthful']);
     $this->assertDatabaseCount('content_reports', 0);
     Mail::assertNothingSent();
 });
 
 it('requires at least two whole people for an organisation', function () {
-    $this->post(route('oasis.gemeinsam.store'), [
+    PublicForms::submit('gemeinsam', [
         'organisation' => 'Association', 'people' => 1.5, 'email' => 'person@example.tld',
-    ])->assertSessionHasErrors('people');
+    ])->assertHasErrors('form.people');
     $this->assertDatabaseCount('organisation_requests', 0);
     Mail::assertNothingSent();
 });
 
 it('normalizes waitlist email and resends unconfirmed opt-in without revealing duplicates', function () {
     $data = ['email' => 'PERSON@example.tld', 'consent' => '1'];
-    $this->post(route('oasis.gruendung.store'), $data)->assertSessionHasNoErrors();
-    $this->post(route('oasis.gruendung.store'), $data)->assertSessionHasNoErrors()
+    PublicForms::submit('gruendung', $data)->assertHasNoErrors();
+    PublicForms::submit('gruendung', $data)->assertHasNoErrors()
         ->assertRedirect(route('oasis.bestaetigung.gruendung'));
     $this->assertDatabaseCount('waitlist_entries', 1);
     $this->assertDatabaseHas('waitlist_entries', ['email' => 'person@example.tld']);
@@ -192,7 +193,7 @@ it('normalizes waitlist email and resends unconfirmed opt-in without revealing d
 });
 
 it('sends signed confirmation and unsubscribe URLs in the waitlist mail', function () {
-    $this->post(route('oasis.gruendung.store'), ['email' => 'person@example.tld', 'consent' => '1']);
+    PublicForms::submit('gruendung', ['email' => 'person@example.tld', 'consent' => '1']);
     Mail::assertSent(WaitlistConfirmation::class, function ($mail) {
         $urls = $mail->content()->with;
         expect($urls['confirmUrl'])->toContain('signature=', 'expires=');
@@ -209,7 +210,7 @@ it('sends signed confirmation and unsubscribe URLs in the waitlist mail', functi
 });
 
 it('confirms the waitlist only with a signed link and preserves the first timestamp', function () {
-    $this->post(route('oasis.gruendung.store'), ['email' => 'person@example.tld', 'consent' => '1']);
+    PublicForms::submit('gruendung', ['email' => 'person@example.tld', 'consent' => '1']);
     $entry = WaitlistEntry::first();
     $this->get(route('oasis.waitlist.confirm', ['token' => $entry->token]))->assertForbidden();
     expect($entry->fresh()->confirmed_at)->toBeNull();
@@ -223,7 +224,7 @@ it('confirms the waitlist only with a signed link and preserves the first timest
 });
 
 it('rejects expired and tampered waitlist confirmation links', function () {
-    $this->post(route('oasis.gruendung.store'), ['email' => 'person@example.tld', 'consent' => '1']);
+    PublicForms::submit('gruendung', ['email' => 'person@example.tld', 'consent' => '1']);
     $entry = WaitlistEntry::first();
     $this->get(URL::temporarySignedRoute('oasis.waitlist.confirm', now()->subMinute(), ['token' => $entry->token]))->assertForbidden();
     $url = URL::temporarySignedRoute('oasis.waitlist.confirm', now()->addDays(7), ['token' => $entry->token]);
@@ -232,7 +233,7 @@ it('rejects expired and tampered waitlist confirmation links', function () {
 });
 
 it('requires a signed POST to unsubscribe and leaves scanner GET requests harmless', function () {
-    $this->post(route('oasis.gruendung.store'), ['email' => 'person@example.tld', 'consent' => '1']);
+    PublicForms::submit('gruendung', ['email' => 'person@example.tld', 'consent' => '1']);
     $entry = WaitlistEntry::first();
     $this->get(route('oasis.waitlist.unsubscribe', ['token' => $entry->token]))->assertForbidden();
     $this->assertDatabaseCount('waitlist_entries', 1);
@@ -249,10 +250,10 @@ it('requires a signed POST to unsubscribe and leaves scanner GET requests harmle
     Mail::assertSentCount(1);
 });
 
-it('renders all assigned pages publicly with one heading and real form actions', function ($page) {
-    $response = $this->get(route('oasis.'.$page))->assertOk();
+it('renders all assigned pages publicly with one heading and a working form', function ($page) {
+    $response = $this->get(route('oasis.'.$page))->assertOk()->assertSeeLivewire(PublicForms::COMPONENTS[$page]);
     expect(substr_count($response->getContent(), '<h1'))->toBe(1);
-    $response->assertSee(route('oasis.'.$page.'.store'), false)->assertSee('name="_token"', false);
+    $response->assertSee('wire:submit="submit"', false);
 })->with(['gruendung', 'gemeinsam', 'kuendigen', 'widerrufen', 'melden']);
 
 it('renders separate legal documents and their active navigation', function ($page) {
@@ -268,7 +269,7 @@ it('does not show success when sending mail fails', function () {
     Mail::shouldReceive('to')->once()->andThrow(new RuntimeException('Mail unavailable'));
     $this->withoutExceptionHandling();
 
-    expect(fn () => $this->post(route('oasis.gruendung.store'), [
+    expect(fn () => PublicForms::submit('gruendung', [
         'email' => 'person@example.tld', 'consent' => '1',
     ]))->toThrow(RuntimeException::class, 'Mail unavailable');
 
@@ -277,6 +278,6 @@ it('does not show success when sending mail fails', function () {
 });
 
 it('does not unlock unrelated success pages', function () {
-    $this->post(route('oasis.gruendung.store'), ['email' => 'person@example.tld', 'consent' => '1']);
+    PublicForms::submit('gruendung', ['email' => 'person@example.tld', 'consent' => '1']);
     $this->get(route('oasis.bestaetigung.kuendigen'))->assertNotFound();
 });

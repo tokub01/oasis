@@ -1,10 +1,12 @@
 <?php
 
+use App\Livewire\Membership\Cancel;
 use App\Mail\Membership\MembershipCancelledMail;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Services\Membership\MollieGateway;
 use Illuminate\Support\Facades\Mail;
+use Livewire\Livewire;
 
 test('cancellation confirmation page requires an active subscription', function () {
     $user = User::factory()->create();
@@ -32,6 +34,7 @@ test('cancellation confirmation renders § 312k BGB compliant details and button
     $this->actingAs($user)
         ->get(route('app.membership.cancel.confirm'))
         ->assertOk()
+        ->assertSeeLivewire(Cancel::class)
         ->assertSee('Mitgliedschaft kündigen')
         ->assertSee('Oase')
         ->assertSee($user->email)
@@ -58,8 +61,9 @@ test('submitting cancellation cancels subscription and sends confirmation email 
     $gateway->shouldReceive('cancel')->once()->with('cus_test123', 'sub_test123');
     $this->app->instance(MollieGateway::class, $gateway);
 
-    $this->actingAs($user)
-        ->post(route('app.membership.cancel'))
+    Livewire::actingAs($user)
+        ->test(Cancel::class)
+        ->call('cancel')
         ->assertRedirect(route('app.membership'))
         ->assertSessionHas('status', 'Deine Kündigung wurde erfolgreich erfasst. Wir haben dir eine Bestätigung per E-Mail geschickt.');
 

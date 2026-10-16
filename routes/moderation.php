@@ -1,28 +1,28 @@
 <?php
 
-use App\Http\Controllers\Moderation\CaseController;
-use App\Http\Controllers\Moderation\ComplaintController;
-use App\Http\Controllers\Moderation\RoleController;
+use App\Livewire\Moderation\CaseDetail;
+use App\Livewire\Moderation\ComplaintForm;
+use App\Livewire\Moderation\ComplaintReview;
+use App\Livewire\Moderation\Overview;
+use App\Livewire\Moderation\Roles;
 use Illuminate\Support\Facades\Route;
 
-/* Staff workflow lives behind verified authentication and confirmed 2FA. */
+/*
+ * Staff workflow lives behind verified authentication and confirmed 2FA. All pages are Livewire components; their
+ * actions (assign, decide, review, change a role) run as Livewire requests, where the persistent `staff` middleware
+ * and the policy checks inside each component action apply again.
+ */
 Route::prefix('moderation')->name('moderation.')->middleware(['auth', 'verified', 'staff'])->group(function () {
-    Route::get('/', [CaseController::class, 'index'])->name('index');
-    Route::get('/cases/{case}', [CaseController::class, 'show'])->name('cases.show');
-    Route::post('/cases/{case}/assign', [CaseController::class, 'assign'])->name('cases.assign');
-    Route::post('/cases/{case}/decide', [CaseController::class, 'decide'])->name('cases.decide');
-    Route::get('/complaints/{complaint}', [ComplaintController::class, 'show'])->name('complaints.show');
-    Route::post('/complaints/{complaint}/decide', [ComplaintController::class, 'decide'])->name('complaints.decide');
-    Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
-    Route::put('/roles/{user}', [RoleController::class, 'update'])->name('roles.update');
+    Route::livewire('/', Overview::class)->name('index');
+    Route::livewire('/cases/{case}', CaseDetail::class)->name('cases.show');
+    Route::livewire('/complaints/{complaint}', ComplaintReview::class)->name('complaints.show');
+    Route::livewire('/roles', Roles::class)->name('roles.index');
 });
 
-/* Public signed capability links work without an account; recipient identity is derived server-side. */
-Route::prefix('moderation/complaint')->name('moderation.complaint.')->middleware('signed')->group(function () {
-    Route::get('/{decision}', [ComplaintController::class, 'create'])->name('create');
-    Route::post('/{decision}', [ComplaintController::class, 'store'])->middleware('throttle:moderation-complaints')->name('store');
-});
-Route::prefix('app/moderation/complaint')->name('moderation.complaint.account')->middleware('auth')->group(function () {
-    Route::get('/{decision}', [ComplaintController::class, 'create']);
-    Route::post('/{decision}', [ComplaintController::class, 'store'])->middleware('throttle:moderation-complaints')->name('.store');
-});
+/*
+ * Complaints against a decision: the signed link from the decision mail works without an account (the recipient
+ * is derived server-side from the link), the account route is for the signed-in affected member.
+ */
+Route::livewire('/moderation/complaint/{decision}', ComplaintForm::class)->middleware('signed')->name('moderation.complaint.create');
+Route::livewire('/app/moderation/complaint/{decision}', ComplaintForm::class)->middleware('auth')
+    ->defaults('via', 'account')->name('moderation.complaint.account');

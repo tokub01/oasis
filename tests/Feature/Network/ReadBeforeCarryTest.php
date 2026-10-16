@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Http;
+use Tests\Support\NetworkActions;
 use Tests\Support\NetworkFixtures as N;
 
 /* Read-before-carry validation and safe external links, including overlapping rich-text tokens. */
@@ -14,10 +15,10 @@ it('requires reading confirmation when carrying a linked Tropfen', function ($co
     $original = N::post(N::member(), ['body' => 'Lies https://wissen.tld/artikel']);
     $this->actingAs(N::member());
 
-    $this->post(route('network.posts.store'), [
+    NetworkActions::publish([
         'body' => 'Meine Gedanken', 'visibility' => 'public', 'carried' => $original->id,
         'link_read' => $confirmation,
-    ])->assertSessionHasErrors(['link_read' => 'Bestätige bitte, dass du den verlinkten Inhalt gelesen hast.']);
+    ])->assertHasErrors(['link_read' => 'accepted']);
 
     $this->assertDatabaseMissing('posts', ['carried_post_id' => $original->id]);
 })->with([null, '0', 'false']);
@@ -26,9 +27,9 @@ it('carries linked Tropfen after confirmation', function () {
     $original = N::post(N::member(), ['body' => 'https://wissen.tld/artikel']);
     $reader = N::member();
 
-    $this->actingAs($reader)->post(route('network.posts.store'), [
+    NetworkActions::publish([
         'body' => 'Meine Gedanken', 'visibility' => 'public', 'carried' => $original->id, 'link_read' => '1',
-    ])->assertRedirect(route('app.home'))->assertSessionHasNoErrors();
+    ], $reader)->assertRedirect(route('app.home'))->assertHasNoErrors();
 
     $this->assertDatabaseHas('posts', ['user_id' => $reader->id, 'carried_post_id' => $original->id, 'body' => 'Meine Gedanken']);
 });
@@ -41,49 +42,28 @@ it('does not require confirmation for carries without links or for new posts and
         $input[$context] = $original->id;
     }
 
-    $this->actingAs($reader)->post(route('network.posts.store'), $input)->assertRedirect()->assertSessionHasNoErrors();
+    NetworkActions::publish($input, $reader)->assertHasNoErrors()->assertHasNoErrors();
 
     $this->assertDatabaseHas('posts', ['user_id' => $reader->id, 'body' => $input['body']]);
 })->with(['carried', 'reply_to', 'new']);
 
-it('shows a required accessible confirmation associated with the carry form and preserves errors', function () {
+it('shows an accessible confirmation and preserves input and validation errors in the reactive carry form', function () {
     $original = N::post(N::member(), ['body' => 'https://wissen.tld/eins und http://andere.tld/zwei']);
-    $url = route('network.posts.carry', $original);
-    $this->actingAs(N::member());
-
-    $this->get($url)->assertOk()
+    $reader = N::member();
+    $this->actingAs($reader)->get(route('network.posts.carry', $original))->assertOk()
         ->assertSee('Hast du den Link gelesen? Weitertragen heißt: Du stehst dafür ein.')
-        ->assertSee('Ich habe den Inhalt gelesen')
-        ->assertSee('href="https://wissen.tld/eins"', false)
-        ->assertSee('href="http://andere.tld/zwei"', false)
-        ->assertSee('form="carry-form"', false)->assertSee('id="carry-form"', false);
-
-    $dom = new DOMDocument;
-    @$dom->loadHTML($this->get($url)->getContent());
-    $checkbox = (new DOMXPath($dom))->query('//input[@name="link_read"]')->item(0);
-    expect($checkbox->hasAttribute('required'))->toBeTrue();
-    expect($checkbox->getAttribute('form'))->toBe('carry-form');
-
-    $this->from($url)->post(route('network.posts.store'), [
-        'body' => 'Meine Gedanken', 'visibility' => 'public', 'carried' => $original->id,
-    ])->assertRedirect($url);
-    $this->get($url)->assertOk()->assertSee('Bestätige bitte, dass du den verlinkten Inhalt gelesen hast.')
-        ->assertSee('aria-invalid="true"', false)->assertSee('Meine Gedanken');
+        ->assertSee('Ich habe den Inhalt gelesen')->assertSee('href="https://wissen.tld/eins"', false)
+        ->assertSee('href="http://andere.tld/zwei"', false)->assertSee('wire:model="link_read"', false);
+    $component = NetworkActions::publish(['body' => 'Meine Gedanken', 'visibility' => 'public', 'carried' => $original->id]);
+    $component->assertHasErrors(['link_read' => 'accepted'])->assertSet('body', 'Meine Gedanken')
+        ->assertSee('Bestätige bitte, dass du den verlinkten Inhalt gelesen hast.');
     Http::assertNothingSent();
 });
 
 it('keeps a checked confirmation after another field fails validation', function () {
     $original = N::post(N::member(), ['body' => 'https://wissen.tld/artikel']);
-    $url = route('network.posts.carry', $original);
-    $this->actingAs(N::member())->from($url)->post(route('network.posts.store'), [
-        'body' => '', 'visibility' => 'public', 'carried' => $original->id, 'link_read' => '1',
-    ])->assertSessionHasErrors('body');
-
-    $dom = new DOMDocument;
-    @$dom->loadHTML($this->get($url)->assertOk()->getContent());
-    $checkbox = (new DOMXPath($dom))->query('//input[@name="link_read"]')->item(0);
-
-    expect($checkbox->hasAttribute('checked'))->toBeTrue();
+    NetworkActions::publish(['body' => '', 'visibility' => 'public', 'carried' => $original->id, 'link_read' => true], N::member())
+        ->assertHasErrors('body')->assertSet('link_read', true);
     $this->assertDatabaseMissing('posts', ['carried_post_id' => $original->id]);
 });
 

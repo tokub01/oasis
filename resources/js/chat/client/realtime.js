@@ -70,4 +70,15 @@ export class Realtime {
         }
         this.current = null;
     }
+
+    /**
+     * Leave any watched channel and close the WebSocket connection when navigating away from the chat page.
+     */
+    disconnect() {
+        this.leave();
+        if (this.echo) {
+            this.echo.disconnect?.();
+            this.echo = null;
+        }
+    }
 }

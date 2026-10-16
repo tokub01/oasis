@@ -1,6 +1,8 @@
 {{--
     Oasis page layout. Pages extend it with:
     @extends('layouts.oasis', ['title' => ..., 'description' => ..., 'active' => ..., 'minimal' => ..., 'announce' => ..., 'noindex' => ...])
+    Livewire pages: ->layout('layouts.oasis', [...]) and the component renders into $slot.
+    Livewire assets load on every page so internal links can use wire:navigate (docs/oasis-livewire.md).
 --}}
 @php
     $pageTitle = isset($title) ? $title.' · Oasis' : 'Oasis – Social Media, das dir Zeit zurückgibt';
@@ -37,6 +39,7 @@
     <link rel="preload" href="{{ asset('fonts/fraunces-latin-full-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
 
     @vite(['resources/css/app.css', 'resources/js/oasis.js'])
+    @livewireStyles
 </head>
 <body class="bg-sand text-ink antialiased">
     <a href="#inhalt" class="o-skip-link">Zum Inhalt springen</a>
@@ -51,9 +54,12 @@
                 <p role="status" class="m-0 rounded-2xl bg-dune px-[18px] py-3.5">{{ session('status') }}</p>
             </div>
         @endif
+        {{ $slot ?? '' }}
         @yield('content')
     </main>
 
     <x-oasis.footer />
+
+    @livewireScripts
 </body>
 </html>

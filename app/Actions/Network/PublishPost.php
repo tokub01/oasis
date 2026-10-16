@@ -15,7 +15,7 @@ use Throwable;
 
 /**
  * Publishes a Tropfen: a new post, a reply or a carried post ("weitertragen" with own words), optionally in an oasis
- * and with images. Authorization and input validation happen before (PostRequest / PostPolicy).
+ * and with images. Authorization and input validation happen before (PostInput / PostPolicy).
  *
  * Visibility rules: a Tropfen in a members-only oasis, a reply to or a carry of a members-only Tropfen is always
  * members-only, so nothing becomes more public than its context.

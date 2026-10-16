@@ -2,13 +2,14 @@
 
 use App\Actions\Network\StorePostImage;
 use App\Events\Chat\MessageSent;
-use App\Http\Requests\Network\PostRequest;
+use App\Livewire\Membership\Checkout;
 use App\Models\Block;
 use App\Models\GiftMembership;
 use App\Models\MembershipPayment;
 use App\Models\Message;
 use App\Models\User;
 use App\Services\Membership\MollieMembershipService;
+use App\Support\Network\PostInput;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Testing\TestResponse;
 use Illuminate\Validation\ValidationException;
+use Livewire\Livewire;
 use Tests\Support\ChatFixtures as Chat;
 use Tests\Support\MollieFixtures;
 use Tests\Support\NetworkFixtures as Network;
@@ -147,7 +149,7 @@ function backendFixImageHeader(int $width, int $height): UploadedFile
 }
 
 it('bounds either input edge before processing and accepts the exact edge boundary', function () {
-    $rules = (new PostRequest)->rules()['images.*'];
+    $rules = PostInput::rules()['images.*'];
     foreach ([[12001, 1], [1, 12001]] as [$width, $height]) {
         $validator = Validator::make(['image' => backendFixImageHeader($width, $height)], ['image' => $rules]);
         expect($validator->fails())->toBeTrue();
@@ -177,9 +179,12 @@ it('logs payment failures with only exception class and provider code', function
     $service->shouldReceive('createSubscriptionCheckout')->once()->andThrow($error);
     $this->app->instance(MollieMembershipService::class, $service);
     Log::spy();
-    $this->actingAs(User::factory()->create())->post('/mitglied-werden/checkout', [
-        'stufe' => 'oase', 'rhythmus' => 'monat', 'zahlart' => 'karte',
-    ])->assertRedirect();
+    Livewire::actingAs(User::factory()->create())
+        ->test(Checkout::class)
+        ->set('stufe', 'oase')
+        ->set('rhythmus', 'monat')
+        ->set('zahlart', 'karte')
+        ->call('checkout');
     Log::shouldHaveReceived('error')->once()->with(
         'Mollie checkout initiation failed.', ['exception_class' => $error::class]);
 });

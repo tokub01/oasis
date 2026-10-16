@@ -1,8 +1,11 @@
 <?php
 
+use App\Livewire\Network\Source;
 use App\Models\Follow;
 use App\Models\User;
 use App\Queries\Network\PostFeed;
+use Livewire\Livewire;
+use Tests\Support\NetworkActions;
 use Tests\Support\NetworkFixtures as N;
 
 /* Quelle, Entdecken, following people and profiles. */
@@ -18,7 +21,7 @@ it('shows own Tropfen and those of followed people in order, with bundled replie
     N::post($friend, ['body' => 'Antwort von Freundin', 'reply_to_id' => $old->id]);
     N::post($me, ['body' => 'Mein Tropfen']);
 
-    $this->actingAs($me)->post(route('network.follow.user', $friend))->assertRedirect();
+    NetworkActions::profile('follow', $friend, $me)->assertHasNoErrors();
     $this->get(route('app.home'))->assertOk()
         ->assertSeeInOrder(['Mein Tropfen', 'Alt von Freundin', 'Antwort von Freundin'])
         ->assertDontSee('Fremder Tropfen')->assertDontSee('Antwort von Fremdem')->assertDontSee('Nächste Schritte');
@@ -30,9 +33,11 @@ it('pages with a cursor and ends honestly', function () {
         N::post($me, ['body' => 'Tropfen Nummer '.$number]);
     }
 
-    $first = $this->actingAs($me)->get(route('app.home'))->assertSee('Ältere Tropfen')->assertDontSee('Du bist auf dem neuesten Stand.');
-    $next = $first->viewData('posts')->nextPageUrl();
-    $this->get($next)->assertSee('Tropfen Nummer 1<', false)->assertSee('Du bist auf dem neuesten Stand.');
+    $first = Livewire::actingAs($me)->test(Source::class)
+        ->assertSee('Ältere Tropfen')->assertDontSee('Du bist auf dem neuesten Stand.');
+    $cursor = $first->viewData('posts')->nextCursor()->encode();
+    $first->call('setPage', $cursor, 'cursor')->assertSee('Tropfen Nummer 1<', false)->assertSee('Du bist auf dem neuesten Stand.');
+
 });
 
 it('shows first steps to members who follow nobody', function () {
@@ -44,17 +49,17 @@ it('follows and unfollows idempotently, never oneself, never hidden profiles', f
     $other = N::member();
     $this->actingAs($me);
 
-    $this->post(route('network.follow.user', $other));
-    $this->post(route('network.follow.user', $other));
+    NetworkActions::profile('follow', $other);
+    NetworkActions::profile('follow', $other);
     expect(Follow::count())->toBe(1);
     $this->get(route('oasis.profil', $other->username))->assertSee('Karawane: 1')->assertSee('Gefolgt');
 
-    $this->post(route('network.follow.user', $me))->assertSessionHasErrors('follow');
-    $this->delete(route('network.unfollow.user', $other));
+    NetworkActions::profile('follow', $me)->assertHasErrors('follow');
+    NetworkActions::profile('unfollow', $other);
     expect(Follow::count())->toBe(0);
 
     $unverified = User::factory()->unverified()->create();
-    $this->post(route('network.follow.user', $unverified))->assertNotFound();
+    NetworkActions::profile('follow', $unverified)->assertNotFound();
 });
 
 it('lets read-only accounts unfollow but not follow', function () {
@@ -62,8 +67,8 @@ it('lets read-only accounts unfollow but not follow', function () {
     $other = N::member();
     Follow::create(['follower_id' => $user->id, 'followable_type' => $other->getMorphClass(), 'followable_id' => $other->id]);
 
-    $this->actingAs($user)->post(route('network.follow.user', N::member()))->assertForbidden();
-    $this->delete(route('network.unfollow.user', $other))->assertRedirect();
+    NetworkActions::profile('follow', N::member(), $user)->assertForbidden();
+    NetworkActions::profile('unfollow', $other)->assertHasNoErrors();
     expect(Follow::count())->toBe(0);
 });
 
@@ -87,12 +92,10 @@ it('edits the own profile', function () {
     $me = N::member();
     $this->actingAs($me)->get(route('network.profile.edit'))->assertOk()->assertSee('Dein Profil');
 
-    $this->put(route('network.profile.update'), ['bio' => 'Hallo', 'location' => 'Krefeld', 'visibility' => 'public', 'avatar_color' => 'night'])
-        ->assertRedirect(route('network.profile.edit'));
+    NetworkActions::saveProfile(['bio' => 'Hallo', 'location' => 'Krefeld', 'visibility' => 'public', 'avatar_color' => 'night'])->assertHasNoErrors();
     expect($me->fresh()->profile->only(['bio', 'location']))->toBe(['bio' => 'Hallo', 'location' => 'Krefeld'])
         ->and($me->fresh()->profile->avatar_color->value)->toBe('night');
-    $this->put(route('network.profile.update'), ['visibility' => 'everyone', 'avatar_color' => 'pink'])
-        ->assertSessionHasErrors(['visibility', 'avatar_color']);
+    NetworkActions::saveProfile(['visibility' => 'everyone', 'avatar_color' => 'pink'])->assertHasErrors(['visibility', 'avatar_color']);
 });
 
 it('lists public Tropfen of public profiles in Entdecken', function () {

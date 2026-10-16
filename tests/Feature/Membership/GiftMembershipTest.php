@@ -1,9 +1,11 @@
 <?php
 
+use App\Livewire\Membership\Overview;
 use App\Models\GiftMembership;
 use App\Models\User;
 use App\Services\Membership\MollieGateway;
 use App\Services\Membership\MollieMembershipService;
+use Livewire\Livewire;
 
 test('generates voucher codes in the expected format', function () {
     $code = GiftMembership::generateCode();
@@ -25,12 +27,12 @@ test('user can redeem a valid gift voucher code', function () {
         'redeemed_at' => null,
     ]);
 
-    $this->actingAs($user)
-        ->post(route('app.membership.redeem'), [
-            'code' => $voucher->code,
-        ])
-        ->assertRedirect(route('app.membership'))
-        ->assertSessionHas('status');
+    Livewire::actingAs($user)
+        ->test(Overview::class)
+        ->set('code', $voucher->code)
+        ->call('redeem')
+        ->assertHasNoErrors()
+        ->assertSee('Gutschein erfolgreich eingelöst!');
 
     $voucher->refresh();
     expect($voucher->isRedeemed())->toBeTrue()
@@ -50,29 +52,28 @@ test('cannot redeem an already redeemed gift voucher code', function () {
 
     $voucher = GiftMembership::factory()->redeemed($user1)->create();
 
-    $this->actingAs($user2)
-        ->post(route('app.membership.redeem'), [
-            'code' => $voucher->code,
-        ])
-        ->assertRedirect(route('app.membership'))
-        ->assertSessionHasErrors('code');
+    Livewire::actingAs($user2)
+        ->test(Overview::class)
+        ->set('code', $voucher->code)
+        ->call('redeem')
+        ->assertHasErrors(['code']);
 });
 
 test('rejects non-existent gift voucher code with German error', function () {
     $user = User::factory()->create();
 
-    $this->actingAs($user)
-        ->post(route('app.membership.redeem'), [
-            'code' => 'OASIS-INVALID-CODE',
-        ])
-        ->assertRedirect(route('app.membership'))
-        ->assertSessionHasErrors('code');
+    Livewire::actingAs($user)
+        ->test(Overview::class)
+        ->set('code', 'OASIS-INVALID-CODE')
+        ->call('redeem')
+        ->assertHasErrors(['code']);
 });
 
 test('purchasing a gift membership initiates checkout session', function () {
     $user = User::factory()->create();
 
     $serviceMock = Mockery::mock(MollieMembershipService::class);
+    $serviceMock->shouldReceive('remainingFoundingSeats')->andReturn(500);
     $serviceMock->shouldReceive('createGiftCheckout')
         ->once()
         ->with(Mockery::on(fn ($u) => $u->id === $user->id), 'oase')
@@ -80,10 +81,10 @@ test('purchasing a gift membership initiates checkout session', function () {
 
     $this->app->instance(MollieMembershipService::class, $serviceMock);
 
-    $this->actingAs($user)
-        ->post(route('app.membership.gift.checkout'), [
-            'tier' => 'oase',
-        ])
+    Livewire::actingAs($user)
+        ->test(Overview::class)
+        ->set('tier', 'oase')
+        ->call('buyGift')
         ->assertRedirect('https://checkout.mollie.com/pay/cs_test_gift');
 });
 

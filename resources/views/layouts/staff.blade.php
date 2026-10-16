@@ -35,14 +35,14 @@
 
     <header class="bg-night text-on-night">
         <div class="mx-auto flex max-w-[1296px] flex-wrap items-center justify-between gap-x-8 gap-y-3 px-5 py-3 lg:px-10">
-            <a href="{{ route('moderation.index') }}" class="flex min-h-11 items-center gap-3 text-on-night no-underline">
+            <a href="{{ route('moderation.index') }}" wire:navigate class="flex min-h-11 items-center gap-3 text-on-night no-underline">
                 <x-oasis.logo :size="30" :wordmark="false" />
                 <span class="text-lg font-extrabold">Moderation</span>
             </a>
             <nav aria-label="Moderationsbereich" class="flex flex-wrap items-center gap-x-6">
                 @foreach ($nav as $key => [$label, $href, $visible])
                     @if ($visible)
-                        <a href="{{ $href }}" @if ($active === $key) aria-current="page" @endif
+                        <a href="{{ $href }}" wire:navigate @if ($active === $key) aria-current="page" @endif
                            @class([
                                'inline-flex min-h-11 items-center text-base no-underline',
                                'font-extrabold text-on-night underline decoration-sun decoration-2 underline-offset-8' => $active === $key,
@@ -50,7 +50,7 @@
                            ])>{{ $label }}</a>
                     @endif
                 @endforeach
-                <a href="{{ route('app.home') }}" class="inline-flex min-h-11 items-center text-base font-semibold text-on-night-2 no-underline">Zur App</a>
+                <a href="{{ route('app.home') }}" wire:navigate class="inline-flex min-h-11 items-center text-base font-semibold text-on-night-2 no-underline">Zur App</a>
             </nav>
             <p class="m-0 text-sm text-on-night-muted">{{ $user?->display_name }} · {{ $user?->role?->label() }}</p>
         </div>

@@ -8,7 +8,11 @@
 
 use App\Actions\Moderation\DecideCase;
 use App\Enums\Role;
+use App\Livewire\Moderation\CaseDetail;
+use App\Livewire\Moderation\ComplaintForm;
+use App\Livewire\Moderation\ComplaintReview;
 use App\Livewire\Moderation\Queue;
+use App\Livewire\Moderation\Roles;
 use App\Models\ContentReport;
 use App\Models\ModerationDecision;
 use App\Models\User;
@@ -83,10 +87,11 @@ describe('case page', function () {
         $case = uiReport()->moderationCase;
 
         $this->actingAs(uiStaff())->get(route('moderation.cases.show', $case))->assertOk()
+            ->assertSeeLivewire(CaseDetail::class)
             ->assertSee('Beleidigender Tropfen.')
-            ->assertSee(route('moderation.cases.decide', $case), false)
-            ->assertSee(route('moderation.cases.assign', $case), false)
-            ->assertSee('name="explanation"', false)
+            ->assertSee('wire:submit="decide"', false)
+            ->assertSee('wire:submit="assign"', false)
+            ->assertSee('wire:model="decision.explanation"', false)
             ->assertDontSee('geheim-meldend@example.tld');
     });
 
@@ -95,7 +100,7 @@ describe('case page', function () {
 
         $this->actingAs(uiStaff())->get(route('moderation.cases.show', $decision->case))->assertOk()
             ->assertSee('Regel 1: Sei respektvoll')
-            ->assertDontSee(route('moderation.cases.decide', $decision->case), false);
+            ->assertDontSee('wire:submit="decide"', false);
     });
 });
 
@@ -104,25 +109,26 @@ describe('complaints', function () {
         $decision = uiDecision(uiStaff());
         $url = URL::signedRoute('moderation.complaint.create', ['decision' => $decision->id, 'recipient' => 'reporter']);
 
-        $html = $this->get($url)->assertOk()->assertSee('Widerspruch einlegen')->assertSee('name="reason"', false)->getContent();
+        $html = $this->get($url)->assertOk()->assertSeeLivewire(ComplaintForm::class)
+            ->assertSee('Widerspruch einlegen')->assertSee('wire:model="reason"', false)->getContent();
 
-        expect($html)->toContain('signature=')->not->toContain('name="email"');
+        expect($html)->not->toContain('name="email"')->not->toContain('geheim-meldend@example.tld');
     });
 
     it('does not let the original decider review the complaint', function () {
         $decider = uiStaff();
         $decision = uiDecision($decider);
-        $this->post(URL::signedRoute('moderation.complaint.store', ['decision' => $decision->id, 'recipient' => 'reporter']), [
-            'reason' => 'Ich halte die Entscheidung für falsch.',
-        ]);
+        Livewire::withQueryParams(['recipient' => 'reporter'])->test(ComplaintForm::class, ['decision' => $decision])
+            ->set('reason', 'Ich halte die Entscheidung für falsch.')->call('submit')->assertHasNoErrors();
         $complaint = $decision->complaints()->firstOrFail();
 
         $this->actingAs($decider)->get(route('moderation.complaints.show', $complaint))->assertOk()
+            ->assertSeeLivewire(ComplaintReview::class)
             ->assertSee('prüft eine andere Person')
-            ->assertDontSee(route('moderation.complaints.decide', $complaint), false);
+            ->assertDontSee('wire:submit="review"', false);
 
         $this->actingAs(uiStaff())->get(route('moderation.complaints.show', $complaint))->assertOk()
-            ->assertSee(route('moderation.complaints.decide', $complaint), false);
+            ->assertSee('wire:submit="review"', false);
     });
 });
 
@@ -132,8 +138,9 @@ describe('roles', function () {
         $member = User::factory()->create(['display_name' => 'Rollen Kandidat']);
 
         $this->actingAs($admin)->get(route('moderation.roles.index'))->assertOk()
+            ->assertSeeLivewire(Roles::class)
             ->assertSee('Rollen Kandidat')
-            ->assertSee(route('moderation.roles.update', $member), false)
+            ->assertSee('wire:submit="save('.$member->id.')"', false)
             ->assertSee('Das bist du');
     });
 

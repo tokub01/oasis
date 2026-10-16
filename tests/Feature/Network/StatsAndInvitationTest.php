@@ -10,6 +10,7 @@ use App\Queries\Network\OasisStats;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
+use Tests\Support\NetworkActions;
 use Tests\Support\NetworkFixtures as N;
 
 /* "Deine Zahlen", host statistics of an oasis and invitation links. */
@@ -71,14 +72,14 @@ it('creates invitation links within the monthly budget', function () {
     $me = N::member();
     $this->actingAs($me);
 
-    $this->post(route('network.invitations.store'))->assertRedirect();
-    $this->post(route('network.invitations.store'));
-    $this->post(route('network.invitations.store'))->assertSessionHasErrors('invitation');
+    NetworkActions::invite()->assertHasNoErrors();
+    NetworkActions::invite();
+    NetworkActions::invite()->assertHasErrors('invitation');
     expect(Invitation::count())->toBe(2);
     $this->get(route('network.invitations.index'))->assertSee('diesen Monat noch 0')->assertSee(Invitation::first()->token);
 
     $this->travelTo(now()->addMonthNoOverflow()->startOfMonth()); // new month, trial still running
-    $this->post(route('network.invitations.store'));
+    NetworkActions::invite();
     expect(Invitation::count())->toBe(3);
 });
 
@@ -112,5 +113,5 @@ it('shows a neutral page for used or expired links and does not remember them', 
 
 it('lets read-only accounts see but not create invitation links', function () {
     $this->actingAs(N::readOnlyMember())->get(route('network.invitations.index'))->assertOk()->assertDontSee('Neuen Einladungslink erstellen');
-    $this->post(route('network.invitations.store'))->assertForbidden();
+    NetworkActions::invite()->assertForbidden();
 });

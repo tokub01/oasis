@@ -1,13 +1,10 @@
 <?php
 
-use App\Http\Controllers\Network\ProfileController;
-use App\Http\Controllers\Oasis\CancellationController;
 use App\Http\Controllers\Oasis\ConfirmationController;
-use App\Http\Controllers\Oasis\ContentReportController;
-use App\Http\Controllers\Oasis\OrganisationController;
 use App\Http\Controllers\Oasis\PageController;
 use App\Http\Controllers\Oasis\WaitlistController;
-use App\Http\Controllers\Oasis\WithdrawalController;
+use App\Livewire\Membership\Checkout;
+use App\Livewire\Network\ProfileShow;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -38,15 +35,15 @@ Route::name('oasis.')->group(function () {
     /*
      * Pages behind feature flags (oasis.checkout_enabled, oasis.demo_pages).
      */
-    Route::get('/mitglied-werden', [PageController::class, 'membership'])->name('mitglied');
+    Route::livewire('/mitglied-werden', Checkout::class)->name('mitglied');
     Route::get('/entdecken', [PageController::class, 'discover'])->name('entdecken');
-    // Real member profiles first; sample profiles only for handles no member has (ProfileController::show).
-    Route::get('/profil/{handle}', [ProfileController::class, 'show'])
+    // Real member profiles first; sample profiles only for handles no member has (App\Livewire\Network\ProfileShow).
+    Route::livewire('/profil/{handle}', ProfileShow::class)
         ->where('handle', '[A-Za-z0-9_]{1,30}')
         ->name('profil');
 
     /*
-     * Legal pages: one URL per document. "Inhalte melden" is the DSA Art. 16 notice form.
+     * Legal pages: one URL per document.
      */
     Route::view('/impressum', 'oasis.legal.impressum')->name('impressum');
     Route::view('/datenschutz', 'oasis.legal.datenschutz')->name('datenschutz');
@@ -55,34 +52,19 @@ Route::name('oasis.')->group(function () {
     Route::view('/community-regeln', 'oasis.legal.regeln')->name('regeln');
 
     /*
-     * Pages with forms (GET shows the form, POST stores it).
-     *
-     * Each POST route has its own throttle key (third throttle parameter). Without it all forms would share one
-     * budget per IP, and a few waitlist attempts could block a cancellation, which § 312k BGB must always allow.
+     * Pages with forms. Each form is a Livewire component in app/Livewire/Oasis (submitted as a Livewire request) with
+     * its own submission budget per IP (SubmitsPublicForm), so a few waitlist attempts can never block a cancellation,
+     * which § 312k BGB must always allow. "Inhalte melden" is the DSA Art. 16 notice form.
      */
     Route::view('/gruendung', 'oasis.gruendung')->name('gruendung');
-    Route::post('/gruendung', [WaitlistController::class, 'store'])
-        ->middleware('throttle:6,1,oasis-gruendung')->name('gruendung.store');
-
     Route::view('/vertraege-kuendigen', 'oasis.kuendigen')->name('kuendigen');
-    Route::post('/vertraege-kuendigen', [CancellationController::class, 'store'])
-        ->middleware('throttle:6,1,oasis-kuendigen')->name('kuendigen.store');
-
     Route::view('/vertrag-widerrufen', 'oasis.widerrufen')->name('widerrufen');
-    Route::post('/vertrag-widerrufen', [WithdrawalController::class, 'store'])
-        ->middleware('throttle:6,1,oasis-widerrufen')->name('widerrufen.store');
-
     Route::view('/inhalte-melden', 'oasis.legal.melden')->name('melden');
-    Route::post('/inhalte-melden', [ContentReportController::class, 'store'])
-        ->middleware('throttle:6,1,oasis-melden')->name('melden.store');
-
     Route::view('/gemeinsam-starten', 'oasis.gemeinsam')->name('gemeinsam');
-    Route::post('/gemeinsam-starten', [OrganisationController::class, 'store'])
-        ->middleware('throttle:6,1,oasis-gemeinsam')->name('gemeinsam.store');
 
     /*
      * Confirmation pages after a submission: /bestaetigung/<form>, named oasis.bestaetigung.<form>.
-     * They are 404 unless the form controller just flashed `oasis.submitted.<form>`.
+     * They are 404 unless the form component just flashed `oasis.submitted.<form>`.
      */
     foreach (ConfirmationController::FORMS as $form) {
         Route::get('/bestaetigung/'.$form, ConfirmationController::class)

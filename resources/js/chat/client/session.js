@@ -33,10 +33,20 @@ export class ChatSession {
         return this.identity !== null;
     }
 
-    /** @param {object} identity unlocked identity from the crypto core; the session owns it from now on */
-    unlock(identity) {
+    /**
+     * Adopt an unlocked identity only if no lock/navigation happened during the asynchronous unlock.
+     * @param {object} identity unlocked identity from the crypto core; the session owns it from now on
+     * @param {number} [generation] session generation captured before asynchronous work
+     * @returns {boolean} whether the identity was adopted (stale private keys are wiped)
+     */
+    unlock(identity, generation = this.generation) {
+        if (generation !== this.generation) {
+            wipeIdentity(identity);
+            return false;
+        }
         this.lock();
         this.identity = identity;
+        return true;
     }
 
     /** Wipe the identity and every conversation key. Verified public keys are public and may stay. */

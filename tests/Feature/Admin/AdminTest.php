@@ -2,6 +2,9 @@
 
 use App\Actions\Governance\ManageVotes;
 use App\Enums\Role;
+use App\Livewire\Admin\Dashboard;
+use App\Livewire\Admin\TransparencyReports;
+use App\Livewire\Admin\Votes;
 use App\Models\ChatIdentity;
 use App\Models\GiftMembership;
 use App\Models\TransparencyReport;
@@ -11,6 +14,7 @@ use App\Models\VoteParticipation;
 use App\Queries\Admin\AdminStats;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Livewire\Livewire;
 use Tests\Support\NetworkFixtures as N;
 
 /* Stage 6: admin access, statistics module, transparency reports and secret member votes. */
@@ -44,9 +48,12 @@ it('opens the admin area only to admins with confirmed 2FA', function () {
     $this->actingAs(User::factory()->create(['role' => Role::Admin]))->get(route('admin.dashboard'))->assertRedirect(); // staff middleware sends to 2FA setup
 
     $this->actingAs(staffUser(Role::Admin))->get(route('admin.dashboard'))->assertOk()
+        ->assertSeeLivewire(Dashboard::class)
         ->assertSee('Mitglieder und Beiträge')->assertSee('nur Metadaten')->assertSee(route('admin.transparency.index'));
     $this->get(route('admin.dashboard', ['tage' => 7]))->assertOk()->assertSee('letzten 7 Tage');
-    $this->get(route('admin.dashboard', ['tage' => 3]))->assertSessionHasErrors('tage');
+    // Periods outside the offered choices fall back to 30 days.
+    $this->get(route('admin.dashboard', ['tage' => 3]))->assertOk()->assertSee('letzten 30 Tage');
+    Livewire::test(Dashboard::class)->set('days', 90)->assertSee('letzten 90 Tage')->set('days', 5)->assertSet('days', 30);
 });
 
 it('aggregates network and chat metadata for the chosen period', function () {
@@ -68,12 +75,14 @@ it('aggregates network and chat metadata for the chosen period', function () {
 
 it('publishes monthly transparency figures that replace the configured placeholders', function () {
     $admin = staffUser(Role::Admin);
-    $this->actingAs($admin)->get(route('admin.transparency.index'))->assertOk()->assertSee('Noch nichts veröffentlicht.');
+    $this->actingAs($admin)->get(route('admin.transparency.index'))->assertOk()->assertSeeLivewire(TransparencyReports::class)
+        ->assertSee('Noch nichts veröffentlicht.');
+    $publish = fn (array $figures) => Livewire::test(TransparencyReports::class)->set($figures)->call('publish');
 
-    $this->post(route('admin.transparency.store'), [
+    $publish([
         'month' => '2026-09', 'members' => 1234, 'sponsored_seats' => 12, 'income' => '6170',
         'items' => [['label' => 'Server', 'amount' => '1000'], ['label' => 'Moderation', 'amount' => '4000'], ['label' => '', 'amount' => '']],
-    ])->assertRedirect(route('admin.transparency.index'));
+    ])->assertHasNoErrors()->assertSee('Die Zahlen sind auf der Transparenz-Seite veröffentlicht.');
 
     $report = TransparencyReport::sole();
     expect($report->cost_items)->toBe(['Server' => 1000, 'Moderation' => 4000])->and($report->coverage())->toBe(123);
@@ -83,25 +92,33 @@ it('publishes monthly transparency figures that replace the configured placehold
         ->assertSee('September 2026')->assertSee('1.234')->assertSee('123 %')->assertSee('Moderation');
 
     // Re-publishing the same month corrects it; future months and half-filled items are refused.
-    $this->actingAs($admin)->post(route('admin.transparency.store'), ['month' => '2026-09', 'members' => 1, 'sponsored_seats' => 0, 'income' => 1, 'items' => [['label' => 'Server', 'amount' => 1]]]);
+    $this->actingAs($admin);
+    $publish(['month' => '2026-09', 'members' => 1, 'sponsored_seats' => 0, 'income' => 1, 'items' => [['label' => 'Server', 'amount' => 1]]]);
     expect(TransparencyReport::count())->toBe(1)->and(TransparencyReport::sole()->members)->toBe(1);
-    $this->post(route('admin.transparency.store'), ['month' => now()->addMonth()->format('Y-m'), 'members' => 1, 'sponsored_seats' => 0, 'income' => 1, 'items' => [['label' => 'Server', 'amount' => 1]]])
-        ->assertSessionHasErrors('month');
-    $this->post(route('admin.transparency.store'), ['month' => '2026-08', 'members' => 1, 'sponsored_seats' => 0, 'income' => 1, 'items' => [['label' => 'Server', 'amount' => '']]])
-        ->assertSessionHasErrors('items.0.amount');
-    $this->post(route('admin.transparency.store'), ['month' => '2026-08', 'members' => 1, 'sponsored_seats' => 0, 'income' => 1, 'items' => [['label' => '', 'amount' => '']]])
-        ->assertStatus(422);
+    $publish(['month' => now()->addMonth()->format('Y-m'), 'members' => 1, 'sponsored_seats' => 0, 'income' => 1, 'items' => [['label' => 'Server', 'amount' => 1]]])
+        ->assertHasErrors('month');
+    $publish(['month' => '2026-08', 'members' => 1, 'sponsored_seats' => 0, 'income' => 1, 'items' => [['label' => 'Server', 'amount' => '']]])
+        ->assertHasErrors('items.0.amount');
+    $publish(['month' => '2026-08', 'members' => 1, 'sponsored_seats' => 0, 'income' => 1, 'items' => [['label' => '', 'amount' => '']]])
+        ->assertHasErrors('items');
+    expect(TransparencyReport::count())->toBe(1);
+    // A moderator without the admin role cannot publish, even with a component opened earlier.
+    $page = Livewire::test(TransparencyReports::class);
+    $admin->forceFill(['role' => Role::Moderator])->save();
+    $page->call('publish')->assertForbidden();
 });
 
 it('lets admins create votes with at least two distinct answers', function () {
-    $this->actingAs(staffUser(Role::Admin))->get(route('admin.votes.index'))->assertOk()->assertSee('Noch keine Abstimmungen.');
+    $this->actingAs(staffUser(Role::Admin))->get(route('admin.votes.index'))->assertOk()->assertSeeLivewire(Votes::class)
+        ->assertSee('Noch keine Abstimmungen.');
     $input = ['title' => 'Frage?', 'description' => 'Warum.', 'starts_at' => now()->addMinute()->format('Y-m-d\TH:i'), 'ends_at' => now()->addWeek()->format('Y-m-d\TH:i')];
 
-    $this->post(route('admin.votes.store'), $input + ['options' => ['Ja', ' Ja ', '']])->assertSessionHasErrors('options');
-    $this->post(route('admin.votes.store'), $input + ['options' => ['Ja', 'Nein', '']])->assertRedirect(route('admin.votes.index'));
+    Livewire::test(Votes::class)->set($input + ['options' => ['Ja', ' Ja ', '']])->call('create')->assertHasErrors('options');
+    expect(Vote::count())->toBe(0);
+    Livewire::test(Votes::class)->set($input + ['options' => ['Ja', 'Nein', '']])->call('create')->assertHasNoErrors()
+        ->assertSee('Die Abstimmung ist angelegt.')->assertSet('title', '')->assertSee('geplant')->assertDontSee('Ja: ');
 
     expect(Vote::sole()->options->pluck('label')->all())->toBe(['Ja', 'Nein']);
-    $this->get(route('admin.votes.index'))->assertSee('geplant')->assertDontSee('Ja: ');
 });
 
 it('counts one secret ballot per member with an active membership', function () {
@@ -109,13 +126,23 @@ it('counts one secret ballot per member with an active membership', function () 
     $member = votingMember();
     [$first, $second] = $vote->options;
 
-    $this->actingAs(N::member())->get(route('app.votes'))->assertOk()->assertSee('Abstimmen können Mitglieder mit aktiver Mitgliedschaft');
-    $this->post(route('app.votes.store', $vote), ['option' => $first->id])->assertForbidden();
+    $this->actingAs(N::member())->get(route('app.votes'))->assertOk()->assertSeeLivewire(App\Livewire\Governance\Votes::class)->assertSee('Abstimmen können Mitglieder mit aktiver Mitgliedschaft');
+    Livewire::actingAs(N::member())->test(App\Livewire\Governance\Votes::class)
+        ->set("options.{$vote->id}", $first->id)
+        ->call('cast', $vote->id)
+        ->assertForbidden();
 
     $this->actingAs($member)->get(route('app.votes'))->assertSee('Stimme abgeben');
-    $this->post(route('app.votes.store', $vote), ['option' => $first->id])->assertRedirect(route('app.votes'));
-    $this->post(route('app.votes.store', $vote), ['option' => $second->id])->assertSessionHasErrors('option');
-    $this->get(route('app.votes'))->assertSee('Du hast abgestimmt.');
+    Livewire::actingAs($member)->test(App\Livewire\Governance\Votes::class)
+        ->set("options.{$vote->id}", $first->id)
+        ->call('cast', $vote->id)
+        ->assertHasNoErrors()
+        ->assertSee('Danke, deine Stimme ist gezählt.');
+    Livewire::actingAs($member)->test(App\Livewire\Governance\Votes::class)
+        ->set("options.{$vote->id}", $second->id)
+        ->call('cast', $vote->id)
+        ->assertHasErrors('option');
+    $this->actingAs($member)->get(route('app.votes'))->assertSee('Du hast abgestimmt.');
 
     expect($first->fresh()->votes_count)->toBe(1)->and($second->fresh()->votes_count)->toBe(0)
         ->and(VoteParticipation::count())->toBe(1);
@@ -129,9 +156,15 @@ it('refuses foreign options and votes that are not running', function () {
     $other = openVote($admin, ['A', 'B']);
     $this->actingAs(votingMember());
 
-    $this->post(route('app.votes.store', $vote), ['option' => $other->options->first()->id])->assertSessionHasErrors('option');
+    Livewire::test(App\Livewire\Governance\Votes::class)
+        ->set("options.{$vote->id}", $other->options->first()->id)
+        ->call('cast', $vote->id)
+        ->assertHasErrors('option');
     $vote->forceFill(['ends_at' => now()->subMinute()])->save();
-    $this->post(route('app.votes.store', $vote), ['option' => $vote->options->first()->id])->assertSessionHasErrors('option');
+    Livewire::test(App\Livewire\Governance\Votes::class)
+        ->set("options.{$vote->id}", $vote->options->first()->id)
+        ->call('cast', $vote->id)
+        ->assertHasErrors('option');
 });
 
 it('publishes results only after the end, in the app and on the Transparenz page', function () {

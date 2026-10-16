@@ -4,24 +4,26 @@ namespace App\Support\Moderation;
 
 use App\Models\ContentReport;
 use App\Models\ModerationDecision;
-use Illuminate\Http\Request;
+use App\Models\User;
 
-/** Resolve complaint identities without accepting emails or account ids from a public form. */
+/**
+ * Resolve who complains about a decision without accepting emails or account ids from a public form.
+ *
+ * The complaint form (App\Livewire\Moderation\ComplaintForm) knows only a recipient selector: "reporter" or
+ * "subject" from the signed link in the decision mail (the `signed` route middleware checks the link before the
+ * form is shown), or "account" for the signed-in affected member. The email address is looked up here,
+ * server-side, every time it is needed.
+ */
 class ComplaintAccess
 {
-    /** Read a signed recipient selector or require the authenticated affected account. */
-    public function recipient(Request $request, ModerationDecision $decision): string
+    /** The stored email address behind the selector, or 403 when it does not apply to this decision. */
+    public function recipient(ModerationDecision $decision, string $selector, ?User $user): string
     {
         $case = $decision->case;
-        if ($request->routeIs('moderation.complaint.account*')) {
-            abort_unless($request->user()?->id === $case->subject_user_id, 403);
-
-            return $request->user()->email;
-        }
-        abort_unless($request->hasValidSignature(), 403);
-        $email = match ($request->query('recipient')) {
+        $email = match ($selector) {
             'reporter' => $case->source instanceof ContentReport ? $case->source->email : null,
             'subject' => $case->subjectUser?->email,
+            'account' => $user !== null && $user->id === $case->subject_user_id ? $user->email : null,
             default => null,
         };
         abort_unless($email !== null, 403);

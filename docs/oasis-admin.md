@@ -36,10 +36,13 @@ against the books before publishing. The public page shows the newest report; wi
 ## Member votes
 
 - Admins create votes at `/admin/abstimmungen` (question, explanation, start, end, 2–8 distinct answers).
-- Members vote at `/app/abstimmungen`. Gate `vote`: verified account with an active paid or gifted membership
-  ("Eine Stimme bei jeder Abstimmung", any tier). Trial accounts can read but not vote.
-- **Secret ballot**: `vote_participations` stores only vote, member and day (one ballot each via the primary key);
-  the choice only increments `vote_options.votes_count` in the same transaction. No row links a member to an option.
+- Members vote at `/app/abstimmungen` (`app.votes`), delivered as the Livewire 4 component
+  `App\Livewire\Governance\Votes` (`Route::livewire`). Gate `vote`: verified account with an active paid or gifted
+  membership ("Eine Stimme bei jeder Abstimmung", any tier). Trial accounts can read but not vote.
+- **Secret ballot**: `Votes::cast(int $voteId, CastBallot $castBallot)` authorizes via `Gate::authorize('vote')` and
+  delegates to `App\Actions\Governance\CastBallot`. `vote_participations` stores only vote, member and day (one ballot
+  each via the primary key); the choice only increments `vote_options.votes_count` in the same transaction. No row
+  links a member to an option.
 - Results (shares and number of ballots) are shown only after the end – in the app, in the admin list and on the
   public Transparenz page; running votes show title, end date and answers.
 

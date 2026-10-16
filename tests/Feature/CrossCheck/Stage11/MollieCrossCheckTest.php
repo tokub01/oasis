@@ -1,5 +1,9 @@
 <?php
 
+use App\Livewire\Membership\Cancel;
+use App\Livewire\Membership\Checkout;
+use App\Livewire\Membership\Overview;
+use App\Livewire\Membership\Withdraw;
 use App\Mail\Membership\MembershipCancelledMail;
 use App\Mail\Membership\MembershipWithdrawnMail;
 use App\Models\GiftMembership;
@@ -8,6 +12,7 @@ use App\Models\Subscription;
 use App\Models\User;
 use App\Queries\Membership\MembershipStats;
 use Illuminate\Support\Facades\Mail;
+use Livewire\Livewire;
 use Mollie\Api\Fake\MockResponse;
 use Mollie\Api\Fake\SequenceMockResponse;
 use Mollie\Api\Http\Requests\CancelSubscriptionRequest;
@@ -18,6 +23,7 @@ use Mollie\Api\Http\Requests\GetPaymentRequest;
 use Mollie\Api\Http\Requests\GetSubscriptionRequest;
 use Mollie\Laravel\Facades\Mollie;
 use Tests\Support\MollieFixtures as Billing;
+use Tests\Support\NetworkActions;
 
 test('forged webhook payloads never activate membership or override local ledger when API disagrees', function () {
     $user = User::factory()->create([
@@ -159,8 +165,10 @@ test('gift voucher is only issued after API-confirmed paid status and not on che
         ]),
     ]);
 
-    $this->actingAs($buyer)
-        ->post(route('app.membership.gift.checkout'), ['tier' => 'oase'])
+    Livewire::actingAs($buyer)
+        ->test(Overview::class)
+        ->set('tier', 'oase')
+        ->call('buyGift')
         ->assertRedirect('https://www.mollie.com/checkout/gift-flow');
 
     $intent = MembershipPayment::sole();
@@ -198,9 +206,11 @@ test('gift voucher is only issued after API-confirmed paid status and not on che
     // Recipient redeems voucher and transitions from read-only to full participation + founding member.
     expect($recipient->canParticipate())->toBeFalse();
 
-    $this->actingAs($recipient)
-        ->post(route('app.membership.redeem'), ['code' => $voucher->code])
-        ->assertRedirect(route('app.membership'));
+    Livewire::actingAs($recipient)
+        ->test(Overview::class)
+        ->set('code', $voucher->code)
+        ->call('redeem')
+        ->assertHasNoErrors();
 
     expect($recipient->fresh()->canParticipate())->toBeTrue()
         ->and($recipient->fresh()->isFoundingMember())->toBeTrue();
@@ -216,14 +226,14 @@ test('custom Maezen amount is validated, persisted for monthly and yearly rhythm
     ]);
 
     // Below minimum (12 €) is rejected.
-    $this->actingAs($monthlyUser)
-        ->post(route('oasis.mitglied.checkout'), [
-            'stufe' => 'maezen',
-            'rhythmus' => 'monat',
-            'betrag' => 11,
-            'zahlart' => 'karte',
-        ])
-        ->assertSessionHasErrors('betrag');
+    Livewire::actingAs($monthlyUser)
+        ->test(Checkout::class)
+        ->set('betrag', '11')
+        ->set('stufe', 'maezen')
+        ->set('rhythmus', 'monat')
+        ->set('zahlart', 'karte')
+        ->call('checkout')
+        ->assertHasErrors(['betrag']);
 
     // Monthly custom Maezen (25 € -> 25.00 EUR first payment + 25.00 EUR recurring 1 month).
     Mollie::fake([
@@ -235,13 +245,13 @@ test('custom Maezen amount is validated, persisted for monthly and yearly rhythm
         ]),
     ]);
 
-    $this->actingAs($monthlyUser)
-        ->post(route('oasis.mitglied.checkout'), [
-            'stufe' => 'maezen',
-            'rhythmus' => 'monat',
-            'betrag' => 25,
-            'zahlart' => 'karte',
-        ])
+    Livewire::actingAs($monthlyUser)
+        ->test(Checkout::class)
+        ->set('betrag', '25')
+        ->set('stufe', 'maezen')
+        ->set('rhythmus', 'monat')
+        ->set('zahlart', 'karte')
+        ->call('checkout')
         ->assertRedirect('https://www.mollie.com/checkout/maezen-m');
 
     $monthlyIntent = MembershipPayment::where('user_id', $monthlyUser->id)->sole();
@@ -278,13 +288,13 @@ test('custom Maezen amount is validated, persisted for monthly and yearly rhythm
         ]),
     ]);
 
-    $this->actingAs($yearlyUser)
-        ->post(route('oasis.mitglied.checkout'), [
-            'stufe' => 'maezen',
-            'rhythmus' => 'jahr',
-            'betrag' => 25,
-            'zahlart' => 'paypal',
-        ])
+    Livewire::actingAs($yearlyUser)
+        ->test(Checkout::class)
+        ->set('betrag', '25')
+        ->set('stufe', 'maezen')
+        ->set('rhythmus', 'jahr')
+        ->set('zahlart', 'paypal')
+        ->call('checkout')
         ->assertRedirect('https://www.mollie.com/checkout/maezen-y');
 
     $yearlyIntent = MembershipPayment::where('user_id', $yearlyUser->id)->sole();
@@ -342,8 +352,9 @@ test('cancellation keeps participation during grace period and enforces read-onl
         ]),
     ]);
 
-    $this->actingAs($user)
-        ->post(route('app.membership.cancel'))
+    Livewire::actingAs($user)
+        ->test(Cancel::class)
+        ->call('cancel')
         ->assertRedirect(route('app.membership'));
 
     $subscription->refresh();
@@ -354,11 +365,9 @@ test('cancellation keeps participation during grace period and enforces read-onl
     Mail::assertSent(MembershipCancelledMail::class, 2);
 
     // During grace period, member can still publish a Tropfen.
-    $this->actingAs($user)
-        ->post(route('network.posts.store'), [
-            'body' => 'Ein Tropfen waehrend der bezahlten Restlaufzeit.',
-        ])
-        ->assertRedirect();
+    NetworkActions::publish([
+        'body' => 'Ein Tropfen waehrend der bezahlten Restlaufzeit.',
+    ], $user)->assertHasNoErrors();
 
     // Advance time past paid_until / ends_at: user enters read-only mode.
     $this->travel(16)->days();
@@ -369,10 +378,9 @@ test('cancellation keeps participation during grace period and enforces read-onl
     // Read access and GDPR export remain available, but writing is blocked with 403.
     $this->actingAs($user)->get(route('app.membership'))->assertOk();
     $this->actingAs($user)->get(route('account.export'))->assertOk();
-    $this->actingAs($user)
-        ->post(route('network.posts.store'), [
-            'body' => 'Versuch nach Ablauf des Abos.',
-        ])
+    NetworkActions::publish([
+        'body' => 'Versuch nach Ablauf des Abos.',
+    ], $user)
         ->assertForbidden();
 });
 
@@ -425,8 +433,9 @@ test('14-day withdrawal revokes participation immediately, refunds paid invoices
         ]),
     ]);
 
-    $this->actingAs($user)
-        ->post(route('app.membership.withdraw'))
+    Livewire::actingAs($user)
+        ->test(Withdraw::class)
+        ->call('withdraw')
         ->assertRedirect(route('app.membership'));
 
     expect($subscription->fresh()->status)->toBe('canceled')
@@ -440,8 +449,7 @@ test('14-day withdrawal revokes participation immediately, refunds paid invoices
     Mail::assertSent(MembershipWithdrawnMail::class, 2);
 
     // Writing is immediately forbidden after withdrawal.
-    $this->actingAs($user)
-        ->post(route('network.posts.store'), ['body' => 'Nach Widerruf nicht mehr erlaubt.'])
+    NetworkActions::publish(['body' => 'Nach Widerruf nicht mehr erlaubt.'], $user)
         ->assertForbidden();
 });
 

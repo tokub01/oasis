@@ -5,7 +5,9 @@
  * sign-up/sign-in, and the signed-in app shell and settings show what the account backend provides.
  */
 
+use App\Livewire\Account\Settings;
 use App\Models\User;
+use Livewire\Livewire;
 
 beforeEach(function () {
     $this->withoutVite();
@@ -66,27 +68,28 @@ describe('app shell', function () {
 });
 
 describe('settings', function () {
-    it('shows every settings block with its endpoint', function () {
+    it('shows every settings block with the Livewire component and export link', function () {
         $user = User::factory()->create();
 
         $this->actingAs($user)->get(route('app.settings'))->assertOk()
-            ->assertSee(route('user-profile-information.update'), false)
-            ->assertSee(route('user-password.update'), false)
-            ->assertSee(route('two-factor.enable'), false)
+            ->assertSeeLivewire(Settings::class)
+            ->assertSee('wire:submit="updateProfile"', false)
+            ->assertSee('wire:submit="updatePassword"', false)
+            ->assertSee('wire:submit="enableTwoFactor"', false)
             ->assertSee(route('account.export'), false)
-            ->assertSee(route('account.destroy'), false)
+            ->assertSee('wire:submit="deleteAccount"', false)
             ->assertSee('@'.$user->username);
     });
 
-    it('shows profile errors from the Fortify error bag next to the field', function () {
+    it('shows profile validation errors next to the field', function () {
         $user = User::factory()->create();
 
-        $this->actingAs($user)
-            ->from(route('app.settings'))
-            ->put(route('user-profile-information.update'), ['display_name' => '', 'email' => 'nope'])
-            ->assertRedirect(route('app.settings'));
-
-        $this->actingAs($user)->get(route('app.settings'))->assertOk()
+        Livewire::actingAs($user)
+            ->test(Settings::class)
+            ->set('display_name', '')
+            ->set('email', 'nope')
+            ->call('updateProfile')
+            ->assertHasErrors(['display_name', 'email'])
             ->assertSee('id="f-email-error"', false)
             ->assertSee('aria-invalid="true"', false);
     });
@@ -94,7 +97,11 @@ describe('settings', function () {
     it('confirms a successful profile update in German', function () {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->withSession(['status' => 'profile-information-updated'])
-            ->get(route('app.settings'))->assertOk()->assertSee('Dein Profil ist gespeichert.');
+        Livewire::actingAs($user)
+            ->test(Settings::class)
+            ->set('display_name', 'Lena Neu')
+            ->call('updateProfile')
+            ->assertHasNoErrors()
+            ->assertSee('Dein Profil ist gespeichert.');
     });
 });

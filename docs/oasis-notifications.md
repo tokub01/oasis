@@ -42,7 +42,7 @@ haben. Claudes dezenter Navigationspunkt darf `$user->unreadNotifications()->cou
 `[a-z0-9_]{3,30}` erkennt keine Teilnamen längerer Zeichenfolgen und keine normalen E-Mail-Adressen.
 `x-network.rich-text :text="$text"` escaped alle Inhalte und verlinkt vorhandene Konten über `oasis.profil`.
 Die Komponente verwendet dasselbe `Mentions::PATTERN` wie die Zustellung und übernimmt die Themen-Regel aus
-`SearchController::TAG_PATTERN`. Themen führen auf Claudes `search.tags.show`; Zeilenumbrüche bleiben erhalten.
+`DirectorySearch::TAG_PATTERN`. Themen führen auf Claudes `search.tags.show`; Zeilenumbrüche bleiben erhalten.
 `Mentions::existing()` fragt bei leerer Namensliste nicht ab. Bereits geprüfte Namen (auch nicht vorhandene) werden
 nur innerhalb des aktuellen Request-Objekts zwischengespeichert; neue Requests lösen sie erneut auf.
 Die Hinweis-Liste und der Digest nutzen `HintPresentation::forMany()`: Absender, Tropfen und Oasen werden pro Liste

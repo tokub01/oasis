@@ -80,12 +80,26 @@ Run JS tests with `./vendor/bin/sail node --test tests/js/chat/*.test.mjs`.
 - Verified safety numbers are not remembered (nothing on the device, and the server must not vouch for them).
 - No unread counts, typing or read receipts (by design in this stage).
 
-## Locking (stage 9)
+## Locking & `wire:navigate` Lifecycle (stage 9 & stage 12)
 
-- `ConversationView::close()` (called on "Sperren", `pagehide`, idle lock and every screen change) also removes the
-  rendered messages, notices, title and the unsent draft from the page; the report dialog forgets its quote.
+- `ConversationView::close()` (called on "Sperren", `pagehide`, `livewire:navigating`, idle lock and every screen change)
+  also removes the rendered messages, notices, title and the unsent draft from the page; the report dialog forgets its quote.
 - `ChatSession::generation` increases on every lock. Key distribution and opening grants capture it before their
   first request and may only keep a key if it is unchanged – a key arriving after locking is wiped
   (`rememberConversationKey` returns false). Results of history loads and realtime messages for a closed
   conversation are dropped (`ConversationView::isCurrent`).
-- Tests: `tests/js/chat/client.test.mjs` (stale generation), `tests/js/chat/view-lock.test.mjs` (page cleared).
+- **SPA Navigation (`wire:navigate`)**: `bindChatNavigation()` in `resources/js/chat/app.js` starts the chat client both on
+  initial load and on `document` `livewire:navigated` whenever `[data-oasis-chat]` is present (guarded against double-start via
+  `data-oasis-chat-started="1"`). On `livewire:navigating` (leaving the chat page) and `pagehide`, the teardown callback locks
+  `ChatSession`, closes the active conversation view, disconnects `Realtime` (`Realtime::disconnect()`), clears timers and
+  removes event listeners so no WebSocket or timer leaks across `wire:navigate` transitions.
+- Tests: `tests/js/chat/client.test.mjs` (stale generation, `Realtime::disconnect`), `tests/js/chat/view-lock.test.mjs`
+  (page cleared and `wire:navigate` lifecycle).
+
+### Navigation and pending cryptographic work
+
+On `livewire:navigating`, the chat stops timers, removes window listeners, clears password inputs, closes the
+conversation/report dialog, wipes its session and disconnects realtime. Repeated initialization on the same root
+is ignored; returning creates a new session. Identity setup/unlock captures the session generation before awaiting
+cryptographic work: a lock or navigation invalidates that generation, so late private keys are wiped instead of
+reopening the abandoned session. Late announcements cannot start timers after teardown.

@@ -2,8 +2,11 @@
 
 use App\Actions\Safety\ManageBlock;
 use App\Actions\Safety\ManageMute;
+use App\Livewire\Search\Index;
+use App\Livewire\Search\Tag;
 use App\Models\User;
 use Illuminate\Cache\RateLimiter;
+use Livewire\Livewire;
 use Tests\Support\NetworkFixtures as N;
 
 beforeEach(fn () => $this->withoutVite());
@@ -83,11 +86,10 @@ it('rejects search terms longer than 100 characters with a validation error', fu
     $me = N::member();
     $tooLong = str_repeat('a', 101);
 
-    $this->actingAs($me)->get(route('search.index', ['q' => $tooLong]))
-        ->assertSessionHasErrors('q');
+    Livewire::actingAs($me)->test(Index::class)->set('q', $tooLong)->assertHasErrors('q');
 
-    $this->actingAs($me)->getJson(route('search.index', ['q' => $tooLong]))
-        ->assertUnprocessable();
+    $this->actingAs($me)->get(route('search.index', ['q' => $tooLong]))
+        ->assertOk()->assertSee('Dein Suchbegriff darf höchstens 100 Zeichen lang sein.');
 });
 
 it('accepts search terms with exactly 100 characters', function (): void {
@@ -123,17 +125,17 @@ it('redirects an exact single #Thema to the topic page preserving lowercase', fu
 it('does not redirect if the term contains more than a single #Thema', function (): void {
     $me = N::member();
 
-    $this->actingAs($me)->get(route('search.index', ['q' => '#garten und mehr']))
+    Livewire::withQueryParams(['q' => '#garten und mehr'])->actingAs($me)->test(Index::class)
         ->assertOk()
-        ->assertViewIs('app.search.index');
+        ->assertSee('wire:name="search"', false);
 
-    $this->actingAs($me)->get(route('search.index', ['q' => 'hallo #garten']))
+    Livewire::withQueryParams(['q' => 'hallo #garten'])->actingAs($me)->test(Index::class)
         ->assertOk()
-        ->assertViewIs('app.search.index');
+        ->assertSee('wire:name="search"', false);
 
-    $this->actingAs($me)->get(route('search.index', ['q' => '#garten #bäume']))
+    Livewire::withQueryParams(['q' => '#garten #bäume'])->actingAs($me)->test(Index::class)
         ->assertOk()
-        ->assertViewIs('app.search.index');
+        ->assertSee('wire:name="search"', false);
 });
 
 it('aborts with 404 for invalid topic tags on /themen/{tag}', function (string $invalidTag): void {
@@ -161,7 +163,7 @@ it('escapes percent wildcard so that % is matched literally', function (): void 
     N::post($author, ['body' => 'Ersparnis von 50% beim Einkauf']);
     N::post($author, ['body' => 'Ersparnis von 500 Euro beim Einkauf']);
 
-    $response = $this->actingAs($me)->get(route('search.index', ['q' => '50%']))->assertOk();
+    $response = Livewire::withQueryParams(['q' => '50%'])->actingAs($me)->test(Index::class)->assertOk();
     $posts = $response->viewData('posts');
 
     expect($posts)->toHaveCount(1)
@@ -174,7 +176,7 @@ it('escapes underscore wildcard so that _ is matched literally', function (): vo
     N::post($author, ['body' => 'Code Variable my_var definiert']);
     N::post($author, ['body' => 'Code Variable myxvar definiert']);
 
-    $response = $this->actingAs($me)->get(route('search.index', ['q' => 'my_var']))->assertOk();
+    $response = Livewire::withQueryParams(['q' => 'my_var'])->actingAs($me)->test(Index::class)->assertOk();
     $posts = $response->viewData('posts');
 
     expect($posts)->toHaveCount(1)
@@ -187,7 +189,7 @@ it('escapes backslash so that backslashes are matched literally', function (): v
     N::post($author, ['body' => 'Pfad C:\Oasis\AppData']);
     N::post($author, ['body' => 'Pfad C:OasisAppData']);
 
-    $response = $this->actingAs($me)->get(route('search.index', ['q' => 'C:\Oasis']))->assertOk();
+    $response = Livewire::withQueryParams(['q' => 'C:\Oasis'])->actingAs($me)->test(Index::class)->assertOk();
     $posts = $response->viewData('posts');
 
     expect($posts)->toHaveCount(1)
@@ -200,7 +202,7 @@ it('safely handles quotation marks and potential SQL injection characters', func
     N::post($author, ['body' => "Garten von O'Reilly & Söhne"]);
     N::post($author, ['body' => 'Tomaten der Sorte "Roma" im Topf']);
 
-    $this->actingAs($me)->get(route('search.index', ['q' => $term]))
+    Livewire::withQueryParams(['q' => $term])->actingAs($me)->test(Index::class)
         ->assertOk();
 })->with([
     'single quote' => "O'Reilly",
@@ -223,7 +225,7 @@ it('matches #Thema as whole word and does not match prefixes or suffixes', funct
     N::post($author, ['body' => 'Ein schöner #gartenzaun aus Holz']);
     N::post($author, ['body' => 'Der #hausgarten blüht schon']);
 
-    $response = $this->get(route('search.tags.show', 'garten'))->assertOk();
+    $response = Livewire::test(Tag::class, ['tag' => 'garten'])->assertOk();
     $posts = $response->viewData('posts');
 
     expect($posts)->toHaveCount(1)
@@ -239,7 +241,7 @@ it('matches #Thema at boundaries such as beginning, end and next to punctuation'
     $p5 = N::post($author, ['body' => 'Mit Komma danach: #garten, herrlich.']);
     $p6 = N::post($author, ['body' => 'Doppelpunkt davor: Thema:#garten']);
 
-    $response = $this->get(route('search.tags.show', 'garten'))->assertOk();
+    $response = Livewire::test(Tag::class, ['tag' => 'garten'])->assertOk();
     $ids = collect($response->viewData('posts')->items())->pluck('id')->all();
 
     expect($ids)->toContain($p1->id, $p2->id, $p3->id, $p4->id, $p5->id, $p6->id);
@@ -250,7 +252,7 @@ it('does not match #Thema when embedded inside a URL or email-like string', func
     N::post($author, ['body' => 'Besuche https://oasis.test/themen#garten']);
     N::post($author, ['body' => 'Schreib an info#garten@example.com']);
 
-    $response = $this->get(route('search.tags.show', 'garten'))->assertOk();
+    $response = Livewire::test(Tag::class, ['tag' => 'garten'])->assertOk();
     expect($response->viewData('posts')->items())->toBeEmpty();
 });
 
@@ -259,13 +261,13 @@ it('matches #Thema case-insensitively with German umlauts', function (): void {
     N::post($author, ['body' => 'Erntezeit für frischen #Grünkohl']);
     N::post($author, ['body' => 'Alles über #ÜBER_UNS im Verein']);
 
-    $res1 = $this->get(route('search.tags.show', 'grünkohl'))->assertOk();
+    $res1 = Livewire::test(Tag::class, ['tag' => 'grünkohl'])->assertOk();
     expect($res1->viewData('posts'))->toHaveCount(1);
 
-    $res2 = $this->get(route('search.tags.show', 'GRÜNKOHL'))->assertOk();
+    $res2 = Livewire::test(Tag::class, ['tag' => 'GRÜNKOHL'])->assertOk();
     expect($res2->viewData('posts'))->toHaveCount(1);
 
-    $res3 = $this->get(route('search.tags.show', 'über_uns'))->assertOk();
+    $res3 = Livewire::test(Tag::class, ['tag' => 'über_uns'])->assertOk();
     expect($res3->viewData('posts'))->toHaveCount(1);
 });
 
@@ -281,14 +283,14 @@ it('restricts guests to public posts on topic pages, hiding members-only posts',
     $membersPost = N::post($author, ['body' => 'Interner Post zu #reisen', 'visibility' => 'members']);
 
     // Guest view
-    $guestResponse = $this->get(route('search.tags.show', 'reisen'))->assertOk();
+    $guestResponse = Livewire::test(Tag::class, ['tag' => 'reisen'])->assertOk();
     $guestIds = collect($guestResponse->viewData('posts')->items())->pluck('id')->all();
     expect($guestIds)->toBe([$publicPost->id])
         ->and($guestIds)->not->toContain($membersPost->id);
 
     // Member view
     $member = N::member();
-    $memberResponse = $this->actingAs($member)->get(route('search.tags.show', 'reisen'))->assertOk();
+    $memberResponse = Livewire::actingAs($member)->test(Tag::class, ['tag' => 'reisen'])->assertOk();
     $memberIds = collect($memberResponse->viewData('posts')->items())->pluck('id')->all();
     expect($memberIds)->toContain($publicPost->id, $membersPost->id);
 });
@@ -303,16 +305,16 @@ it('hides posts removed from oasis from search and topic pages for third parties
     ]);
 
     // Viewer should not see it in search or on topic page
-    $this->actingAs($viewer)->get(route('search.index', ['q' => 'moderierter']))
+    Livewire::withQueryParams(['q' => 'moderierter'])->actingAs($viewer)->test(Index::class)
         ->assertOk()
         ->assertDontSee('Moderierter Tropfen');
 
-    $this->actingAs($viewer)->get(route('search.tags.show', 'zensur'))
+    Livewire::actingAs($viewer)->test(Tag::class, ['tag' => 'zensur'])
         ->assertOk()
         ->assertDontSee('Moderierter Tropfen');
 
     // Author still sees own removed post
-    $this->actingAs($author)->get(route('search.index', ['q' => 'moderierter']))
+    Livewire::withQueryParams(['q' => 'moderierter'])->actingAs($author)->test(Index::class)
         ->assertOk()
         ->assertSee('Moderierter Tropfen');
 });
@@ -333,14 +335,14 @@ it('suppresses blocked accounts and their posts from search in both directions',
     app(ManageBlock::class)->block($alice, $bob);
 
     // Alice searches for Bob
-    $aliceSearch = $this->actingAs($alice)->get(route('search.index', ['q' => 'bob_cross']))->assertOk();
+    $aliceSearch = Livewire::withQueryParams(['q' => 'bob_cross'])->actingAs($alice)->test(Index::class)->assertOk();
     expect($aliceSearch->viewData('people')->pluck('id')->all())->not->toContain($bob->id);
-    expect($this->actingAs($alice)->get(route('search.index', ['q' => 'Bobs geheimer']))->viewData('posts')->items())->toBeEmpty();
+    expect(Livewire::withQueryParams(['q' => 'Bobs geheimer'])->actingAs($alice)->test(Index::class)->viewData('posts')->items())->toBeEmpty();
 
     // Bob searches for Alice (reverse direction)
-    $bobSearch = $this->actingAs($bob)->get(route('search.index', ['q' => 'alice_cross']))->assertOk();
+    $bobSearch = Livewire::withQueryParams(['q' => 'alice_cross'])->actingAs($bob)->test(Index::class)->assertOk();
     expect($bobSearch->viewData('people')->pluck('id')->all())->not->toContain($alice->id);
-    expect($this->actingAs($bob)->get(route('search.index', ['q' => 'Alices geheimer']))->viewData('posts')->items())->toBeEmpty();
+    expect(Livewire::withQueryParams(['q' => 'Alices geheimer'])->actingAs($bob)->test(Index::class)->viewData('posts')->items())->toBeEmpty();
 });
 
 it('suppresses muted accounts posts from search results without hiding their profile', function (): void {
@@ -352,11 +354,11 @@ it('suppresses muted accounts posts from search results without hiding their pro
     app(ManageMute::class)->mute($alice, $bob);
 
     // Bob's posts must be hidden from Alice's search results
-    $res = $this->actingAs($alice)->get(route('search.index', ['q' => 'stumm sein soll']))->assertOk();
+    $res = Livewire::withQueryParams(['q' => 'stumm sein soll'])->actingAs($alice)->test(Index::class)->assertOk();
     expect($res->viewData('posts')->items())->toBeEmpty();
 
     // But Bob's profile remains findable in DirectorySearch (unilateral mute leaves profile accessible)
-    $peopleRes = $this->actingAs($alice)->get(route('search.index', ['q' => 'bob_muted']))->assertOk();
+    $peopleRes = Livewire::withQueryParams(['q' => 'bob_muted'])->actingAs($alice)->test(Index::class)->assertOk();
     expect($peopleRes->viewData('people')->pluck('id')->all())->toContain($bob->id);
 });
 
@@ -371,7 +373,7 @@ it('orders people search with exact username match first, then alphabetical', fu
     $partial = N::member(['username' => 'alex_meier', 'display_name' => 'Berta Meier']);
     $exact = N::member(['username' => 'alex', 'display_name' => 'Zacharias Alex']);
 
-    $people = $this->actingAs($me)->get(route('search.index', ['q' => '@alex']))->assertOk()->viewData('people');
+    $people = Livewire::withQueryParams(['q' => '@alex'])->actingAs($me)->test(Index::class)->assertOk()->viewData('people');
 
     expect($people->pluck('username')->all())->toBe(['alex', 'alex_meier']);
 });
@@ -380,7 +382,7 @@ it('never includes unverified users in people search', function (): void {
     $me = N::member();
     $unverified = User::factory()->unverified()->create(['username' => 'phantom_user', 'display_name' => 'Phantom']);
 
-    $people = $this->actingAs($me)->get(route('search.index', ['q' => 'phantom']))->assertOk()->viewData('people');
+    $people = Livewire::withQueryParams(['q' => 'phantom'])->actingAs($me)->test(Index::class)->assertOk()->viewData('people');
 
     expect($people->pluck('id')->all())->not->toContain($unverified->id);
 });
@@ -398,7 +400,7 @@ it('limits people and oases search results to maximum 12 items', function (): vo
         N::oasis($me, ['name' => sprintf('Bulk Oasis %02d', $i)]);
     }
 
-    $response = $this->actingAs($me)->get(route('search.index', ['q' => 'bulk']))->assertOk();
+    $response = Livewire::withQueryParams(['q' => 'bulk'])->actingAs($me)->test(Index::class)->assertOk();
 
     expect($response->viewData('people'))->toHaveCount(12)
         ->and($response->viewData('oases'))->toHaveCount(12);
@@ -408,7 +410,7 @@ it('does not return all users when searching for double at-signs (@@)', function
     $me = N::member();
     $randomUser = N::member(['username' => 'totally_unrelated', 'display_name' => 'Unrelated Person']);
 
-    $response = $this->actingAs($me)->get(route('search.index', ['q' => '@@']))->assertOk();
+    $response = Livewire::withQueryParams(['q' => '@@'])->actingAs($me)->test(Index::class)->assertOk();
     $people = $response->viewData('people');
 
     expect($people->pluck('id')->all())->not->toContain($randomUser->id);

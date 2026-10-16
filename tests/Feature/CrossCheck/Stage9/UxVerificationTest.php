@@ -1,7 +1,10 @@
 <?php
 
 use App\Actions\Network\ManageFollows;
+use App\Livewire\Membership\Checkout;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Livewire\Livewire;
+use Tests\Support\NetworkActions;
 use Tests\Support\NetworkFixtures as Network;
 
 beforeEach(fn () => $this->withoutVite());
@@ -9,33 +12,38 @@ beforeEach(fn () => $this->withoutVite());
 it('shows the actual checkout explanation after the guest registration redirect', function () {
     config()->set('oasis.checkout_enabled', true);
     $status = 'Erstelle bitte zuerst dein Oasis-Konto, um deine Mitgliedschaft abzuschließen.';
-    $response = $this->post('/mitglied-werden/checkout', ['stufe' => 'oase', 'rhythmus' => 'monat']);
-    $response->assertRedirect(route('register'))->assertSessionHas('status', $status);
-    $this->get($response->headers->get('Location'))->assertOk()->assertSee($status);
+    Livewire::test(Checkout::class)
+        ->set('stufe', 'oase')
+        ->set('rhythmus', 'monat')
+        ->call('checkout')
+        ->assertRedirect(route('register'))
+        ->assertSessionHas('status', $status);
+    $this->get(route('register'))->assertOk()->assertSee($status);
 });
 
 it('records the correct delete and block forms and their direct effects', function () {
     $author = Network::member();
     $viewer = Network::member();
     $post = Network::post($author);
-    foreach ([[$author, route('network.posts.destroy', $post), 'Löschen'],
-        [$viewer, route('safety.block.store', $author), 'Blockieren']] as [$actor, $action, $label]) {
+    foreach ([[$author, 'deletePost('.$post->id.')', 'Löschen'],
+        [$viewer, 'blockUser('.$author->id.')', 'Blockieren']] as [$actor, $action, $label]) {
         $response = $this->actingAs($actor)->get(route('network.posts.show', $post))->assertOk();
         $document = new DOMDocument;
         @$document->loadHTML('<?xml encoding="UTF-8">'.$response->getContent());
         $xpath = new DOMXPath($document);
-        $forms = $xpath->query('//form[@action="'.$action.'"]');
+        $forms = $xpath->query('//form[@*[name()="wire:submit" and .="'.$action.'"]]');
         expect($forms->length)->toBe(1);
         $form = $forms->item(0);
-        expect($form->getAttribute('method'))->toBe('POST');
+        expect($form->getAttribute('wire:submit'))->toBe($action);
+        expect($xpath->query('.//button/@*[name()="wire:loading.attr"]', $form)->length)->toBe(1);
         expect($xpath->query('.//button', $form)->item(0)->textContent)->toContain($label);
     }
     app(ManageFollows::class)->follow($author, $viewer);
     app(ManageFollows::class)->follow($viewer, $author);
-    $this->actingAs($viewer)->post(route('safety.block.store', $author))->assertRedirect();
+    NetworkActions::post('blockUser', $author->id, $viewer)->assertHasNoErrors();
     expect($author->fresh()->followers()->count())->toBe(0);
     expect($viewer->fresh()->followers()->count())->toBe(0);
-    $this->actingAs($author->fresh())->delete(route('network.posts.destroy', $post))->assertRedirect();
+    NetworkActions::post('deletePost', $post->id, $author->fresh())->assertHasNoErrors();
     $this->assertDatabaseMissing('posts', ['id' => $post->id]);
 });
 

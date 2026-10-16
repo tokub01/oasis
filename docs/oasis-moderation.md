@@ -4,44 +4,35 @@ Roles: `App\Enums\Role::{Member,Moderator,Admin}`; `label()` and `isStaff()`; ca
 Role is deliberately excluded from user mass assignment. All moderation enums live in `App\Enums\Moderation`:
 `CaseStatus`, `Outcome`, `Ground`, `Priority`, `ComplaintStatus`, `EventType`; PascalCase cases and German `label()`.
 
-## Routes and authorization
+## Pages and authorization (Livewire, stage 12)
 
-Staff routes use `auth`, `verified`, `staff` (staff role and confirmed 2FA); members get 403, unconfirmed staff
-redirect to `app.settings` with German flash `status`. Every controller/action also checks its gate/policy.
+Staff pages use `auth`, `verified`, `staff` (staff role and confirmed 2FA; `staff` is persistent Livewire middleware,
+so it also runs on every Livewire update request); members get 403, unconfirmed staff redirect to `app.settings`
+with German flash `status`. Each component checks its gate/policy on render and again in every action before
+validating; the Actions check once more inside their transaction.
 
-| Method | URL | Name | Gate/policy |
+| URL | Name | Component | Actions (gate/policy) |
 |---|---|---|---|
-| GET | /moderation | moderation.index | viewModeration |
-| GET | /moderation/cases/{case} | moderation.cases.show | view on case |
-| POST | /moderation/cases/{case}/assign | moderation.cases.assign | assign on case |
-| POST | /moderation/cases/{case}/decide | moderation.cases.decide | decide on case |
-| GET | /moderation/complaints/{complaint} | moderation.complaints.show | view on complaint |
-| POST | /moderation/complaints/{complaint}/decide | moderation.complaints.decide | reviewComplaint on complaint |
-| GET | /moderation/roles | moderation.roles.index | manageRoles |
-| PUT | /moderation/roles/{user} | moderation.roles.update | manageRoles |
-| GET | /moderation/complaint/{decision} | moderation.complaint.create | valid signature + submitComplaint |
-| POST | /moderation/complaint/{decision} | moderation.complaint.store | valid signature + submitComplaint + throttle |
-| GET | /app/moderation/complaint/{decision} | moderation.complaint.account | auth + submitComplaint (affected user) |
-| POST | /app/moderation/complaint/{decision} | moderation.complaint.account.store | auth + submitComplaint + throttle |
+| /moderation | moderation.index | `Moderation\Overview` (embeds `Moderation\Queue`) | – (viewModeration) |
+| /moderation/cases/{case} | moderation.cases.show | `Moderation\CaseDetail` | `assign` (assign), `decide` (decide) |
+| /moderation/complaints/{complaint} | moderation.complaints.show | `Moderation\ComplaintReview` | `review` (reviewComplaint) |
+| /moderation/roles | moderation.roles.index | `Moderation\Roles` | `save(userId)` (manageRoles; not the own account) |
+| /moderation/complaint/{decision} | moderation.complaint.create | `Moderation\ComplaintForm` | `submit` (signed link + submitComplaint + 5/min per IP) |
+| /app/moderation/complaint/{decision} | moderation.complaint.account | `Moderation\ComplaintForm` (`via` = account) | `submit` (auth, affected account + submitComplaint + 5/min per IP) |
 
-Public signed URLs include `recipient=reporter|subject`, never an email. The server resolves the recipient from
-stored records. Signed GET and POST URLs are separate; use the supplied `storeUrl` as form action.
+Public signed URLs include `recipient=reporter|subject`, never an email. The `signed` middleware checks the link
+when the form opens; the selector is then a `#[Locked]` property, and `App\Support\Moderation\ComplaintAccess`
+resolves the stored email server-side on every action. The email never enters the page snapshot.
 
-## Exact view data
+## Form data
 
-| View | Variables and loaded relations |
-|---|---|
-| moderation.index | no variables; Claude's Livewire queue queries cases with policy authorization |
-| moderation.cases.show | `case: ModerationCase` with `source`, `subjectUser`, `assignee`, `decisions.decider`, `complaints.reviewer`, `events.actor`; `staff: Collection<User>` (id, display_name, role); `outcomes: list<Outcome>`, `grounds: list<Ground>` |
-| moderation.complaints.show | `complaint: ModerationComplaint` with `case`, `decision.decider`, `submitter`, `reviewer`; `outcomes: list<Outcome>`, `grounds: list<Ground>` |
-| moderation.roles.index | `users: LengthAwarePaginator<User>` (id, display_name, email, role), 25/page; `roles: list<Role>` |
-| moderation.complaint.create | `decision: ModerationDecision` with `case` (no source/contact exposed); `storeUrl: string`; `deadline: CarbonInterface` |
-| moderation.complaint.thanks | no variables; rendered directly following a successful POST |
-
-Assignment: `assigned_to` required existing staff id. Decision: `outcome`, `ground`, `rule_reference` (255),
-`facts` and `explanation` (10000). Review: `result=upheld|overturned`, `explanation` (10000); overturned additionally
-requires `outcome`, `ground`, `rule_reference`, `facts`. Complaint: `reason` (10000); email comes from authenticated
-account or signed recipient, never a user-supplied email. Role update: `role` enum value. Mutations flash `status`.
+`App\Livewire\Moderation\Forms\DecisionForm` holds the statement of reasons (DSA Art. 17): `outcome`, `ground`,
+`rule_reference` (255), `facts` and `explanation` (10000), all required; errors are keyed `decision.<field>`. The
+case page uses it for the first decision. The complaint review needs `result=upheld|overturned`; "upheld" needs
+`explanation` (10000), "overturned" a complete DecisionForm whose explanation is also the reason for the result.
+Assignment: `assigned_to` must be an existing staff id. Complaint: `reason` (10000); one per decision and recipient.
+Role change: a Role enum value per account (`roles.<id>`). German messages and field names come from
+`App\Livewire\Moderation\Concerns\ModerationValidation`. Results are shown in the component (`role="status"`).
 
 Models: `ModerationCase`, `ModerationDecision`, `ModerationComplaint`, `ModerationEvent` in `App\Models`.
 Relations use `case`, `decider`, `assignee`, `subjectUser`, `reviewer`, `latestDecision`, `supersedesDecision`.

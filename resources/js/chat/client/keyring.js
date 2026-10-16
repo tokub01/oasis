@@ -59,15 +59,20 @@ export class PublishedKeysMismatchError extends Error {
  * @param {import('./api.js').ChatApi} api
  * @param {import('./session.js').ChatSession} session receives the unlocked identity
  * @param {string} passphrase
- * @returns {Promise<object>} the stored Identity from the API
+ * @returns {Promise<object|null>} the stored Identity, or null if the session was locked meanwhile
  */
 export async function setUpIdentity(api, session, passphrase) {
+    const generation = session.generation;
     const identity = await createIdentity();
     try {
         const locked = await lockIdentity(identity, passphrase);
-        const response = await api.saveIdentity(locked, await exportPublicKeys(identity));
-        session.unlock(identity);
-        return response.data;
+        const publicKeys = await exportPublicKeys(identity);
+        if (generation !== session.generation) {
+            wipeIdentity(identity);
+            return null;
+        }
+        const response = await api.saveIdentity(locked, publicKeys);
+        return session.unlock(identity, generation) ? response.data : null;
     } catch (error) {
         wipeIdentity(identity);
         throw error;
@@ -80,11 +85,12 @@ export async function setUpIdentity(api, session, passphrase) {
  * @param {import('./session.js').ChatSession} session
  * @param {object} storedIdentity Identity from `GET /identity`
  * @param {string} passphrase
- * @returns {Promise<void>}
+ * @returns {Promise<boolean>} false if the session was locked while unlocking
  * @throws {import('../errors.js').WrongPassphraseError} on a wrong passphrase
  * @throws {PublishedKeysMismatchError} if the server publishes other public keys than the locked blob contains
  */
 export async function unlockStoredIdentity(session, storedIdentity, passphrase) {
+    const generation = session.generation;
     const identity = await unlockIdentity(storedIdentity.locked_identity, passphrase);
     try {
         const published = await verifyPublicKeys(storedIdentity.public_keys);
@@ -96,7 +102,7 @@ export async function unlockStoredIdentity(session, storedIdentity, passphrase) 
         wipeIdentity(identity);
         throw error instanceof InvalidPublicKeysError ? new PublishedKeysMismatchError() : error;
     }
-    session.unlock(identity);
+    return session.unlock(identity, generation);
 }
 
 /**

@@ -1,46 +1,36 @@
 <?php
 
-use App\Http\Controllers\Membership\CancellationController;
-use App\Http\Controllers\Membership\CheckoutController;
-use App\Http\Controllers\Membership\GiftPurchaseController;
-use App\Http\Controllers\Membership\GiftRedemptionController;
 use App\Http\Controllers\Membership\InvoiceController;
-use App\Http\Controllers\Membership\MembershipController;
 use App\Http\Controllers\Membership\MollieWebhookController;
-use App\Http\Controllers\Membership\PortalController;
-use App\Http\Controllers\Membership\WithdrawalController;
+use App\Livewire\Membership\Cancel;
+use App\Livewire\Membership\Overview;
+use App\Livewire\Membership\Portal;
+use App\Livewire\Membership\Withdraw;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Membership & Payment Routes (Stages 1 & 5)
+| Membership & Payment Routes (Stages 1, 5, 11 & 12)
 |--------------------------------------------------------------------------
+|
+| Member-facing screens are Livewire full-page components. Invoice rendering
+| and the Mollie webhook remain controllers.
+|
 */
 
-// Public / Checkout routes (guarded by oasis.checkout_enabled inside the controller)
-Route::post('/mitglied-werden/checkout', [CheckoutController::class, 'checkout'])->name('oasis.mitglied.checkout');
-Route::post('/mitglied-werden', [CheckoutController::class, 'checkout']);
-
-// Member-area routes: verified Oasis accounts
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/app/mitgliedschaft', [MembershipController::class, 'index'])->name('app.membership');
-    Route::get('/app/mitgliedschaft/portal', [PortalController::class, 'index'])->name('app.membership.portal');
+    Route::livewire('/app/mitgliedschaft', Overview::class)->name('app.membership');
+    Route::livewire('/app/mitgliedschaft/portal', Portal::class)->name('app.membership.portal');
 
-    Route::post('/app/mitgliedschaft/portal', [PortalController::class, 'update'])->name('app.membership.portal.update');
-
-    Route::get('/app/mitgliedschaft/rechnungen/{payment}', [InvoiceController::class, 'show'])->whereNumber('payment')->name('app.membership.invoice');
+    Route::get('/app/mitgliedschaft/rechnungen/{payment}', [InvoiceController::class, 'show'])
+        ->whereNumber('payment')
+        ->name('app.membership.invoice');
 
     // § 312k BGB Cancellation Flow
-    Route::get('/app/mitgliedschaft/kuendigen', [CancellationController::class, 'confirm'])->name('app.membership.cancel.confirm');
-    Route::post('/app/mitgliedschaft/kuendigen', [CancellationController::class, 'cancel'])->name('app.membership.cancel');
+    Route::livewire('/app/mitgliedschaft/kuendigen', Cancel::class)->name('app.membership.cancel.confirm');
 
     // § 355/356 BGB 14-Day Statutory Withdrawal
-    Route::get('/app/mitgliedschaft/widerrufen', [WithdrawalController::class, 'confirm'])->name('app.membership.withdraw.confirm');
-    Route::post('/app/mitgliedschaft/widerrufen', [WithdrawalController::class, 'withdraw'])->name('app.membership.withdraw');
-
-    // Gift membership redemption & purchase
-    Route::post('/app/mitgliedschaft/einloesen', [GiftRedemptionController::class, 'redeem'])->name('app.membership.redeem');
-    Route::post('/app/mitgliedschaft/geschenke/kaufen', [GiftPurchaseController::class, 'checkout'])->name('app.membership.gift.checkout');
+    Route::livewire('/app/mitgliedschaft/widerrufen', Withdraw::class)->name('app.membership.withdraw.confirm');
 });
 
 // Mollie notifications verified through the authenticated API

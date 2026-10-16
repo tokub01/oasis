@@ -8,6 +8,7 @@
       active  string|null  key of the current navigation item: quelle|entdecken|oasen|nachrichten|profil, or of an
                            account page: hinweise|gemerkt|einstellungen|mitgliedschaft|zahlen|einladen|sicherheit|abstimmungen|moderation
       wide    bool         wider main column for pages with a side column (Quelle), default false
+    Internal links use wire:navigate (Livewire SPA navigation): only the page body is swapped, see docs/oasis-livewire.md.
     Stack 'scripts': page-specific Vite entries in <head> (e.g. the chat page).
 
     Layout: navigation as a sidebar from 1024px, as a bottom bar below. All pages are noindex (private area).
@@ -67,7 +68,7 @@
     <div class="lg:grid lg:min-h-screen lg:grid-cols-[260px_1fr]">
         <header class="border-b border-dune-line bg-paper lg:sticky lg:top-0 lg:h-screen lg:border-r lg:border-b-0">
             <div class="flex items-center justify-between gap-4 px-5 py-4 lg:h-full lg:flex-col lg:items-stretch lg:justify-start lg:gap-8 lg:px-6 lg:py-8">
-                <a href="{{ route('app.home') }}" aria-label="Oasis – zur Quelle" class="flex min-h-11 items-center text-night no-underline">
+                <a href="{{ route('app.home') }}" wire:navigate aria-label="Oasis – zur Quelle" class="flex min-h-11 items-center text-night no-underline">
                     <x-oasis.logo :size="36" />
                 </a>
 
@@ -77,7 +78,7 @@
                     <input id="app-search" type="search" name="q" maxlength="100" placeholder="Suchen …" value="{{ request()->routeIs('search.index') ? request('q') : '' }}"
                            class="o-input min-h-11 w-full py-2">
                 </form>
-                <a href="{{ route('search.index') }}" aria-label="Suchen" class="ml-auto flex min-h-11 min-w-11 items-center justify-center rounded-full text-night lg:hidden">
+                <a href="{{ route('search.index') }}" wire:navigate aria-label="Suchen" class="ml-auto flex min-h-11 min-w-11 items-center justify-center rounded-full text-night lg:hidden">
                     <x-oasis.icon name="search" :size="22" />
                 </a>
 
@@ -86,7 +87,7 @@
                     <ul class="m-0 flex list-none justify-around p-0 lg:flex-col lg:justify-start lg:gap-1">
                         @foreach ($nav as $key => [$label, $icon, $href])
                             <li>
-                                <a href="{{ $href }}" @if ($active === $key) aria-current="page" @endif
+                                <a href="{{ $href }}" wire:navigate @if ($active === $key) aria-current="page" @endif
                                    @class([
                                        'flex min-h-12 flex-col items-center justify-center gap-1 rounded-2xl px-3 text-xs font-bold no-underline lg:flex-row lg:justify-start lg:gap-3 lg:px-4 lg:text-base',
                                        'bg-night text-on-night' => $active === $key,
@@ -104,7 +105,7 @@
                 <nav aria-label="Konto" class="hidden lg:block">
                     <ul class="m-0 flex list-none flex-col gap-1 p-0">
                         @foreach ($more as $key => [$label, $href])
-                            <li><a href="{{ $href }}" @if ($active === $key) aria-current="page" @endif
+                            <li><a href="{{ $href }}" wire:navigate @if ($active === $key) aria-current="page" @endif
                                    @class(['flex min-h-11 items-center gap-2 rounded-xl px-4 no-underline', 'font-bold text-night bg-dune' => $active === $key, 'text-ink-2' => $active !== $key])>{{ $label }}@if ($key === 'hinweise' && $hasUnread)<span class="size-2 rounded-full bg-spring" aria-hidden="true"></span><span class="sr-only">(neue Hinweise)</span>@endif</a></li>
                         @endforeach
                     </ul>
@@ -123,7 +124,7 @@
                         <nav aria-label="Konto">
                             <ul class="m-0 flex list-none flex-col gap-1 p-0">
                                 @foreach ($more as $key => [$label, $href])
-                                    <li><a href="{{ $href }}" @if ($active === $key) aria-current="page" @endif class="flex min-h-11 items-center gap-2 rounded-xl px-3 text-night no-underline">{{ $label }}@if ($key === 'hinweise' && $hasUnread)<span class="size-2 rounded-full bg-spring" aria-hidden="true"></span><span class="sr-only">(neue Hinweise)</span>@endif</a></li>
+                                    <li><a href="{{ $href }}" wire:navigate @if ($active === $key) aria-current="page" @endif class="flex min-h-11 items-center gap-2 rounded-xl px-3 text-night no-underline">{{ $label }}@if ($key === 'hinweise' && $hasUnread)<span class="size-2 rounded-full bg-spring" aria-hidden="true"></span><span class="sr-only">(neue Hinweise)</span>@endif</a></li>
                                 @endforeach
                             </ul>
                         </nav>

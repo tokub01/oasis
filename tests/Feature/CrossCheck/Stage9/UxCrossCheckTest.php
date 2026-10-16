@@ -71,7 +71,7 @@ it('FINDING B1: focus-visible indicator meets WCAG 2.1 SC 1.4.11 non-text contra
 it('FINDING S1: text on dune background meets WCAG 2.1 SC 1.4.3 minimum contrast for normal text', function () {
     // WCAG 2.1 SC 1.4.3 requires >= 4.5:1 for regular text.
     // In membership/index.blade.php, gift cards on bg-dune must use text-ink-2 rather than text-muted.
-    $membershipBlade = File::get(resource_path('views/app/membership/index.blade.php'));
+    $membershipBlade = File::get(resource_path('views/livewire/membership/overview.blade.php'));
     expect($membershipBlade)->toMatch('/bg-dune[\s\S]*?text-ink-2[\s\S]*?12 Monate für/');
 
     $css = File::get(resource_path('css/oasis.css'));
@@ -125,16 +125,16 @@ it('FINDING S4: post deletion and author blocking provide confirmation safeguard
     $authorHtml = $authorResponse->getContent();
 
     // Must not use CSP-violating inline handlers
-    expect($authorHtml)->not->toMatch('/action=["\'][^"\']*\/tropfen\/'.$post->id.'["\'][^>]*onclick=/i');
-    expect($authorHtml)->toMatch('/<details[^>]*>[\s\S]*?Wirklich löschen\?[\s\S]*?action=["\'][^"\']*\/tropfen\/'.$post->id.'["\'][\s\S]*?Löschen bestätigen/i');
+    expect($authorHtml)->not->toMatch('/wire:submit=["\']deletePost\('.$post->id.'\)["\'][^>]*onclick=/i');
+    expect($authorHtml)->toMatch('/<details[^>]*>[\s\S]*?Wirklich löschen\?[\s\S]*?wire:submit=["\']deletePost\('.$post->id.'\)["\'][\s\S]*?Löschen bestätigen/i');
 
     // Viewer sees two-step confirmation details element for blocking
     $viewerResponse = $this->actingAs($viewer)->get(route('network.posts.show', $post));
     $viewerResponse->assertOk();
     $viewerHtml = $viewerResponse->getContent();
 
-    expect($viewerHtml)->not->toMatch('/action=["\'][^"\']*\/sicherheit\/block\/'.$author->id.'["\'][^>]*onclick=/i');
-    expect($viewerHtml)->toMatch('/<details[^>]*>[\s\S]*?Wirklich blockieren\?[\s\S]*?action=["\'][^"\']*\/sicherheit\/block\/'.$author->id.'["\'][\s\S]*?Blockieren bestätigen/i');
+    expect($viewerHtml)->not->toMatch('/wire:submit=["\']blockUser\('.$author->id.'\)["\'][^>]*onclick=/i');
+    expect($viewerHtml)->toMatch('/<details[^>]*>[\s\S]*?Wirklich blockieren\?[\s\S]*?wire:submit=["\']blockUser\('.$author->id.'\)["\'][\s\S]*?Blockieren bestätigen/i');
 });
 
 it('FINDING S5: invitation links provide progressive enhancement copy action', function () {

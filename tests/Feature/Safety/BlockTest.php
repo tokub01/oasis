@@ -9,6 +9,7 @@ use App\Queries\Network\PostFeed;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Tests\Support\ChatFixtures;
+use Tests\Support\NetworkActions;
 use Tests\Support\NetworkFixtures as Fixtures;
 
 it('blocks an account and removes existing follows in both directions', function (): void {
@@ -139,8 +140,7 @@ it('prevents interacting (reacting, replying, carrying) on posts of blocked acco
     expect(Gate::forUser($alice)->allows('interact', $bobPost))->toBeFalse();
 
     // Trying to react -> 403
-    $this->actingAs($alice)
-        ->post(route('network.reactions.store', $bobPost))
+    NetworkActions::post('react', $bobPost->id, $alice)
         ->assertForbidden();
 
     // Trying to carry -> 403
@@ -148,13 +148,12 @@ it('prevents interacting (reacting, replying, carrying) on posts of blocked acco
         ->get(route('network.posts.carry', $bobPost))
         ->assertForbidden();
 
-    // Trying to reply via PostRequest -> 403
-    $this->actingAs($alice)
-        ->post(route('network.posts.store'), [
-            'body' => 'Unerwünschte Antwort',
-            'visibility' => 'public',
-            'reply_to' => $bobPost->id,
-        ])
+    // Trying to reply via the Livewire composer -> 403
+    NetworkActions::publish([
+        'body' => 'Unerwünschte Antwort',
+        'visibility' => 'public',
+        'reply_to' => $bobPost->id,
+    ], $alice)
         ->assertForbidden();
 });
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Membership\Checkout;
 use App\Models\GiftMembership;
 use App\Models\User;
 use App\Services\Membership\MollieMembershipService;
@@ -10,11 +11,13 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
+use Livewire\Livewire;
 use Mollie\Api\Fake\MockResponse;
 use Mollie\Api\Http\Requests\GetPaymentRequest;
 use Mollie\Laravel\Facades\Mollie;
 use Tests\Support\ChatFixtures as Chat;
 use Tests\Support\MollieFixtures;
+use Tests\Support\NetworkActions;
 use Tests\Support\NetworkFixtures as Network;
 
 beforeEach(function () {
@@ -60,10 +63,10 @@ it('makes existing oasis posts private when a host switches the oasis to members
     $oasis = Network::oasis($host);
     $post = Network::post($host, ['oasis_id' => $oasis->id, 'body' => 'stage9 formerly public content']);
     $this->get(route('network.posts.show', $post))->assertOk();
-    $this->actingAs($host)->put(route('network.oases.update', $oasis), [
+    NetworkActions::saveOasis([
         'name' => $oasis->name, 'description' => $oasis->description, 'house_rules' => $oasis->house_rules,
         'visibility' => 'members', 'color' => 'sun',
-    ])->assertRedirect();
+    ], $oasis, $host)->assertRedirect();
     expect($oasis->fresh()->visibility->value)->toBe('members');
     Auth::logout();
     $this->get(route('network.oases.show', $oasis))->assertNotFound();
@@ -73,7 +76,7 @@ it('makes existing oasis posts private when a host switches the oasis to members
 it('hides blocked accounts from exact username chat discovery', function () {
     [$alpha] = Chat::user();
     [$beta] = Chat::user();
-    $this->actingAs($alpha)->post(route('safety.block.store', $beta))->assertRedirect();
+    NetworkActions::post('blockUser', $beta->id, $alpha)->assertHasNoErrors();
     $this->actingAs($alpha->fresh())->getJson(route('chat.api.users.index', ['username' => $beta->username]))
         ->assertOk()->assertJsonCount(0, 'data');
 });
@@ -95,9 +98,12 @@ it('does not copy sensitive provider exception text into checkout logs', functio
     $service->shouldReceive('createSubscriptionCheckout')->once()->andThrow(new RuntimeException($marker));
     $this->app->instance(MollieMembershipService::class, $service);
     Log::spy();
-    $this->actingAs(User::factory()->create())->post('/mitglied-werden/checkout', [
-        'stufe' => 'oase', 'rhythmus' => 'monat', 'zahlart' => 'karte',
-    ])->assertRedirect();
+    Livewire::actingAs(User::factory()->create())
+        ->test(Checkout::class)
+        ->set('stufe', 'oase')
+        ->set('rhythmus', 'monat')
+        ->set('zahlart', 'karte')
+        ->call('checkout');
     Log::shouldHaveReceived('error')->once()->with('Mollie checkout initiation failed.', [
         'exception_class' => RuntimeException::class,
     ]);
@@ -122,10 +128,10 @@ it('denies guest access to existing images after their oasis becomes members onl
     Storage::disk('local')->put('stage9-test.webp', 'private image sentinel');
     $image = $post->images()->create(['path' => 'stage9-test.webp', 'alt' => 'Private image',
         'width' => 1, 'height' => 1, 'position' => 0]);
-    $this->actingAs($host)->put(route('network.oases.update', $oasis), [
+    NetworkActions::saveOasis([
         'name' => $oasis->name, 'description' => $oasis->description, 'house_rules' => $oasis->house_rules,
         'visibility' => 'members', 'color' => 'sun',
-    ])->assertRedirect();
+    ], $oasis, $host)->assertRedirect();
     Auth::logout();
     $response = $this->get(route('network.images.show', [$post, $image]));
     $response->assertNotFound();

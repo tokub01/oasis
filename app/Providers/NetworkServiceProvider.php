@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use App\Actions\Network\ManageInvitations;
-use App\Http\Controllers\Network\InvitationController;
+use App\Livewire\Network\InvitationLanding;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -16,14 +16,12 @@ class NetworkServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        // Generous for people, tight enough to stop scripted flooding.
-        RateLimiter::for('network-posts', fn (Request $request) => Limit::perMinute(10)->by('network-posts:'.$request->user()?->id));
         // Search runs LIKE/REGEXP over Tropfen: bounded per account (guests per IP) so it cannot be used to load the DB.
         RateLimiter::for('search', fn (Request $request) => Limit::perMinute(30)->by('search:'.($request->user()?->id ?? $request->ip())));
 
-        // InvitationController::show remembers the token in the session; the new account accepts it on sign-up.
+        // InvitationLanding::mount remembers the token in the session; the new account accepts it on sign-up.
         Event::listen(Registered::class, function (Registered $event): void {
-            $token = session()->pull(InvitationController::SESSION_KEY);
+            $token = session()->pull(InvitationLanding::SESSION_KEY);
             if (is_string($token)) {
                 app(ManageInvitations::class)->accept($token, $event->user);
             }

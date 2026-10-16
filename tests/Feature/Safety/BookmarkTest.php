@@ -5,9 +5,11 @@ use App\Actions\Network\ManageOasis;
 use App\Actions\Safety\ManageBlock;
 use App\Actions\Safety\ManageBookmark;
 use App\Actions\Safety\ManageMute;
+use App\Livewire\Safety\Bookmarks;
 use App\Models\Bookmark;
 use App\Models\Post;
 use App\Queries\Safety\BookmarkList;
+use Livewire\Livewire;
 use Tests\Support\NetworkFixtures as Fixtures;
 
 it('bookmarks a Tropfen and removes the bookmark', function (): void {
@@ -124,7 +126,8 @@ it('aborts with 404 when attempting to bookmark an unreadable or blocked post', 
 
     app(ManageBlock::class)->block($alice, $bob);
 
-    $this->actingAs($alice)
-        ->post(route('safety.bookmarks.store', $bobPost))
+    Livewire::actingAs($alice)
+        ->test(Bookmarks::class)
+        ->call('bookmark', $bobPost->id)
         ->assertNotFound();
 });

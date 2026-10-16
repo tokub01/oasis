@@ -169,6 +169,18 @@
             </form>
         </section>
 
+        {{-- Only the purchaser sees their paid gift codes; no JavaScript required. --}}
+        @if ($purchasedGifts->isNotEmpty())
+            <section aria-labelledby="geschenke-titel" class="{{ $card }}">
+                <h2 id="geschenke-titel" class="{{ $h2 }}">Deine gekauften Gutscheine</h2>
+                <ul>
+                    @foreach ($purchasedGifts as $gift)
+                        <li><code>{{ $gift->code }}</code> · {{ $tiers[$gift->tier]['name'] ?? $gift->tier }} · {{ $gift->isRedeemed() ? 'Bereits eingelöst' : 'Zum Weitergeben' }}</li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
+
         {{-- Gift purchase card --}}
         <section aria-labelledby="verschenken-titel" class="{{ $card }}">
             <h2 id="verschenken-titel" class="{{ $h2 }}">Mitgliedschaft verschenken</h2>

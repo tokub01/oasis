@@ -15,8 +15,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
-use Laravel\Cashier\Billable;
-use Laravel\Cashier\Subscription;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
 /**
@@ -32,7 +30,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property Carbon|null $trial_reminder_sent_at
  * @property Carbon|null $founding_member_at
  * @property bool $founding_price_guarantee
- * @property string|null $stripe_id
+ * @property string|null $mollie_customer_id
  * @property string|null $pm_type
  * @property string|null $pm_last_four
  * @property string $email
@@ -53,16 +51,13 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
     'trial_reminder_sent_at',
     'founding_member_at',
     'founding_price_guarantee',
-    'stripe_id',
+    'mollie_customer_id',
     'pm_type',
     'pm_last_four',
 ])]
 #[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 class User extends Authenticatable implements MustVerifyEmail
 {
-    // Stage 1 & 5: Stripe payments and subscription management.
-    use Billable;
-
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
@@ -156,6 +151,22 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Recurring membership agreements.
+     *
+     * @return HasMany<Subscription, $this>
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class)->latest('id');
+    }
+
+    /** Whether a Mollie customer has been created for this account. */
+    public function hasMollieId(): bool
+    {
+        return $this->mollie_customer_id !== null;
+    }
+
+    /**
      * Get a subscription instance by type.
      * When type is null, returns the most recent subscription matching any Oasis tier or 'default'.
      */
@@ -171,7 +182,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Whether the account currently has an active, paid Stripe subscription (including grace periods).
+     * Whether the account currently has an active, paid Mollie subscription (including grace periods).
      */
     public function hasActiveMembership(): bool
     {
@@ -209,18 +220,6 @@ class User extends Authenticatable implements MustVerifyEmail
                 return $subscription->type;
             }
 
-            // Check subscription items metadata/price
-            $item = $subscription->items->first();
-            if ($item) {
-                foreach (array_keys(config('oasis.tiers', [])) as $tierKey) {
-                    if (str_contains(strtolower($item->stripe_price ?? ''), $tierKey)
-                        || str_contains(strtolower($item->stripe_product ?? ''), $tierKey)) {
-                        return $tierKey;
-                    }
-                }
-            }
-
-            // Default fallback if active subscription exists without explicit tier
             return 'oase';
         }
 

@@ -21,7 +21,7 @@ use Illuminate\Support\Str;
  * @property string $currency
  * @property int|null $purchaser_user_id
  * @property string|null $purchaser_email
- * @property string|null $stripe_checkout_session_id
+ * @property string|null $mollie_payment_id
  * @property int|null $redeemed_by_user_id
  * @property Carbon|null $redeemed_at
  * @property Carbon|null $expires_at
@@ -36,7 +36,7 @@ use Illuminate\Support\Str;
     'currency',
     'purchaser_user_id',
     'purchaser_email',
-    'stripe_checkout_session_id',
+    'mollie_payment_id',
     'redeemed_by_user_id',
     'redeemed_at',
     'expires_at',

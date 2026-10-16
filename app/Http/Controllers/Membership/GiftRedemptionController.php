@@ -4,11 +4,10 @@ namespace App\Http\Controllers\Membership;
 
 use App\Exceptions\Membership\MembershipDomainException;
 use App\Http\Controllers\Controller;
-use App\Services\Membership\StripeMembershipService;
+use App\Services\Membership\MollieMembershipService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Stripe\Exception\ApiErrorException;
 
 /**
  * Controller for redeeming a gift membership voucher on the user's account.
@@ -18,7 +17,7 @@ class GiftRedemptionController extends Controller
     /**
      * Redeem a gift code.
      */
-    public function redeem(Request $request, StripeMembershipService $service): RedirectResponse
+    public function redeem(Request $request, MollieMembershipService $service): RedirectResponse
     {
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:64'],
@@ -40,7 +39,6 @@ class GiftRedemptionController extends Controller
         } catch (\Throwable $e) {
             Log::error('Gift redemption error.', [
                 'exception_class' => $e::class,
-                'provider_code' => $e instanceof ApiErrorException ? $e->getStripeCode() : null,
             ]);
 
             return redirect()->route('app.membership')

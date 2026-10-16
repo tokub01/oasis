@@ -9,14 +9,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('gift_memberships', function (Blueprint $table): void {
-            $table->unique('stripe_checkout_session_id');
+            $table->unique('mollie_payment_id');
         });
     }
 
     public function down(): void
     {
         Schema::table('gift_memberships', function (Blueprint $table): void {
-            $table->dropUnique(['stripe_checkout_session_id']);
+            $table->dropUnique(['mollie_payment_id']);
         });
     }
 };

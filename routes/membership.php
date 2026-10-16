@@ -4,9 +4,10 @@ use App\Http\Controllers\Membership\CancellationController;
 use App\Http\Controllers\Membership\CheckoutController;
 use App\Http\Controllers\Membership\GiftPurchaseController;
 use App\Http\Controllers\Membership\GiftRedemptionController;
+use App\Http\Controllers\Membership\InvoiceController;
 use App\Http\Controllers\Membership\MembershipController;
+use App\Http\Controllers\Membership\MollieWebhookController;
 use App\Http\Controllers\Membership\PortalController;
-use App\Http\Controllers\Membership\StripeWebhookController;
 use App\Http\Controllers\Membership\WithdrawalController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +26,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/app/mitgliedschaft', [MembershipController::class, 'index'])->name('app.membership');
     Route::get('/app/mitgliedschaft/portal', [PortalController::class, 'index'])->name('app.membership.portal');
 
+    Route::post('/app/mitgliedschaft/portal', [PortalController::class, 'update'])->name('app.membership.portal.update');
+
+    Route::get('/app/mitgliedschaft/rechnungen/{payment}', [InvoiceController::class, 'show'])->whereNumber('payment')->name('app.membership.invoice');
+
     // § 312k BGB Cancellation Flow
     Route::get('/app/mitgliedschaft/kuendigen', [CancellationController::class, 'confirm'])->name('app.membership.cancel.confirm');
     Route::post('/app/mitgliedschaft/kuendigen', [CancellationController::class, 'cancel'])->name('app.membership.cancel');
@@ -38,5 +43,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/app/mitgliedschaft/geschenke/kaufen', [GiftPurchaseController::class, 'checkout'])->name('app.membership.gift.checkout');
 });
 
-// Custom Stripe Webhook route with signature verification
-Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook'])->name('cashier.webhook');
+// Mollie notifications verified through the authenticated API
+Route::post('/mollie/webhook', [MollieWebhookController::class, 'handleWebhook'])->name('mollie.webhook');

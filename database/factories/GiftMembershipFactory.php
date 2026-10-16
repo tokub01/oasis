@@ -28,7 +28,7 @@ class GiftMembershipFactory extends Factory
             'currency' => 'eur',
             'purchaser_user_id' => User::factory(),
             'purchaser_email' => fake()->safeEmail(),
-            'stripe_checkout_session_id' => 'cs_test_'.fake()->uuid(),
+            'mollie_payment_id' => 'cs_test_'.fake()->uuid(),
             'redeemed_by_user_id' => null,
             'redeemed_at' => null,
             'expires_at' => null,

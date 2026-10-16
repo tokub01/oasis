@@ -2,8 +2,8 @@
 
 use App\Enums\Role;
 use App\Models\GiftMembership;
+use App\Models\Subscription;
 use App\Models\User;
-use Laravel\Cashier\Subscription;
 
 test('retention prune command skips deletion by default when config switch is disabled', function () {
     config()->set('oasis.retention.auto_delete_expired', false);
@@ -51,9 +51,9 @@ test('retention prune command deletes expired accounts past retention days when 
     Subscription::create([
         'user_id' => $userD->id,
         'type' => 'oase',
-        'stripe_id' => 'sub_userD',
-        'stripe_status' => 'active',
-        'stripe_price' => 'price_oase',
+        'mollie_id' => 'sub_userD',
+        'status' => 'active', 'paid_until' => now()->addMonth(),
+
     ]);
 
     // User E: expired trial but active gift -> should be kept

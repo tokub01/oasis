@@ -4,12 +4,11 @@ namespace App\Http\Controllers\Membership;
 
 use App\Exceptions\Membership\MembershipDomainException;
 use App\Http\Controllers\Controller;
-use App\Services\Membership\StripeMembershipService;
+use App\Services\Membership\MollieMembershipService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
-use Stripe\Exception\ApiErrorException;
 
 /**
  * Controller for statutory 14-day contract withdrawals (§ 355, 356 BGB).
@@ -47,7 +46,7 @@ class WithdrawalController extends Controller
     /**
      * Process statutory withdrawal.
      */
-    public function withdraw(Request $request, StripeMembershipService $service): RedirectResponse
+    public function withdraw(Request $request, MollieMembershipService $service): RedirectResponse
     {
         $user = $request->user();
 
@@ -62,7 +61,6 @@ class WithdrawalController extends Controller
         } catch (\Throwable $e) {
             Log::error('Withdrawal error.', [
                 'exception_class' => $e::class,
-                'provider_code' => $e instanceof ApiErrorException ? $e->getStripeCode() : null,
             ]);
 
             return redirect()->route('app.membership')

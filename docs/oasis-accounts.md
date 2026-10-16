@@ -102,4 +102,4 @@ The stage handoff in `docs/oasis-stage0-backend-report.md` records actual check 
   images under `bilder/`. Allowlisted fields only; encrypted chat messages are not readable by the server and not
   included. Available in read-only mode, as the AGB promise.
 - **Deletion** (`App\Actions\Account\DeleteAccount`): refused with a hint while a paid membership is running and
-  not cancelled (Stripe would keep charging); oases are handed over or closed; images are deleted from the media disk.
+  not cancelled (Mollie would keep charging); oases are handed over or closed; images are deleted from the media disk.

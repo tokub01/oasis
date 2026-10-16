@@ -6,19 +6,36 @@ use App\Models\User;
 /* Stage 7: security headers and the nonce-based Content-Security-Policy on public, app and staff pages. */
 
 it('sends a strict CSP and security headers on public pages', function () {
+    config([
+        'reverb.apps.apps.0.options.host' => 'ws.get-oasis.com',
+        'reverb.apps.apps.0.options.port' => 443,
+        'reverb.apps.apps.0.options.scheme' => 'https',
+    ]);
     $response = $this->get(route('oasis.home'))->assertOk();
     $csp = $response->headers->get('Content-Security-Policy');
 
     expect($csp)->toContain("default-src 'self'")
         ->toContain("object-src 'none'")
         ->toContain("frame-ancestors 'none'")
-        ->toContain('form-action \'self\' https://checkout.stripe.com https://billing.stripe.com')
-        ->toContain('wss://ws-eu.pusher.com')
+        ->toContain("form-action 'self' https://www.mollie.com https://checkout.mollie.com")
+        ->toContain("connect-src 'self' wss://ws.get-oasis.com")
+        ->not->toContain('pusher.com')
         ->not->toContain("'unsafe-eval'");
     $response->assertHeader('X-Frame-Options', 'DENY')
         ->assertHeader('X-Content-Type-Options', 'nosniff')
         ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     $response->assertHeaderMissing('Strict-Transport-Security');
+});
+
+it('includes non-default Reverb port in CSP connect-src during local development', function () {
+    config([
+        'reverb.apps.apps.0.options.host' => 'localhost',
+        'reverb.apps.apps.0.options.port' => 8080,
+        'reverb.apps.apps.0.options.scheme' => 'http',
+    ]);
+    $csp = $this->get(route('oasis.home'))->assertOk()->headers->get('Content-Security-Policy');
+
+    expect($csp)->toContain("connect-src 'self' ws://localhost:8080");
 });
 
 it('puts the per-request nonce on every script tag and into the policy', function () {

@@ -1,11 +1,10 @@
 <?php
 
 use App\Mail\Membership\MembershipCancelledMail;
+use App\Models\Subscription;
 use App\Models\User;
+use App\Services\Membership\MollieGateway;
 use Illuminate\Support\Facades\Mail;
-use Laravel\Cashier\Subscription;
-use Stripe\Service\SubscriptionService;
-use Stripe\StripeClient;
 
 test('cancellation confirmation page requires an active subscription', function () {
     $user = User::factory()->create();
@@ -18,16 +17,15 @@ test('cancellation confirmation page requires an active subscription', function 
 
 test('cancellation confirmation renders § 312k BGB compliant details and button', function () {
     $user = User::factory()->create([
-        'stripe_id' => 'cus_test123',
+        'mollie_customer_id' => 'cus_test123',
     ]);
 
     $subscription = Subscription::create([
         'user_id' => $user->id,
         'type' => 'oase',
-        'stripe_id' => 'sub_test123',
-        'stripe_status' => 'active',
-        'stripe_price' => 'price_oase_monthly',
-        'quantity' => 1,
+        'mollie_id' => 'sub_test123',
+        'status' => 'active', 'paid_until' => now()->addMonth(),
+
         'ends_at' => null,
     ]);
 
@@ -44,34 +42,21 @@ test('submitting cancellation cancels subscription and sends confirmation email 
     Mail::fake();
 
     $user = User::factory()->create([
-        'stripe_id' => 'cus_test123',
+        'mollie_customer_id' => 'cus_test123',
     ]);
 
     $subscription = Subscription::create([
         'user_id' => $user->id,
         'type' => 'oase',
-        'stripe_id' => 'sub_test123',
-        'stripe_status' => 'active',
-        'stripe_price' => 'price_oase_monthly',
-        'quantity' => 1,
+        'mollie_id' => 'sub_test123',
+        'status' => 'active', 'paid_until' => now()->addMonth(),
+
         'ends_at' => null,
     ]);
 
-    $stripeMock = Mockery::mock(StripeClient::class);
-    $subService = Mockery::mock(SubscriptionService::class);
-    $stripeMock->subscriptions = $subService;
-    $stripeMock->shouldReceive('__get')->with('subscriptions')->andReturn($subService);
-
-    $subService->shouldReceive('update')
-        ->once()
-        ->with('sub_test123', ['cancel_at_period_end' => true])
-        ->andReturn((object) [
-            'status' => 'active',
-            'current_period_end' => now()->addDays(20)->timestamp,
-            'cancel_at' => null,
-        ]);
-
-    $this->app->bind(StripeClient::class, fn () => $stripeMock);
+    $gateway = Mockery::mock(MollieGateway::class);
+    $gateway->shouldReceive('cancel')->once()->with('cus_test123', 'sub_test123');
+    $this->app->instance(MollieGateway::class, $gateway);
 
     $this->actingAs($user)
         ->post(route('app.membership.cancel'))

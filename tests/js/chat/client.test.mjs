@@ -234,3 +234,21 @@ test('rememberConversationKey refuses and wipes keys for a locked or newer sessi
     assert.equal(session.rememberConversationKey('42', 1, key), false);
     assert.ok(key.every((byte) => byte === 0));
 });
+
+test('Realtime stays disabled without a key and subscribes via Reverb when configured', async () => {
+    const { Realtime } = await import('../../../resources/js/chat/client/realtime.js');
+    const disabled = new Realtime({ key: '', host: 'localhost', port: '8080', scheme: 'http', csrfToken: 'csrf-1' });
+    assert.equal(disabled.enabled, false);
+    disabled.watch('42', { onMessage: () => {}, onKeyRotated: () => {} });
+    assert.equal(disabled.current, null);
+
+    const enabled = new Realtime({ key: 'reverb-key', host: 'ws.get-oasis.com', port: '8080', scheme: 'https', csrfToken: 'csrf-1' });
+    assert.equal(enabled.enabled, true);
+    assert.equal(enabled.echo.options.broadcaster, 'reverb');
+    assert.equal(enabled.echo.options.wsHost, 'ws.get-oasis.com');
+    assert.equal(enabled.echo.options.wsPort, 8080);
+    assert.equal(enabled.echo.options.wssPort, 8080);
+    assert.equal(enabled.echo.options.forceTLS, true);
+    assert.deepEqual(enabled.echo.options.enabledTransports, ['ws', 'wss']);
+    enabled.echo.disconnect();
+});

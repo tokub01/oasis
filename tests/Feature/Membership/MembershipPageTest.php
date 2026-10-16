@@ -1,8 +1,9 @@
 <?php
 
 use App\Models\GiftMembership;
+use App\Models\Subscription;
 use App\Models\User;
-use App\Services\Membership\StripeMembershipService;
+use Illuminate\Support\Carbon;
 
 test('membership page requires authentication and email verification', function () {
     $this->get(route('app.membership'))->assertRedirect(route('login'));
@@ -77,32 +78,28 @@ test('app navigation links to membership page with heart icon', function () {
         ->assertSee(route('app.membership'));
 });
 
-test('portal redirects to membership page if user has no stripe id', function () {
-    $user = User::factory()->create([
-        'stripe_id' => null,
-    ]);
-
-    $this->actingAs($user)
-        ->get(route('app.membership.portal'))
-        ->assertRedirect(route('app.membership'))
-        ->assertSessionHas('status', 'Du hast bisher keine Zahlungsdaten bei Stripe hinterlegt.');
+test('billing management renders without a provider customer', function () {
+    $this->actingAs(User::factory()->create())->get(route('app.membership.portal'))
+        ->assertOk()->assertSee('Noch keine bezahlten Beiträge vorhanden.');
 });
 
-test('portal redirects to billing portal url when user has stripe id', function () {
-    $user = User::factory()->create([
-        'stripe_id' => 'cus_test123',
-    ]);
-
-    $serviceMock = Mockery::mock(StripeMembershipService::class);
-    $serviceMock->shouldReceive('getBillingPortalUrl')
-        ->once()
-        ->with(Mockery::on(fn ($u) => $u->id === $user->id))
-        ->andReturn('https://billing.stripe.com/p/session/test123');
-
-    $this->app->instance(StripeMembershipService::class, $serviceMock);
-
-    $response = $this->actingAs($user)
-        ->get(route('app.membership.portal'));
-
-    $response->assertRedirect('https://billing.stripe.com/p/session/test123');
+test('billing management offers a refundable mandate update through a protected form', function () {
+    $this->actingAs(User::factory()->create(['mollie_customer_id' => 'cst_test123']))
+        ->get(route('app.membership.portal'))->assertOk()->assertSee('Zahlungsmittel ändern')->assertSee('1 €');
 });
+
+test('purchased voucher codes are shown only in the purchasers membership area', function () {
+    $buyer = User::factory()->create();
+    $gift = GiftMembership::factory()->create(['purchaser_user_id' => $buyer->id]);
+    $this->actingAs($buyer)->get(route('app.membership'))->assertOk()->assertSee($gift->code);
+    $this->actingAs(User::factory()->create())->get(route('app.membership'))->assertOk()->assertDontSee($gift->code);
+});
+
+test('membership overview offers withdrawal through the end of day fourteen', function (int $days, bool $eligible) {
+    $this->travelTo(Carbon::parse('2026-10-16 16:00:00 UTC'));
+    $user = User::factory()->create();
+    Subscription::create(['user_id' => $user->id, 'type' => 'oase', 'status' => 'active',
+        'paid_until' => now()->addMonth(), 'created_at' => now()->subDays($days)->startOfDay()->addHours(10)]);
+
+    $this->actingAs($user)->get(route('app.membership'))->assertOk()->assertViewHas('isEligibleForWithdrawal', $eligible);
+})->with([[14, true], [15, false]]);

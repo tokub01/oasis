@@ -3,9 +3,9 @@
 namespace App\Queries\Membership;
 
 use App\Models\GiftMembership;
+use App\Models\Subscription;
 use App\Models\User;
 use Carbon\CarbonInterface;
-use Laravel\Cashier\Subscription;
 
 /**
  * Read-only aggregate statistics queries for Stage 6 admin module.
@@ -32,7 +32,7 @@ class MembershipStats
         return User::query()
             ->where('trial_ends_at', '>', now())
             ->whereDoesntHave('subscriptions', function ($query) {
-                $query->whereIn('stripe_status', ['active', 'trialing']);
+                $query->whereIn('status', ['active', 'canceled'])->where('paid_until', '>', now())->where(fn ($query) => $query->whereNull('ends_at')->orWhere('ends_at', '>', now()));
             })
             ->whereDoesntHave('giftMemberships', function ($query) {
                 $query->where('expires_at', '>', now());
@@ -47,7 +47,7 @@ class MembershipStats
     {
         $subscribedCount = User::query()
             ->whereHas('subscriptions', function ($query) use ($from, $to) {
-                $query->whereBetween('created_at', [$from, $to]);
+                $query->whereBetween('created_at', [$from, $to])->whereNotNull('paid_until');
             })
             ->count();
 
@@ -66,7 +66,7 @@ class MembershipStats
         return User::query()
             ->whereBetween('trial_ends_at', [$from, $to])
             ->whereDoesntHave('subscriptions', function ($query) {
-                $query->whereIn('stripe_status', ['active', 'trialing']);
+                $query->whereIn('status', ['active', 'canceled'])->where('paid_until', '>', now())->where(fn ($query) => $query->whereNull('ends_at')->orWhere('ends_at', '>', now()));
             })
             ->whereDoesntHave('giftMemberships', function ($query) {
                 $query->where('expires_at', '>', now());
@@ -87,11 +87,12 @@ class MembershipStats
             'maezen' => [],
         ]));
 
+        /** @var array<string, int> $result */
         $result = array_fill_keys($tiers, 0);
 
         // Subscriptions
         $activeSubs = Subscription::query()
-            ->whereIn('stripe_status', ['active', 'trialing'])
+            ->whereIn('status', ['active', 'canceled'])->where('paid_until', '>', now())->where(fn ($query) => $query->whereNull('ends_at')->orWhere('ends_at', '>', now()))
             ->get();
 
         foreach ($activeSubs as $sub) {
@@ -121,7 +122,7 @@ class MembershipStats
     public function activeMembersCount(): int
     {
         $subCount = Subscription::query()
-            ->whereIn('stripe_status', ['active', 'trialing'])
+            ->whereIn('status', ['active', 'canceled'])->where('paid_until', '>', now())->where(fn ($query) => $query->whereNull('ends_at')->orWhere('ends_at', '>', now()))
             ->distinct('user_id')
             ->count('user_id');
 
@@ -138,52 +139,10 @@ class MembershipStats
      */
     public function monthlyRecurringRevenue(): float
     {
-        $subscriptions = Subscription::query()
-            ->whereIn('stripe_status', ['active', 'trialing'])
-            ->with('items')
-            ->get();
-
-        $tiers = config('oasis.tiers', []);
-        $totalMrr = 0.0;
-
-        foreach ($subscriptions as $sub) {
-            $tierKey = in_array($sub->type, array_keys($tiers), true) ? $sub->type : 'oase';
-            $tierData = $tiers[$tierKey] ?? ['monthly' => 5];
-
-            // Check if monthly or yearly from price lookup or items
-            $isYearly = false;
-            $customMonthly = null;
-
-            foreach ($sub->items as $item) {
-                if (str_contains(strtolower($item->stripe_price ?? ''), 'yearly')
-                    || str_contains(strtolower($item->stripe_price ?? ''), 'jahr')) {
-                    $isYearly = true;
-                }
-
-                // Check for custom amount in lookup key e.g. oasis_maezen_monthly_25
-                if (preg_match('/oasis_maezen_(monthly|yearly)_(\d+)/', $item->stripe_price ?? '', $matches)) {
-                    $customMonthly = (float) $matches[2];
-                    if ($matches[1] === 'yearly') {
-                        $isYearly = true;
-                    }
-                }
-            }
-
-            if ($customMonthly !== null) {
-                $totalMrr += $isYearly ? ($customMonthly / 12) : $customMonthly;
-            } else {
-                $monthly = (float) ($tierData['monthly'] ?? 5);
-                if ($isYearly) {
-                    $yearMonths = (float) config('oasis.year_months', 10);
-                    $yearlyPrice = $monthly * $yearMonths;
-                    $totalMrr += ($yearlyPrice / 12);
-                } else {
-                    $totalMrr += $monthly;
-                }
-            }
-        }
-
-        return round($totalMrr, 2);
+        return round(Subscription::query()->where('status', 'active')->whereNull('ends_at')
+            ->where('paid_until', '>', now())->get()->sum(
+                fn (Subscription $subscription) => $subscription->amount / 100 / ($subscription->rhythm === 'jahr' ? 12 : 1)
+            ), 2);
     }
 
     /**

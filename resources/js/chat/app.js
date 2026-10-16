@@ -49,8 +49,10 @@ function start(root) {
         session: new ChatSession(root.dataset.userId),
         clock: new ServerClock(),
         realtime: new Realtime({
-            key: import.meta.env.VITE_PUSHER_APP_KEY,
-            cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+            key: import.meta.env.VITE_REVERB_APP_KEY,
+            host: import.meta.env.VITE_REVERB_HOST,
+            port: import.meta.env.VITE_REVERB_PORT,
+            scheme: import.meta.env.VITE_REVERB_SCHEME,
             csrfToken,
         }),
         /** False for read-only accounts (trial ended, no membership): reading only, no new chats or sending. */

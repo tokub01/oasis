@@ -2,50 +2,44 @@
 
 use App\Models\GiftMembership;
 use App\Models\User;
-use App\Services\Membership\StripeMembershipService;
+use App\Services\Membership\MollieMembershipService;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
-use Laravel\Cashier\Events\WebhookHandled;
-use Laravel\Cashier\Events\WebhookReceived;
+use Mollie\Api\Fake\MockResponse;
+use Mollie\Api\Http\Requests\GetPaymentRequest;
+use Mollie\Laravel\Facades\Mollie;
 use Tests\Support\ChatFixtures as Chat;
+use Tests\Support\MollieFixtures;
 use Tests\Support\NetworkFixtures as Network;
 
 beforeEach(function () {
     $this->withoutVite();
     Mail::fake();
     Notification::fake();
-    Event::fake([WebhookReceived::class, WebhookHandled::class]);
-    config()->set('cashier.webhook.secret', 'whsec_stage9_local_test_only');
 });
 
 function stage9GiftEvent(User $buyer, string $status = 'paid'): array
 {
-    return ['id' => 'evt_stage9_same_event', 'type' => 'checkout.session.completed', 'data' => ['object' => [
-        'id' => 'cs_stage9_same_session', 'mode' => 'payment', 'payment_status' => $status,
-        'metadata' => ['type' => 'gift_membership', 'purchaser_id' => (string) $buyer->id,
-            'purchaser_email' => $buyer->email, 'tier' => 'oase', 'months' => '12', 'amount' => '5000'],
-    ]]];
+    $intent = MollieFixtures::intent($buyer, 'gift', 'tr_stage9same');
+
+    return MollieFixtures::resource($intent, $status === 'unpaid' ? 'pending' : $status);
 }
 
 function stage9Webhook(array $event, bool $valid = true): TestResponse
 {
-    $body = json_encode($event, JSON_THROW_ON_ERROR);
-    $timestamp = time();
-    $signature = hash_hmac('sha256', $timestamp.'.'.$body,
-        $valid ? config('cashier.webhook.secret') : 'incorrect_local_test_secret');
+    Mollie::fake([GetPaymentRequest::class => $valid
+        ? MockResponse::ok($event) : MockResponse::notFound()]);
 
-    return test()->call('POST', route('cashier.webhook'), [], [], [],
-        ['HTTP_STRIPE_SIGNATURE' => 't='.$timestamp.',v1='.$signature, 'CONTENT_TYPE' => 'application/json'], $body);
+    return test()->postJson(route('mollie.webhook'), ['id' => $event['id'], 'status' => 'paid']);
 }
 
-it('rejects a forged Stripe signature without creating a gift', function () {
-    stage9Webhook(stage9GiftEvent(User::factory()->create()), false)->assertForbidden();
+it('rejects a forged Mollie payment identifier without creating a gift', function () {
+    stage9Webhook(stage9GiftEvent(User::factory()->create()), false)->assertStatus(503);
     expect(GiftMembership::count())->toBe(0);
 });
 
@@ -54,7 +48,7 @@ it('does not issue a redeemable gift before delayed payment succeeds', function 
     expect(GiftMembership::count())->toBe(0);
 });
 
-it('issues only one gift when Stripe retries the same paid event', function () {
+it('issues only one gift when Mollie retries the same paid event', function () {
     $event = stage9GiftEvent(User::factory()->create());
     stage9Webhook($event)->assertOk();
     stage9Webhook($event)->assertOk();
@@ -97,15 +91,15 @@ it('bounds reset emails per IP across different existing accounts', function () 
 it('does not copy sensitive provider exception text into checkout logs', function () {
     config()->set('oasis.checkout_enabled', true);
     $marker = 'stage9-sensitive-customer@example.tld';
-    $service = Mockery::mock(StripeMembershipService::class);
+    $service = Mockery::mock(MollieMembershipService::class);
     $service->shouldReceive('createSubscriptionCheckout')->once()->andThrow(new RuntimeException($marker));
-    $this->app->instance(StripeMembershipService::class, $service);
+    $this->app->instance(MollieMembershipService::class, $service);
     Log::spy();
     $this->actingAs(User::factory()->create())->post('/mitglied-werden/checkout', [
         'stufe' => 'oase', 'rhythmus' => 'monat', 'zahlart' => 'karte',
     ])->assertRedirect();
-    Log::shouldHaveReceived('error')->once()->with('Stripe checkout initiation failed.', [
-        'exception_class' => RuntimeException::class, 'provider_code' => null,
+    Log::shouldHaveReceived('error')->once()->with('Mollie checkout initiation failed.', [
+        'exception_class' => RuntimeException::class,
     ]);
 });
 

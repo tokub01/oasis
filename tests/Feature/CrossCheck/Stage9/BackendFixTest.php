@@ -5,9 +5,10 @@ use App\Events\Chat\MessageSent;
 use App\Http\Requests\Network\PostRequest;
 use App\Models\Block;
 use App\Models\GiftMembership;
+use App\Models\MembershipPayment;
 use App\Models\Message;
 use App\Models\User;
-use App\Services\Membership\StripeMembershipService;
+use App\Services\Membership\MollieMembershipService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\DB;
@@ -19,38 +20,30 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Testing\TestResponse;
 use Illuminate\Validation\ValidationException;
-use Laravel\Cashier\Events\WebhookHandled;
-use Laravel\Cashier\Events\WebhookReceived;
-use Stripe\Exception\InvalidRequestException;
 use Tests\Support\ChatFixtures as Chat;
+use Tests\Support\MollieFixtures;
 use Tests\Support\NetworkFixtures as Network;
 
 beforeEach(function () {
     $this->withoutVite();
     Mail::fake();
     Notification::fake();
-    Event::fake([MessageSent::class, WebhookReceived::class,
-        WebhookHandled::class]);
-    config()->set('cashier.webhook.secret', 'whsec_backend_fix_local_test');
+    Event::fake([MessageSent::class]);
 });
 
 function backendFixGiftEvent(User $buyer, string $type, ?string $status): array
 {
-    return ['id' => 'evt_backend_fix', 'type' => $type, 'data' => ['object' => [
-        'id' => 'cs_backend_fix', 'payment_status' => $status,
-        'metadata' => ['type' => 'gift_membership', 'purchaser_id' => (string) $buyer->id,
-            'purchaser_email' => $buyer->email, 'tier' => 'oase', 'months' => '12', 'amount' => '5000'],
-    ]]];
+    $intent = MembershipPayment::where('mollie_payment_id', 'tr_backendfix')->first()
+        ?? MollieFixtures::intent($buyer, 'gift', 'tr_backendfix');
+
+    return MollieFixtures::resource($intent, $status === 'paid' ? 'paid' : 'pending');
 }
 
 function backendFixWebhook(array $event): TestResponse
 {
-    $body = json_encode($event, JSON_THROW_ON_ERROR);
-    $time = time();
-    $signature = hash_hmac('sha256', $time.'.'.$body, config('cashier.webhook.secret'));
+    MollieFixtures::fake($event);
 
-    return test()->call('POST', route('cashier.webhook'), [], [], [],
-        ['HTTP_STRIPE_SIGNATURE' => 't='.$time.',v1='.$signature, 'CONTENT_TYPE' => 'application/json'], $body);
+    return test()->postJson(route('mollie.webhook'), ['id' => $event['id']]);
 }
 
 it('fulfills delayed gifts only after payment and tolerates all subsequent retries', function () {
@@ -75,7 +68,7 @@ it('does not fulfill failed delayed payments or missing and unpaid statuses', fu
 
 it('recovers the losing insert when another fulfillment wins after the initial lookup', function () {
     $buyer = User::factory()->create();
-    $metadata = backendFixGiftEvent($buyer, 'checkout.session.completed', 'paid')['data']['object']['metadata'];
+    $metadata = ['tier' => 'oase', 'months' => 12, 'amount' => 5000, 'purchaser_id' => $buyer->id];
     $injected = false;
     DB::listen(function ($query) use (&$injected, $buyer) {
         if (! $injected && str_starts_with(strtolower($query->sql), 'select')
@@ -83,10 +76,10 @@ it('recovers the losing insert when another fulfillment wins after the initial l
             $injected = true;
             GiftMembership::create(['code' => 'OASIS-RACE-WINS', 'tier' => 'oase', 'months' => 12,
                 'amount' => 5000, 'currency' => 'eur', 'purchaser_user_id' => $buyer->id,
-                'stripe_checkout_session_id' => 'cs_backend_race']);
+                'mollie_payment_id' => 'cs_backend_race']);
         }
     });
-    $gift = app(StripeMembershipService::class)->fulfillGiftPurchase($metadata, 'cs_backend_race');
+    $gift = app(MollieMembershipService::class)->fulfillGiftPurchase($metadata, 'cs_backend_race');
     expect($injected)->toBeTrue()->and($gift->code)->toBe('OASIS-RACE-WINS')
         ->and(GiftMembership::count())->toBe(1);
 });
@@ -179,17 +172,16 @@ it('rejects input above forty megapixels before GD decoding or storage', functio
 
 it('logs payment failures with only exception class and provider code', function () {
     config()->set('oasis.checkout_enabled', true);
-    $error = InvalidRequestException::factory('private-customer@example.tld',
-        400, 'private response body', null, null, 'parameter_invalid', 'customer_email');
-    $service = Mockery::mock(StripeMembershipService::class);
+    $error = new RuntimeException('private-customer@example.tld');
+    $service = Mockery::mock(MollieMembershipService::class);
     $service->shouldReceive('createSubscriptionCheckout')->once()->andThrow($error);
-    $this->app->instance(StripeMembershipService::class, $service);
+    $this->app->instance(MollieMembershipService::class, $service);
     Log::spy();
     $this->actingAs(User::factory()->create())->post('/mitglied-werden/checkout', [
         'stufe' => 'oase', 'rhythmus' => 'monat', 'zahlart' => 'karte',
     ])->assertRedirect();
     Log::shouldHaveReceived('error')->once()->with(
-        'Stripe checkout initiation failed.', ['exception_class' => $error::class, 'provider_code' => 'parameter_invalid']);
+        'Mollie checkout initiation failed.', ['exception_class' => $error::class]);
 });
 
 it('limits reset attempts by IP independently of target account and keeps neutral responses', function () {
@@ -205,9 +197,11 @@ it('limits reset attempts by IP independently of target account and keeps neutra
         ->postJson(route('password.email'), ['email' => 'independent@example.tld'])->assertOk();
 });
 
-it('acknowledges signed invoice failure events without provider calls or customer logging', function () {
-    backendFixWebhook(['id' => 'evt_invoice_failed', 'type' => 'invoice.payment_failed',
-        'data' => ['object' => ['id' => 'in_backend_failed', 'customer' => 'cus_backend_failed']]])->assertOk();
+it('acknowledges failed payments only after checking the provider and without customer logging', function () {
+    $buyer = User::factory()->create();
+    $intent = MollieFixtures::intent($buyer, 'gift', 'tr_failed');
+    backendFixWebhook(MollieFixtures::resource($intent, 'failed'))->assertOk();
+    expect(GiftMembership::count())->toBe(0);
 });
 
 it('applies the reset IP budget to compiled routes as well', function () {

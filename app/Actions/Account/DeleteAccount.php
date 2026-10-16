@@ -12,7 +12,7 @@ use Illuminate\Validation\ValidationException;
 /**
  * Deletes an account completely (Art. 17 GDPR).
  *
- * - Refused while a paid membership is running and not cancelled: deleting would leave Stripe charging an account
+ * - Refused while a paid membership is running and not cancelled: deleting would leave Mollie charging an account
  *   that no longer exists. The member cancels first (the membership then runs out) and deletes afterwards.
  * - Oases where the account is the only host get a new host (longest member) or are closed (stage 9, F8).
  * - Database rows cascade from `users`; uploaded images are removed from the media disk after the commit, so a

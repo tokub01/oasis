@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\User;
-use App\Services\Membership\StripeMembershipService;
+use App\Services\Membership\MollieMembershipService;
 
 test('membership public page returns 404 when checkout_enabled is false', function () {
     config()->set('oasis.checkout_enabled', false);
@@ -43,11 +43,11 @@ test('checkout validates inputs correctly', function () {
         ->assertSessionHasErrors('betrag');
 });
 
-test('checkout initiates Stripe Checkout session and redirects authenticated user', function () {
+test('checkout initiates Mollie Checkout session and redirects authenticated user', function () {
     config()->set('oasis.checkout_enabled', true);
     $user = User::factory()->create();
 
-    $serviceMock = Mockery::mock(StripeMembershipService::class);
+    $serviceMock = Mockery::mock(MollieMembershipService::class);
     $serviceMock->shouldReceive('createSubscriptionCheckout')
         ->once()
         ->with(
@@ -57,9 +57,9 @@ test('checkout initiates Stripe Checkout session and redirects authenticated use
             null,
             'sepa'
         )
-        ->andReturn('https://checkout.stripe.com/pay/cs_test_session_123');
+        ->andReturn('https://www.mollie.com/checkout/test123');
 
-    $this->app->instance(StripeMembershipService::class, $serviceMock);
+    $this->app->instance(MollieMembershipService::class, $serviceMock);
 
     $this->actingAs($user)
         ->post('/mitglied-werden/checkout', [
@@ -67,5 +67,5 @@ test('checkout initiates Stripe Checkout session and redirects authenticated use
             'rhythmus' => 'monat',
             'zahlart' => 'sepa',
         ])
-        ->assertRedirect('https://checkout.stripe.com/pay/cs_test_session_123');
+        ->assertRedirect('https://www.mollie.com/checkout/test123');
 });

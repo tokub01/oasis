@@ -41,7 +41,7 @@ class PruneExpiredAccountsCommand extends Command
             ->whereNotNull('trial_ends_at')
             ->where('trial_ends_at', '<', $cutoff)
             ->whereDoesntHave('subscriptions', function ($query) {
-                $query->whereIn('stripe_status', ['active', 'trialing']);
+                $query->whereIn('status', ['active', 'canceled'])->where('paid_until', '>', now());
             })
             ->whereDoesntHave('giftMemberships', function ($query) {
                 $query->where('expires_at', '>', now());

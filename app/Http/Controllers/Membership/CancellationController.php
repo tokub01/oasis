@@ -4,12 +4,11 @@ namespace App\Http\Controllers\Membership;
 
 use App\Exceptions\Membership\MembershipDomainException;
 use App\Http\Controllers\Controller;
-use App\Services\Membership\StripeMembershipService;
+use App\Services\Membership\MollieMembershipService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
-use Stripe\Exception\ApiErrorException;
 
 /**
  * Controller for member subscription cancellations complying with § 312k BGB button flow:
@@ -33,7 +32,7 @@ class CancellationController extends Controller
 
         $tierKey = $user->currentMembershipTier() ?? 'oase';
         $tierName = config("oasis.tiers.{$tierKey}.name", 'Oasis');
-        $effectiveDate = $subscription->ends_at ?? now()->addMonth();
+        $effectiveDate = $subscription->ends_at ?? $subscription->paid_until;
 
         return view('app.membership.cancel', [
             'user' => $user,
@@ -46,7 +45,7 @@ class CancellationController extends Controller
     /**
      * Process the cancellation ("Jetzt kündigen").
      */
-    public function cancel(Request $request, StripeMembershipService $service): RedirectResponse
+    public function cancel(Request $request, MollieMembershipService $service): RedirectResponse
     {
         $user = $request->user();
 
@@ -61,7 +60,6 @@ class CancellationController extends Controller
         } catch (\Throwable $e) {
             Log::error('Cancellation error.', [
                 'exception_class' => $e::class,
-                'provider_code' => $e instanceof ApiErrorException ? $e->getStripeCode() : null,
             ]);
 
             return redirect()->route('app.membership')

@@ -3,22 +3,21 @@
 namespace App\Http\Controllers\Membership;
 
 use App\Http\Controllers\Controller;
-use App\Services\Membership\StripeMembershipService;
+use App\Services\Membership\MollieMembershipService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
-use Stripe\Exception\ApiErrorException;
 
 /**
- * Controller for purchasing a 12-month gift membership voucher via Stripe Checkout.
+ * Controller for purchasing a 12-month gift membership voucher via Mollie Checkout.
  */
 class GiftPurchaseController extends Controller
 {
     /**
      * Start Checkout for gift membership purchase.
      */
-    public function checkout(Request $request, StripeMembershipService $service): RedirectResponse
+    public function checkout(Request $request, MollieMembershipService $service): RedirectResponse
     {
         $tiers = array_keys(config('oasis.tiers', []));
 
@@ -35,7 +34,6 @@ class GiftPurchaseController extends Controller
         } catch (\Throwable $e) {
             Log::error('Gift purchase checkout failed.', [
                 'exception_class' => $e::class,
-                'provider_code' => $e instanceof ApiErrorException ? $e->getStripeCode() : null,
             ]);
 
             return redirect()->route('app.membership')

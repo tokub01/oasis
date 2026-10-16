@@ -31,7 +31,7 @@ shown – encryption happens in the browser.
 | `client/clock.js` | server clock offset from `server_time`; signed expiry = server now + lifetime (API allows ±120 s) |
 | `client/keyring.js` | identity setup/unlock, verify the member key directory, open grants, owner key distribution, safety numbers |
 | `client/messages.js` | seal/open envelopes, draft limits, in-memory `Timeline` de-duplicated by signature |
-| `client/realtime.js` | Laravel Echo + pusher-js on `private-conversation.{id}`: `.MessageSent`, `.KeyRotated` |
+| `client/realtime.js` | Laravel Echo (`broadcaster: 'reverb'`) + pusher-js on `private-conversation.{id}`: `.MessageSent`, `.KeyRotated` |
 | `ui/*` | screens; German texts; `ui/errors.js` maps API/crypto errors to user texts |
 
 ## Security behaviour
@@ -51,7 +51,7 @@ shown – encryption happens in the browser.
   bundle produces a visible notice; the details screen shows the pairwise safety numbers to compare in person.
 - **No HTML injection**: all names and message texts are set with `textContent`; `tests/js/chat/hygiene.test.mjs`
   checks that no chat source uses `innerHTML` & co., browser storage, cookies or the console.
-- **Realtime** is optional: without `VITE_PUSHER_APP_KEY` the chat works with history only.
+- **Realtime** is optional: without `VITE_REVERB_APP_KEY` the chat works with history only.
 
 ## Owner key distribution
 

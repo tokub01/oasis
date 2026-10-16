@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Membership;
 
 use App\Http\Controllers\Controller;
-use App\Services\Membership\StripeMembershipService;
+use App\Services\Membership\MollieMembershipService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
-use Stripe\Exception\ApiErrorException;
 
 /**
  * Controller handling the checkout initiation from /mitglied-werden.
@@ -16,9 +15,9 @@ use Stripe\Exception\ApiErrorException;
 class CheckoutController extends Controller
 {
     /**
-     * Start the Stripe Checkout session for a selected membership tier.
+     * Start the Mollie Checkout session for a selected membership tier.
      */
-    public function checkout(Request $request, StripeMembershipService $service): RedirectResponse
+    public function checkout(Request $request, MollieMembershipService $service): RedirectResponse
     {
         abort_unless(config('oasis.checkout_enabled'), 404);
 
@@ -58,9 +57,8 @@ class CheckoutController extends Controller
 
             return redirect()->away($checkoutUrl);
         } catch (\Throwable $e) {
-            Log::error('Stripe checkout initiation failed.', [
+            Log::error('Mollie checkout initiation failed.', [
                 'exception_class' => $e::class,
-                'provider_code' => $e instanceof ApiErrorException ? $e->getStripeCode() : null,
             ]);
 
             return redirect()->route('oasis.mitglied')

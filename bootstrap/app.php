@@ -20,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'participate' => EnsureUserCanParticipate::class,
         ]);
         $middleware->validateCsrfTokens(except: [
-            'stripe/webhook',
+            'mollie/webhook',
         ]);
         // CSP with per-request nonce and the other security headers on every web response (stage 7).
         $middleware->web(append: [SecurityHeaders::class]);

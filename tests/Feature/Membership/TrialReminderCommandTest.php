@@ -2,9 +2,9 @@
 
 use App\Mail\Membership\TrialEndingReminderMail;
 use App\Models\GiftMembership;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
-use Laravel\Cashier\Subscription;
 
 test('sends reminder email to users whose trial ends within 2 days and is idempotent', function () {
     Mail::fake();
@@ -35,9 +35,9 @@ test('sends reminder email to users whose trial ends within 2 days and is idempo
     Subscription::create([
         'user_id' => $userD->id,
         'type' => 'oase',
-        'stripe_id' => 'sub_userD',
-        'stripe_status' => 'active',
-        'stripe_price' => 'price_oase',
+        'mollie_id' => 'sub_userD',
+        'status' => 'active', 'paid_until' => now()->addMonth(),
+
     ]);
 
     // User E: trial ends in 36 hours, but has active gift -> should NOT receive email

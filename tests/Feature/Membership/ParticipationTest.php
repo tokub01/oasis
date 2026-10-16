@@ -2,11 +2,10 @@
 
 use App\Enums\Role;
 use App\Models\GiftMembership;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
-use Laravel\Cashier\Subscription;
-use Laravel\Cashier\SubscriptionItem;
 
 beforeEach(function () {
     Route::middleware(['web', 'auth', 'participate'])->group(function () {
@@ -150,20 +149,12 @@ test('current membership tier resolves from subscription item or returns null', 
     $sub = Subscription::create([
         'user_id' => $user->id,
         'type' => 'default',
-        'stripe_id' => 'sub_default_item',
-        'stripe_status' => 'active',
-        'stripe_price' => 'oasis_solidar_monthly',
+        'mollie_id' => 'sub_default_item',
+        'status' => 'active', 'paid_until' => now()->addMonth(),
+
     ]);
 
-    SubscriptionItem::create([
-        'subscription_id' => $sub->id,
-        'stripe_id' => 'si_default_item',
-        'stripe_product' => 'prod_solidar',
-        'stripe_price' => 'oasis_solidar_monthly',
-        'quantity' => 1,
-    ]);
-
-    $user->load('subscriptions.items');
-    expect($user->currentMembershipTier())->toBe('solidar')
+    $user->load('subscriptions');
+    expect($user->currentMembershipTier())->toBe('oase')
         ->and($user->subscription('default')?->id)->toBe($sub->id);
 });

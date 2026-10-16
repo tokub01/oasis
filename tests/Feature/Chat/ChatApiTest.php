@@ -259,9 +259,9 @@ it('changes lifetime only for future messages', function () {
         ->assertCreated();
 });
 
-it('authorizes only active verified members on the private Pusher channel', function () {
-    config(['broadcasting.default' => 'pusher', 'broadcasting.connections.pusher.key' => 'test-key',
-        'broadcasting.connections.pusher.secret' => 'test-secret', 'broadcasting.connections.pusher.app_id' => '123']);
+it('authorizes only active verified members on the private Reverb channel', function () {
+    config(['broadcasting.default' => 'reverb', 'broadcasting.connections.reverb.key' => 'test-key',
+        'broadcasting.connections.reverb.secret' => 'test-secret', 'broadcasting.connections.reverb.app_id' => '123']);
     require base_path('routes/channels.php');
     $payload = ['socket_id' => '123.456', 'channel_name' => 'private-conversation.'.$this->conversation->id];
     $this->postJson('/broadcasting/auth', $payload)->assertOk()->assertJsonStructure(['auth'])

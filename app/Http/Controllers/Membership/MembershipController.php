@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Membership;
 
 use App\Http\Controllers\Controller;
-use App\Services\Membership\StripeMembershipService;
+use App\Models\MembershipPayment;
+use App\Services\Membership\MollieMembershipService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -15,7 +16,7 @@ class MembershipController extends Controller
     /**
      * Display the membership dashboard with status, tier, invoices, and voucher redemption.
      */
-    public function index(Request $request, StripeMembershipService $service): View
+    public function index(Request $request, MollieMembershipService $service): View
     {
         $user = $request->user();
         $subscription = $user->subscription();
@@ -27,18 +28,10 @@ class MembershipController extends Controller
 
         $isEligibleForWithdrawal = false;
         if ($subscription && $subscription->valid() && $subscription->created_at) {
-            $isEligibleForWithdrawal = $subscription->created_at->diffInDays(now()) <= 14;
+            $isEligibleForWithdrawal = ! now()->greaterThan($subscription->created_at->copy()->addDays(14)->endOfDay());
         }
 
-        $invoices = [];
-        try {
-            if ($user->hasStripeId()) {
-                $invoices = $user->invoices();
-            }
-        } catch (\Throwable) {
-            // In local/test without live API connection, proceed with empty invoice list
-            $invoices = [];
-        }
+        $invoices = MembershipPayment::where('user_id', $user->id)->where('status', 'paid')->where('kind', '!=', 'mandate')->latest('id')->get();
 
         return view('app.membership.index', [
             'user' => $user,
@@ -49,6 +42,7 @@ class MembershipController extends Controller
             'remainingFoundingSeats' => $service->remainingFoundingSeats(),
             'isEligibleForWithdrawal' => $isEligibleForWithdrawal,
             'invoices' => $invoices,
+            'purchasedGifts' => $user->purchasedGiftMemberships()->latest('id')->get(),
             'tiers' => config('oasis.tiers', []),
         ]);
     }

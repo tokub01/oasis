@@ -130,11 +130,10 @@ return [
         'hosting' => 'IONOS SE, Elgendorfer Str. 57, 56410 Montabaur, Server in Deutschland',
         // Provider that sends the confirmation mails, incl. region. Planned: Amazon SES via SMTP (see PROMPT.md).
         'mail_provider' => null,
-        // Realtime delivery of encrypted chat messages (Pusher Channels, cluster "eu"). Verify contract partner and
-        // transfer safeguard against the signed DPA before launch.
         // Automated content check (stage 10): only the text is sent. Verify DPA and retention terms before launch.
         'ai_provider' => 'Mistral AI SAS, 15 rue des Halles, 75001 Paris, Frankreich – Verarbeitung in der EU',
-        'realtime_provider' => 'Pusher Ltd, London (Vereinigtes Königreich), Verarbeitung im EU-Cluster; für das Vereinigte Königreich gilt ein Angemessenheitsbeschluss der EU-Kommission (Art. 45 DSGVO)',
+        // Realtime delivery of encrypted chat messages runs on our own server via Laravel Reverb (null = no third-party provider).
+        'realtime_provider' => null,
         // Days after which web server log files (IP address, time, URL, browser) are deleted.
         'server_log_days' => null,
         // Days after which unconfirmed waitlist entries are deleted.
@@ -169,7 +168,7 @@ return [
      */
     'payment' => [
         // Card payment provider named in the checkout hint.
-        'provider' => 'Stripe',
+        'provider' => 'Mollie',
         // SEPA creditor identifier for the mandate text.
         'sepa_creditor_id' => '[GLÄUBIGER-ID]',
     ],

@@ -55,7 +55,7 @@ Nothing is pushed or deployed without approval.
 | 2 | Core network | Profiles (public / members only), Tropfen (text, images via EU S3 storage), chronological feed with an end, follow, replies, "weitertragen", quiet reactions (counts only for the author), Oasen (spaces with hosts and house rules), group start with invitations | 0 |
 | 3 | Encrypted chat | Key setup and unlock, 1:1 chats, group chats, self-deleting messages, safety numbers, Pusher channels and auth, consent-based reporting | 0 |
 | 4 | Moderation & DSA | In-app reports for posts/profiles, moderation queue, statement of reasons (Art. 17), internal complaints (Art. 20), second reviewer, transparency data | 2 |
-| 5 | Payments | Provider with SEPA, PayPal, card (e.g. Mollie or Stripe), checkout on, invoices, VAT, gift memberships, founding-seat counter, price guarantee | 1 |
+| 5 | Payments | Mollie with SEPA, PayPal, card, checkout on, invoices, VAT, gift memberships, founding-seat counter, price guarantee | 1 |
 | 6 | Admin & transparency | Admin area, real figures on the Transparenz page, member votes | 4, 5 |
 | 7 | Launch readiness | Security review (incl. crypto), backups, monitoring, CSP/SRI, performance, legal texts reviewed, DPIA | all |
 

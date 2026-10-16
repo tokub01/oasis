@@ -139,13 +139,13 @@ it('FINDING F2: a blockade also stops sending in an existing direct chat', funct
 it('FINDING F3: deleting an account with a running paid membership is refused or cancels it', function () {
     $member = N::member();
     $member->subscriptions()->create([
-        'type' => 'oase', 'stripe_id' => 'sub_test', 'stripe_status' => 'active', 'stripe_price' => 'price_test', 'quantity' => 1,
+        'type' => 'oase', 'mollie_id' => 'sub_test', 'status' => 'active', 'paid_until' => now()->addMonth(),
     ]);
 
     $response = $this->actingAs($member)->withSession(['auth.password_confirmed_at' => time()])
         ->delete(route('account.destroy'), ['confirm' => '1']);
 
-    // Acceptable: refuse with a clear message (account stays) – never delete silently while Stripe keeps charging.
+    // Acceptable: refuse with a clear message (account stays) – never delete silently while Mollie keeps charging.
     expect(User::find($member->id))->not->toBeNull();
     $response->assertSessionHasErrors();
 });

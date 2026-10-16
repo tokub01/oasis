@@ -2,7 +2,8 @@
 
 use App\Models\GiftMembership;
 use App\Models\User;
-use App\Services\Membership\StripeMembershipService;
+use App\Services\Membership\MollieGateway;
+use App\Services\Membership\MollieMembershipService;
 
 test('generates voucher codes in the expected format', function () {
     $code = GiftMembership::generateCode();
@@ -71,19 +72,19 @@ test('rejects non-existent gift voucher code with German error', function () {
 test('purchasing a gift membership initiates checkout session', function () {
     $user = User::factory()->create();
 
-    $serviceMock = Mockery::mock(StripeMembershipService::class);
+    $serviceMock = Mockery::mock(MollieMembershipService::class);
     $serviceMock->shouldReceive('createGiftCheckout')
         ->once()
         ->with(Mockery::on(fn ($u) => $u->id === $user->id), 'oase')
-        ->andReturn('https://checkout.stripe.com/pay/cs_test_gift');
+        ->andReturn('https://checkout.mollie.com/pay/cs_test_gift');
 
-    $this->app->instance(StripeMembershipService::class, $serviceMock);
+    $this->app->instance(MollieMembershipService::class, $serviceMock);
 
     $this->actingAs($user)
         ->post(route('app.membership.gift.checkout'), [
             'tier' => 'oase',
         ])
-        ->assertRedirect('https://checkout.stripe.com/pay/cs_test_gift');
+        ->assertRedirect('https://checkout.mollie.com/pay/cs_test_gift');
 });
 
 test('gift membership relations resolve purchaser and redeemed by users', function () {
@@ -98,4 +99,17 @@ test('gift membership relations resolve purchaser and redeemed by users', functi
         ->and($voucher->redeemedBy->id)->toBe($recipient->id)
         ->and($purchaser->purchasedGiftMemberships->first()->id)->toBe($voucher->id)
         ->and($recipient->giftMemberships->first()->id)->toBe($voucher->id);
+});
+
+test('a failed founding allocation rolls back the voucher redemption', function () {
+    $user = User::factory()->create();
+    $voucher = GiftMembership::factory()->create();
+    $service = Mockery::mock(MollieMembershipService::class, [app(MollieGateway::class)])->makePartial();
+    $service->shouldReceive('assignFoundingMemberIfEligible')->once()->andThrow(new RuntimeException('Allocation failed'));
+
+    expect(fn () => $service->redeemGift($user, $voucher->code))->toThrow(RuntimeException::class);
+
+    expect($voucher->fresh()->redeemed_at)->toBeNull();
+    expect($voucher->fresh()->redeemed_by_user_id)->toBeNull();
+    expect($voucher->fresh()->expires_at)->toBeNull();
 });

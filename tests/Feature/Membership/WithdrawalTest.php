@@ -1,26 +1,23 @@
 <?php
 
 use App\Mail\Membership\MembershipWithdrawnMail;
+use App\Models\MembershipPayment;
+use App\Models\Subscription;
 use App\Models\User;
+use App\Services\Membership\MollieGateway;
 use Illuminate\Support\Facades\Mail;
-use Laravel\Cashier\Subscription;
-use Stripe\Service\InvoiceService;
-use Stripe\Service\RefundService;
-use Stripe\Service\SubscriptionService;
-use Stripe\StripeClient;
 
 test('withdrawal confirmation renders for subscriptions within 14 days', function () {
     $user = User::factory()->create([
-        'stripe_id' => 'cus_test123',
+        'mollie_customer_id' => 'cus_test123',
     ]);
 
     $subscription = Subscription::create([
         'user_id' => $user->id,
         'type' => 'oase',
-        'stripe_id' => 'sub_test123',
-        'stripe_status' => 'active',
-        'stripe_price' => 'price_oase_monthly',
-        'quantity' => 1,
+        'mollie_id' => 'sub_test123',
+        'status' => 'active', 'paid_until' => now()->addMonth(),
+
         'created_at' => now()->subDays(5),
     ]);
 
@@ -33,14 +30,13 @@ test('withdrawal confirmation renders for subscriptions within 14 days', functio
 });
 
 test('withdrawal boundary: day 14 is accepted, day 15 is rejected', function () {
-    $userDay14 = User::factory()->create(['stripe_id' => 'cus_day14']);
+    $userDay14 = User::factory()->create(['mollie_customer_id' => 'cus_day14']);
     Subscription::create([
         'user_id' => $userDay14->id,
         'type' => 'oase',
-        'stripe_id' => 'sub_day14',
-        'stripe_status' => 'active',
-        'stripe_price' => 'price_oase_monthly',
-        'quantity' => 1,
+        'mollie_id' => 'sub_day14',
+        'status' => 'active', 'paid_until' => now()->addMonth(),
+
         'created_at' => now()->subDays(14)->addHours(2), // Exactly 14 days ago, within endOfDay
     ]);
 
@@ -48,14 +44,13 @@ test('withdrawal boundary: day 14 is accepted, day 15 is rejected', function () 
         ->get(route('app.membership.withdraw.confirm'))
         ->assertOk();
 
-    $userDay15 = User::factory()->create(['stripe_id' => 'cus_day15']);
+    $userDay15 = User::factory()->create(['mollie_customer_id' => 'cus_day15']);
     Subscription::create([
         'user_id' => $userDay15->id,
         'type' => 'oase',
-        'stripe_id' => 'sub_day15',
-        'stripe_status' => 'active',
-        'stripe_price' => 'price_oase_monthly',
-        'quantity' => 1,
+        'mollie_id' => 'sub_day15',
+        'status' => 'active', 'paid_until' => now()->addMonth(),
+
         'created_at' => now()->subDays(15), // 15 days ago, past endOfDay of day 14
     ]);
 
@@ -69,54 +64,24 @@ test('submitting withdrawal terminates subscription immediately, refunds invoice
     Mail::fake();
 
     $user = User::factory()->create([
-        'stripe_id' => 'cus_test123',
+        'mollie_customer_id' => 'cus_test123',
     ]);
 
     $subscription = Subscription::create([
         'user_id' => $user->id,
         'type' => 'oase',
-        'stripe_id' => 'sub_test123',
-        'stripe_status' => 'active',
-        'stripe_price' => 'price_oase_monthly',
-        'quantity' => 1,
+        'mollie_id' => 'sub_test123',
+        'status' => 'active', 'paid_until' => now()->addMonth(),
+
         'created_at' => now()->subDays(3),
     ]);
 
-    $stripeMock = Mockery::mock(StripeClient::class);
-    $subService = Mockery::mock(SubscriptionService::class);
-    $invoiceService = Mockery::mock(InvoiceService::class);
-    $refundService = Mockery::mock(RefundService::class);
-
-    $stripeMock->subscriptions = $subService;
-    $stripeMock->invoices = $invoiceService;
-    $stripeMock->refunds = $refundService;
-    $stripeMock->shouldReceive('__get')->with('subscriptions')->andReturn($subService);
-    $stripeMock->shouldReceive('__get')->with('invoices')->andReturn($invoiceService);
-    $stripeMock->shouldReceive('__get')->with('refunds')->andReturn($refundService);
-
-    // Expect subscription cancelNow call
-    $subService->shouldReceive('cancel')
-        ->once()
-        ->with('sub_test123', ['prorate' => true])
-        ->andReturn((object) ['status' => 'canceled']);
-
-    // Expect invoice lookup for this subscription
-    $invoiceService->shouldReceive('all')
-        ->once()
-        ->with(['subscription' => 'sub_test123', 'status' => 'paid', 'limit' => 10])
-        ->andReturn((object) [
-            'data' => [
-                (object) ['id' => 'in_123', 'payment_intent' => 'pi_paid_123'],
-            ],
-        ]);
-
-    // Expect refund creation for paid invoice payment intent (§ 357 Abs. 1 BGB)
-    $refundService->shouldReceive('create')
-        ->once()
-        ->with(['payment_intent' => 'pi_paid_123'])
-        ->andReturn((object) ['id' => 're_test_refund']);
-
-    $this->app->bind(StripeClient::class, fn () => $stripeMock);
+    $gateway = Mockery::mock(MollieGateway::class);
+    $gateway->shouldReceive('cancel')->once()->with('cus_test123', 'sub_test123');
+    MembershipPayment::create(['user_id' => $user->id, 'subscription_id' => $subscription->id,
+        'mollie_payment_id' => 'tr_paid123', 'kind' => 'membership', 'tier' => 'oase', 'rhythm' => 'monat', 'amount' => 500, 'status' => 'paid']);
+    $gateway->shouldReceive('refund')->once()->with('tr_paid123', 500);
+    $this->app->instance(MollieGateway::class, $gateway);
 
     $this->actingAs($user)
         ->post(route('app.membership.withdraw'))
@@ -125,7 +90,7 @@ test('submitting withdrawal terminates subscription immediately, refunds invoice
 
     $subscription->refresh();
     expect($subscription->ends_at)->not->toBeNull()
-        ->and($subscription->stripe_status)->toBe('canceled');
+        ->and($subscription->status)->toBe('canceled');
 
     Mail::assertSent(MembershipWithdrawnMail::class, function (MembershipWithdrawnMail $mail) use ($user) {
         return $mail->hasTo($user->email) && ! $mail->operatorCopy;

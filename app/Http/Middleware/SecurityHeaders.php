@@ -13,8 +13,8 @@ use Symfony\Component\HttpFoundation\Response;
  * Content-Security-Policy: scripts only from our origin or with the per-request nonce that Vite and Livewire add to
  * their tags (Livewire runs its CSP-safe Alpine build, config livewire.csp_safe), no eval except WebAssembly
  * compilation for libsodium in the chat ('wasm-unsafe-eval'), no plugins, no framing, no foreign form targets except
- * Stripe's hosted checkout and portal, network connections only to our origin and Pusher. Inline style attributes
- * stay allowed (bar widths); styles cannot execute code.
+ * Mollie's hosted checkout, network connections only to our origin and the self-hosted Reverb WebSocket server. Inline
+ * style attributes stay allowed (bar widths); styles cannot execute code.
  */
 class SecurityHeaders
 {
@@ -38,9 +38,8 @@ class SecurityHeaders
 
     private function policy(string $nonce): string
     {
-        $cluster = config('broadcasting.connections.pusher.options.cluster') ?: 'eu';
         $scripts = ["'self'", "'nonce-$nonce'", "'wasm-unsafe-eval'"];
-        $connect = ["'self'", "wss://ws-$cluster.pusher.com", "https://sockjs-$cluster.pusher.com"];
+        $connect = ["'self'", $this->reverbOrigin()];
         $styles = ["'self'", "'unsafe-inline'"];
         // Local development with `npm run dev`: allow the Vite dev server and its websocket.
         if (Vite::isRunningHot()) {
@@ -61,7 +60,21 @@ class SecurityHeaders
             "object-src 'none'",
             "base-uri 'self'",
             "frame-ancestors 'none'",
-            "form-action 'self' https://checkout.stripe.com https://billing.stripe.com",
+            "form-action 'self' https://www.mollie.com https://checkout.mollie.com",
         ]);
+    }
+
+    /**
+     * Resolve the public WebSocket origin (`ws://` or `wss://`) for our self-hosted Laravel Reverb server.
+     */
+    private function reverbOrigin(): string
+    {
+        $options = (array) config('reverb.apps.apps.0.options', []);
+        $host = (string) ($options['host'] ?? '') ?: (parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'localhost');
+        $scheme = (($options['scheme'] ?? 'https') === 'http') ? 'ws' : 'wss';
+        $port = (int) ($options['port'] ?? ($scheme === 'wss' ? 443 : 8080));
+        $defaultPort = $scheme === 'wss' ? 443 : 80;
+
+        return $port === $defaultPort ? "{$scheme}://{$host}" : "{$scheme}://{$host}:{$port}";
     }
 }

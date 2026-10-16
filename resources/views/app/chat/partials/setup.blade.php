@@ -9,7 +9,7 @@
         <h1 id="chat-setup-title" class="o-h2 m-0 text-night">Deine Chat-Passphrase</h1>
         <p class="o-lead m-0 text-ink-2">
             Deine Nachrichten werden in deinem Browser verschlüsselt. Lesen können sie nur die Menschen im Chat –
-            nicht Oasis, nicht unser Hosting, nicht Pusher.
+            nicht Oasis und nicht unser Hosting.
         </p>
     </div>
 

@@ -32,7 +32,7 @@ sending; reading, key handling, leaving and reporting stay available.
 | GET | /conversations/{conversation}/messages | messages.index | optional `before_id` positive integer | 200 `{"data":[Message,…],"next_before_id":string|null}`; 50 newest first |
 | POST | /conversations/{conversation}/messages | messages.store | `{"envelope":Envelope}` | 201 `{"data":Message}` |
 | POST | /conversations/{conversation}/reports | reports.store | `{"envelope":Envelope,"plaintext":string,"reason":string}` | 201 `{"data":ChatReport}` |
-| POST | /broadcasting/auth (outside prefix) | broadcasting.auth | standard Echo `socket_id`, `channel_name` | standard Pusher auth JSON; same auth, verification and membership checks |
+| POST | /broadcasting/auth (outside prefix) | broadcasting.auth | standard Echo `socket_id`, `channel_name` | standard Reverb (Pusher-protocol) auth JSON; same auth, verification and membership checks |
 
 `Identity = {user_id,locked_identity,public_keys,key_changed_at}`. Initial setup has null key_changed_at;
 relocking identical public keys changes only the encrypted blob. Replacing either public key records server time,
@@ -52,7 +52,7 @@ only to new messages; existing signed expiries cannot be rewritten.
 are returned. `Envelope` is the exact object returned by `encryptMessage`:
 `{v:1,conversation_id:string,key_version:integer,sender_id:string,nonce:base64url,ciphertext:base64url,
 signature:base64url,expires_at:UTC-string}`. Nonce 24 bytes, signature 64 bytes, ciphertext 16–6000 bytes
-(including AEAD tag). This transport limit leaves room below Pusher's 10 KiB event limit: UI must limit UTF-8
+(including AEAD tag). This transport limit leaves room below Reverb's default 10 KiB message limit: UI must limit UTF-8
 plaintext to 5984 bytes in addition to the crypto core's character limit. Expiry is mandatory, whole seconds
 `YYYY-MM-DDTHH:mm:ssZ`, within ±120 seconds of server_time + lifetime_days. Compute it using Conversation.server_time
 and send promptly. Server preserves the signed instant exactly, stores it as expires_at, and never extends it.
@@ -76,7 +76,7 @@ returned by `POST /conversations/{conversation}/reports`.
 
 ## Channels and events
 
-Echo subscribes with `Echo.private('conversation.' + id)`; wire channel `private-conversation.{id}`.
+Echo subscribes with `Echo.private('conversation.' + id)` via the `reverb` broadcaster; wire channel `private-conversation.{id}`.
 Only active, verified members can authorize. Never use a public channel or a presence member list.
 Event alias `.MessageSent`: the **envelope itself**, without model, user profile or plaintext.
 No DB message ID is added to the signed envelope: deduplicate realtime/history by signature and reload history
@@ -84,7 +84,7 @@ to obtain database IDs. Event alias `.KeyRotated`: `{conversation_id:string,key_
 rotation_required:boolean}`. Events are dispatched after commit. Membership/identity changes also send
 KeyRotated with rotation_required=true so open tabs lock sending and reload keys/membership.
 
-A previously authorized Pusher connection cannot be remotely revoked by Laravel's auth endpoint alone.
+A previously authorized WebSocket connection cannot be remotely revoked by Laravel's auth endpoint alone.
 Removed members can still see subsequent ciphertext/metadata until they disconnect, but must never receive the new
 key grant and cannot decrypt new messages. UI unsubscribes when its next authorized request fails. The server
 never broadcasts grants or identity blobs.

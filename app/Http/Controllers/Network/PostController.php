@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Network\PostRequest;
 use App\Models\Post;
 use App\Queries\Network\PostFeed;
+use App\Support\Moderation\ContentAssessor;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -26,11 +27,24 @@ class PostController extends Controller
         return view('app.network.posts.show', ['post' => $post, 'replies' => $feed->replies($post, $request->user())]);
     }
 
-    public function store(PostRequest $request, PublishPost $publish): RedirectResponse
+    /**
+     * Publish a Tropfen. Before that, a hostile tone gets a calm "Nochmal lesen?" hint (stage 10): the member can
+     * still send it unchanged by ticking `tone_confirmed`. The check never blocks posting – on a model failure the
+     * word list decides and the background check runs anyway.
+     */
+    public function store(PostRequest $request, PublishPost $publish, ContentAssessor $assessor): RedirectResponse
     {
+        if (! $request->boolean('tone_confirmed') && $assessor->assess((string) $request->input('body'))->shouldNudge()) {
+            return back()->withInput()->with('tone_nudge', true)->withErrors([
+                'body' => 'Nochmal lesen? Dein Tropfen klingt verletzend. Vielleicht findest du Worte, die dein Gegenüber besser '
+                    .'hören kann. Wenn du es genau so meinst, bestätige unten „So senden“.',
+            ]);
+        }
+
         // Resolved models replace the raw ids/slugs from the validated input.
         $post = $publish->handle($request->user(), [
             ...$request->validated(),
+            'kind' => $request->input('kind'),
             'oasis' => $request->oasis(),
             'reply_to' => $request->replyTo(),
             'carried' => $request->carried(),

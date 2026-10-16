@@ -9,7 +9,11 @@
     <p>Grundlage: {{ $decision->ground->label() }} – {{ $decision->rule_reference }}</p>
     <h2>Maßgebliche Tatsachen</h2><p>{{ $decision->facts }}</p>
     <h2>Begründung</h2><p>{{ $decision->explanation }}</p>
-    <p>Es wurden keine automatisierten Verfahren für diese Entscheidung eingesetzt.</p>
+    @if ($decision->case->source instanceof \App\Models\ContentCheck)
+        <p>Der Inhalt wurde von einem automatisierten Verfahren (Sprachmodell) erkannt. Die Entscheidung hat ein Mensch getroffen.</p>
+    @else
+        <p>Es wurden keine automatisierten Verfahren für diese Entscheidung eingesetzt.</p>
+    @endif
 @else
     <p>Wir haben deine Meldung geprüft. Persönliche Angaben über betroffene Konten teilen wir nicht mit.</p>
 @endif

@@ -85,6 +85,22 @@ return [
     // Files are always served through the app after a visibility check, never via public bucket URLs.
     'media_disk' => env('OASIS_MEDIA_DISK', 'local'),
 
+    /*
+     * Automated content check (stage 10, docs/oasis-auto-moderation.md). Language model via the Laravel AI SDK on
+     * Mistral (EU); only the text is sent. Scores are 0..1. A human always decides; held = hidden until reviewed.
+     */
+    'moderation' => [
+        'enabled' => (bool) env('OASIS_AI_MODERATION', true),
+        'provider' => env('OASIS_MODERATION_PROVIDER', 'mistral'),
+        'model' => env('OASIS_MODERATION_MODEL', 'mistral-small-latest'),
+        // "Nochmal lesen?" before sending (insult, hate, threat).
+        'nudge_threshold' => 0.6,
+        // Opens a moderation case.
+        'report_threshold' => 0.7,
+        // Clearly sexual Tropfen are held until reviewed.
+        'hold_threshold' => 0.85,
+    ],
+
     // Free trial length in days. Used in every "30 Tage testen" text.
     'trial_days' => 30,
     // Days in which posts can still be downloaded after a trial ends or a membership is cancelled.
@@ -116,6 +132,8 @@ return [
         'mail_provider' => null,
         // Realtime delivery of encrypted chat messages (Pusher Channels, cluster "eu"). Verify contract partner and
         // transfer safeguard against the signed DPA before launch.
+        // Automated content check (stage 10): only the text is sent. Verify DPA and retention terms before launch.
+        'ai_provider' => 'Mistral AI SAS, 15 rue des Halles, 75001 Paris, Frankreich – Verarbeitung in der EU',
         'realtime_provider' => 'Pusher Ltd, London (Vereinigtes Königreich), Verarbeitung im EU-Cluster; für das Vereinigte Königreich gilt ein Angemessenheitsbeschluss der EU-Kommission (Art. 45 DSGVO)',
         // Days after which web server log files (IP address, time, URL, browser) are deleted.
         'server_log_days' => null,

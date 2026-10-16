@@ -2,6 +2,7 @@
 
 namespace App\Queries\Network;
 
+use App\Enums\Network\PostKind;
 use App\Models\Oasis;
 use App\Models\Post;
 use App\Models\User;
@@ -18,17 +19,21 @@ class PostFeed
 {
     public const PER_PAGE = 20;
 
-    /** "Quelle": own Tropfen plus those of followed people and oases; replies stay on the Tropfen page. */
+    /** "Quelle": own Tropfen plus those of followed people and oases; replies from followed people are bundled under their origin Tropfen. */
     public function source(User $viewer): CursorPaginator
     {
         $people = $viewer->following()->where('followable_type', (new User)->getMorphClass())->select('followable_id');
         $oases = $viewer->following()->where('followable_type', (new Oasis)->getMorphClass())->select('followable_id');
 
-        return $this->paginate($viewer, Post::query()
+        $paginator = $this->paginate($viewer, Post::query()
             ->whereNull('reply_to_id')
             ->where(fn (Builder $query) => $query->where('user_id', $viewer->id)
                 ->orWhereIn('user_id', $people)
                 ->orWhereIn('oasis_id', $oases)));
+
+        $this->loadConversationReplies($paginator->getCollection(), $viewer);
+
+        return $paginator;
     }
 
     /** Tropfen of one person (profile page), without replies. */
@@ -122,6 +127,8 @@ class PostFeed
      */
     public function withCardData(Builder $query, ?User $viewer): Builder
     {
+        $viewer?->mutualFollowUserIds();
+
         return $query
             ->with(['author.profile', 'oasis', 'images', 'carried.author.profile', 'carried.images', 'replyTo.author'])
             ->withCount(['reactions', 'replies'])
@@ -129,5 +136,59 @@ class PostFeed
                 'reactions as reacted' => fn (Builder $reaction) => $reaction->where('user_id', $viewer->id),
                 'bookmarks as bookmarked' => fn (Builder $bookmark) => $bookmark->where('user_id', $viewer->id),
             ]));
+    }
+
+    /**
+     * Bundles conversation replies under their origin Tropfen for the Quelle.
+     * Loads up to 2 replies from followed people (or replies to the viewer's own questions),
+     * oldest first, and notes if more replies exist.
+     *
+     * @param  \Illuminate\Support\Collection<int, Post>  $posts
+     */
+    public function loadConversationReplies(\Illuminate\Support\Collection $posts, User $viewer): void
+    {
+        if ($posts->isEmpty()) {
+            return;
+        }
+
+        $postIds = $posts->pluck('id')->all();
+        $followedUserIds = $viewer->following()
+            ->where('followable_type', (new User)->getMorphClass())
+            ->pluck('followable_id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+
+        // Build query for replies to these posts:
+        $repliesQuery = Post::query()
+            ->whereIn('reply_to_id', $postIds)
+            ->visibleTo($viewer);
+
+        $repliesQuery = $this->filterSafety($repliesQuery, $viewer);
+
+        // Include replies from people the viewer follows (or the viewer themselves), or replies to the viewer's own questions
+        $repliesQuery->where(function (Builder $q) use ($viewer, $followedUserIds): void {
+            if (! empty($followedUserIds)) {
+                $q->whereIn('posts.user_id', [...$followedUserIds, $viewer->id]);
+            } else {
+                $q->where('posts.user_id', $viewer->id);
+            }
+            $q->orWhere(function (Builder $questionReplies) use ($viewer): void {
+                $questionReplies->whereHas('replyTo', function (Builder $parent) use ($viewer): void {
+                    $parent->where('user_id', $viewer->id)->where('kind', PostKind::Question->value);
+                });
+            });
+        });
+
+        $replies = $repliesQuery
+            ->with(['author.profile'])
+            ->orderBy('id', 'asc')
+            ->get()
+            ->groupBy('reply_to_id');
+
+        foreach ($posts as $post) {
+            $postReplies = $replies->get($post->id, collect());
+            $post->setRelation('conversationReplies', $postReplies->take(2));
+            $post->has_more_replies = ($post->replies_count ?? 0) > 2 || $postReplies->count() > 2;
+        }
     }
 }

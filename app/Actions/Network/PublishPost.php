@@ -2,6 +2,7 @@
 
 namespace App\Actions\Network;
 
+use App\Enums\Network\PostKind;
 use App\Enums\Network\Visibility;
 use App\Events\Network\PostPublished;
 use App\Models\Oasis;
@@ -24,7 +25,7 @@ class PublishPost
     public function __construct(private readonly StorePostImage $images) {}
 
     /**
-     * @param  array{body: string, visibility: string, oasis?: Oasis|null, reply_to?: Post|null, carried?: Post|null}  $input
+     * @param  array{body: string, visibility: string, kind?: string|PostKind|null, oasis?: Oasis|null, reply_to?: Post|null, carried?: Post|null}  $input
      * @param  list<array{file: UploadedFile, alt: string}>  $images
      */
     public function handle(User $author, array $input, array $images = []): Post
@@ -38,6 +39,16 @@ class PublishPost
             }
         }
 
+        $kind = match ($input['kind'] ?? null) {
+            PostKind::Question, 'question' => PostKind::Question,
+            default => PostKind::Post,
+        };
+
+        // Replies and carried posts are always regular posts.
+        if ($context !== null || ($input['carried'] ?? null) !== null) {
+            $kind = PostKind::Post;
+        }
+
         $post = DB::transaction(fn () => Post::create([
             'user_id' => $author->id,
             'oasis_id' => $oasis?->id,
@@ -45,6 +56,7 @@ class PublishPost
             'carried_post_id' => ($input['carried'] ?? null)?->id,
             'body' => $input['body'],
             'visibility' => $visibility,
+            'kind' => $kind,
         ]));
 
         try {

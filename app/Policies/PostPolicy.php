@@ -27,7 +27,7 @@ class PostPolicy
     public function interact(User $user, Post $post): bool
     {
         return $this->create($user)
-            && $post->removed_from_oasis_at === null
+            && $post->removed_from_oasis_at === null && $post->held_at === null
             && $post->isVisibleTo($user)
             && ! in_array($post->user_id, $user->blockedUserIds(), true);
     }

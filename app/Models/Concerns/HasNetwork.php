@@ -62,4 +62,52 @@ trait HasNetwork
             ->where('followable_id', $target->getKey())
             ->exists();
     }
+
+    /**
+     * Cache for mutual follow user IDs within the current request/model instance.
+     *
+     * @var array<int>|null
+     */
+    protected ?array $mutualFollowUserIdsCache = null;
+
+    /**
+     * Whether this account and the other user mutually follow each other.
+     */
+    public function followsMutually(User $other): bool
+    {
+        if ($this->id === $other->id) {
+            return false;
+        }
+
+        if ($this->mutualFollowUserIdsCache !== null) {
+            return in_array($other->id, $this->mutualFollowUserIdsCache, true);
+        }
+
+        return $this->follows($other) && $other->follows($this);
+    }
+
+    /**
+     * Return (and cache on this model instance) the IDs of users who mutually follow each other with this user.
+     *
+     * @return array<int>
+     */
+    public function mutualFollowUserIds(): array
+    {
+        if ($this->mutualFollowUserIdsCache === null) {
+            $this->mutualFollowUserIdsCache = Follow::query()
+                ->where('follower_id', $this->id)
+                ->where('followable_type', (new User)->getMorphClass())
+                ->whereIn('followable_id', function ($query): void {
+                    $query->select('follower_id')
+                        ->from('follows')
+                        ->where('followable_type', (new User)->getMorphClass())
+                        ->where('followable_id', $this->id);
+                })
+                ->pluck('followable_id')
+                ->map(fn ($id): int => (int) $id)
+                ->all();
+        }
+
+        return $this->mutualFollowUserIdsCache;
+    }
 }

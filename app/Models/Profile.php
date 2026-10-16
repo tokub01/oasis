@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\Network\AvatarColor;
 use App\Enums\Network\Visibility;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Public-facing profile of an account (stage 2). Kept apart from `users` so account/billing columns and profile
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $location
  * @property Visibility $visibility
  * @property AvatarColor $avatar_color
+ * @property User $user
  */
 class Profile extends Model
 {
@@ -31,6 +33,12 @@ class Profile extends Model
     protected function casts(): array
     {
         return ['visibility' => Visibility::class, 'avatar_color' => AvatarColor::class];
+    }
+
+    /** The account this profile belongs to (moderation links to the profile by username). */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     /** Whether a viewer (null = guest) may open this profile. */

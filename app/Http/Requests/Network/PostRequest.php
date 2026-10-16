@@ -6,6 +6,7 @@ use App\Actions\Network\StorePostImage;
 use App\Enums\Network\Visibility;
 use App\Models\Oasis;
 use App\Models\Post;
+use App\Support\Network\TextLinks;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\Rule;
@@ -44,6 +45,7 @@ class PostRequest extends FormRequest
             'oasis' => ['nullable', 'string', Rule::exists('oases', 'slug')],
             'reply_to' => ['nullable', 'integer', Rule::exists('posts', 'id')],
             'carried' => ['nullable', 'integer', Rule::exists('posts', 'id'), 'prohibits:reply_to'],
+            'link_read' => [Rule::when(TextLinks::in($this->carried()->body ?? '') !== [], ['accepted'])],
             'images' => ['nullable', 'array', 'max:'.Post::MAX_IMAGES],
             'images.*' => ['file', 'image', 'mimes:jpeg,png,webp,gif', 'max:'.self::IMAGE_MAX_KB,
                 Rule::dimensions()->maxWidth(StorePostImage::MAX_INPUT_EDGE)->maxHeight(StorePostImage::MAX_INPUT_EDGE)],
@@ -71,6 +73,7 @@ class PostRequest extends FormRequest
         return [
             'body.required' => 'Schreib etwas in deinen Tropfen.',
             'body.max' => 'Ein Tropfen hat höchstens '.Post::MAX_LENGTH.' Zeichen.',
+            'link_read.accepted' => 'Bestätige bitte, dass du den verlinkten Inhalt gelesen hast.',
             'images.max' => 'Höchstens '.Post::MAX_IMAGES.' Bilder pro Tropfen.',
             'images.*.image' => 'Das ist kein Bild.',
             'images.*.mimes' => 'Bilder bitte als JPEG, PNG, WebP oder GIF.',

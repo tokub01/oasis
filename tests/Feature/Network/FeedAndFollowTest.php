@@ -8,19 +8,20 @@ use Tests\Support\NetworkFixtures as N;
 /* Quelle, Entdecken, following people and profiles. */
 beforeEach(fn () => $this->withoutVite());
 
-it('shows own Tropfen and those of followed people in order, without replies or strangers', function () {
+it('shows own Tropfen and those of followed people in order, with bundled replies from followed people', function () {
     $me = N::member();
     $friend = N::member();
     $stranger = N::member();
     $old = N::post($friend, ['body' => 'Alt von Freundin']);
     N::post($stranger, ['body' => 'Fremder Tropfen']);
+    N::post($stranger, ['body' => 'Antwort von Fremdem', 'reply_to_id' => $old->id]);
     N::post($friend, ['body' => 'Antwort von Freundin', 'reply_to_id' => $old->id]);
     N::post($me, ['body' => 'Mein Tropfen']);
 
     $this->actingAs($me)->post(route('network.follow.user', $friend))->assertRedirect();
     $this->get(route('app.home'))->assertOk()
-        ->assertSeeInOrder(['Mein Tropfen', 'Alt von Freundin'])
-        ->assertDontSee('Fremder Tropfen')->assertDontSee('Antwort von Freundin')->assertDontSee('Nächste Schritte');
+        ->assertSeeInOrder(['Mein Tropfen', 'Alt von Freundin', 'Antwort von Freundin'])
+        ->assertDontSee('Fremder Tropfen')->assertDontSee('Antwort von Fremdem')->assertDontSee('Nächste Schritte');
 });
 
 it('pages with a cursor and ends honestly', function () {

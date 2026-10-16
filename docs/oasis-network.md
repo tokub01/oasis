@@ -88,3 +88,21 @@ Charts are tables with CSS bars (`x-network.week-chart`), readable by screen rea
 - **Account deletion** (`App\Actions\Account\DeleteAccount`): oases where the account is the only host get the
   longest member as host or are closed when empty; uploaded images are removed from the media disk after the commit.
 - **Reporting**: "Melden" on foreign profiles and oases as well; the report form is prefilled for members.
+
+## Stage 10: read before carrying
+
+- **External links**: `x-network.rich-text` makes valid HTTP/HTTPS URLs clickable, showing the destination host.
+  Text, URL attributes and titles are escaped; external links use `target="_blank"` and
+  `rel="noopener noreferrer nofollow"`. Other schemes, credentials and backslash URLs remain plain text.
+  Sentence punctuation stays outside links; balanced parentheses in URL paths are preserved.
+  URL ranges take precedence over mention/topic tokens, so paths and fragments are not split into internal links.
+- **Read before carrying**: when the original Tropfen contains such a link, `network.posts.carry` shows
+  “Hast du den Link gelesen? Weitertragen heißt: Du stehst dafür ein.”, the destinations and the required
+  “Ich habe den Inhalt gelesen” checkbox. Its HTML `form` attribute associates it with the compose form without JS.
+  `PostRequest` validates `link_read` as accepted against the original Tropfen's body, including direct POSTs.
+  New posts, replies and carries without external links need no confirmation. Acceptance is a submission check,
+  not evidence that a person visited or read a page, and is not stored as a separate tracking record.
+- **No previews or tracking**: `App\Support\Network\TextLinks` only parses text; it never resolves or fetches URLs.
+  The check does not assess the truth or trustworthiness of linked content.
+- **Tests**: `tests/Feature/Network/ReadBeforeCarryTest.php` covers validation, accessible form association,
+  error/old-input handling, dangerous input, URL/token overlap and punctuation; outbound HTTP is prohibited.

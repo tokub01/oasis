@@ -3,11 +3,16 @@
 namespace App\Providers;
 
 use App\Enums\Role;
+use App\Events\Network\PostPublished;
+use App\Jobs\Moderation\CheckContent;
 use App\Models\ChatReport;
+use App\Models\ContentCheck;
 use App\Models\ContentReport;
 use App\Models\ModerationCase;
 use App\Models\ModerationComplaint;
 use App\Models\ModerationDecision;
+use App\Models\Oasis;
+use App\Models\Profile;
 use App\Models\User;
 use App\Observers\ChatReportObserver;
 use App\Observers\ContentReportObserver;
@@ -17,6 +22,7 @@ use App\Policies\ModerationDecisionPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -30,9 +36,22 @@ class ModerationServiceProvider extends ServiceProvider
         Relation::morphMap([
             'content_report' => ContentReport::class,
             'chat_report' => ChatReport::class,
+            'content_check' => ContentCheck::class,
         ]);
         ContentReport::observe(ContentReportObserver::class);
         ChatReport::observe(ChatReportObserver::class);
+        // Stage 10: automated content check of every new/changed public text (docs/oasis-auto-moderation.md).
+        Event::listen(PostPublished::class, fn (PostPublished $event) => CheckContent::for($event->post));
+        Profile::saved(function (Profile $profile): void {
+            if ($profile->wasRecentlyCreated || $profile->wasChanged(['bio', 'location'])) {
+                CheckContent::for($profile);
+            }
+        });
+        Oasis::saved(function (Oasis $oasis): void {
+            if ($oasis->wasRecentlyCreated || $oasis->wasChanged(['name', 'description', 'house_rules'])) {
+                CheckContent::for($oasis);
+            }
+        });
         Gate::policy(ModerationCase::class, ModerationCasePolicy::class);
         Gate::policy(ModerationComplaint::class, ModerationComplaintPolicy::class);
         Gate::policy(ModerationDecision::class, ModerationDecisionPolicy::class);

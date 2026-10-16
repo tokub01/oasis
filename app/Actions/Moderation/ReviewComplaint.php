@@ -46,6 +46,10 @@ class ReviewComplaint
 
             return $replacement;
         });
+        if ($replacement) {
+            // An overturned decision on an automated detection may make a held Tropfen visible again.
+            app(ReleaseHeldContent::class)->handle($replacement);
+        }
         DB::afterCommit(function () use ($replacement, $complaint) {
             if ($replacement) {
                 app(NotifyDecision::class)->handle($replacement);

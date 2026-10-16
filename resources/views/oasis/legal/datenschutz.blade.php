@@ -103,6 +103,7 @@
             <ul class="m-0 flex list-disc flex-col gap-1 pl-5">
                 <li>Hosting: {{ $privacy['hosting'] }}</li>
                 <li>E-Mail-Versand und -Empfang: {{ $open($privacy['mail_provider']) }}</li>
+                <li>Automatische Prüfung öffentlicher Texte auf Regelverstöße: {{ $privacy['ai_provider'] }} – erhält nur den jeweiligen Text, keine Namen, Benutzernamen oder anderen Angaben zu deinem Konto</li>
                 <li>Zustellung von Chat-Nachrichten in Echtzeit: {{ $privacy['realtime_provider'] }} – erhält nur verschlüsselte Nachrichten, Chat-Nummern und technische Verbindungsdaten wie deine IP-Adresse</li>
                 <li>Zahlungsabwicklung und Abrechnung: Stripe Payments Europe, Ltd., 1 Grand Canal Street Lower, Grand Canal Dock, Dublin, D02 H210, Irland (Muttergesellschaft: Stripe, Inc., USA) – verarbeitet Zahlungs- und Abrechnungsdaten (z. B. Kartendaten, IBAN, Rechnungsadresse) zur Abwicklung der Mitgliedsbeiträge (Art. 6 Abs. 1 lit. b DSGVO) sowie zur Erfüllung gesetzlicher steuer- und handelsrechtlicher Aufbewahrungspflichten (Art. 6 Abs. 1 lit. c DSGVO). Für eventuelle Datenübermittlungen an die US-Muttergesellschaft gelten EU-Standardvertragsklauseln (Art. 46 Abs. 2 lit. c DSGVO) und der Angemessenheitsbeschluss zum EU-US Data Privacy Framework (Art. 45 DSGVO).</li>
             </ul>
@@ -116,8 +117,9 @@
         </section>
 
         <section class="flex flex-col gap-[6px]">
-            <h2 class="{{ $h2 }}">14. Automatisierte Entscheidungen</h2>
-            <p class="m-0">Wir treffen keine Entscheidungen, die ausschließlich automatisiert sind, und bilden keine Profile über dich.</p>
+            <h2 class="{{ $h2 }}">14. Automatische Prüfung und Entscheidungen</h2>
+            <p class="m-0">Tropfen, Antworten, Profiltexte und Texte von Oasen prüfen wir automatisch mit einem Sprachmodell auf Beleidigungen, Hass, Drohungen und sexuelle Inhalte. Dafür geht nur der Text an unseren Dienstleister in der EU (siehe Abschnitt 12); gespeichert werden bei uns nur die Einschätzung (Werte je Kategorie und eine kurze Begründung) und der Zeitpunkt – {{ $open($privacy['records_years'], ' Jahre') }} lang, wie andere Moderationsunterlagen. Rechtsgrundlage ist unser berechtigtes Interesse, die Community-Regeln durchzusetzen und rechtswidrige Inhalte zu erkennen (Art. 6 Abs. 1 lit. f DSGVO), sowie die Pflichten aus dem Digital Services Act (Art. 6 Abs. 1 lit. c DSGVO).</p>
+            <p class="m-0">Klingt ein Tropfen verletzend, zeigen wir dir vor dem Absenden einen Hinweis; du entscheidest selbst, ob du ihn änderst. Fällt ein Text auf, landet er beim Moderationsteam. Eindeutig sexuelle Tropfen blenden wir bis zur Prüfung vorläufig aus und sagen dir das. Entscheidungen über Konsequenzen trifft immer ein Mensch – wir treffen keine Entscheidungen, die ausschließlich automatisiert sind (Art. 22 DSGVO), und bilden keine Profile über dich. Verschlüsselte Chat-Nachrichten werden nicht geprüft; wir können sie nicht lesen.</p>
         </section>
 
         <section class="flex flex-col gap-[6px]">

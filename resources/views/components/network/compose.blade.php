@@ -34,6 +34,13 @@
                   aria-describedby="{{ $id }}-hint{{ $errors->has('body') ? ' '.$id.'-error' : '' }}">{{ old('body') }}</textarea>
         <p id="{{ $id }}-hint" class="m-0 text-sm text-muted">Höchstens {{ \App\Models\Post::MAX_LENGTH }} Zeichen.</p>
         @error('body') <p id="{{ $id }}-error" class="m-0 text-sm font-bold text-sun-text">{{ $message }}</p> @enderror
+        {{-- "Nochmal lesen?" (stage 10): after the automated tone hint the member may still send it unchanged. --}}
+        @if (session('tone_nudge') || old('tone_confirmed'))
+            <label class="flex items-start gap-3 rounded-2xl bg-dune px-4 py-3 text-[15px]">
+                <input type="checkbox" name="tone_confirmed" value="1" @checked(old('tone_confirmed')) class="mt-1 size-5 flex-none accent-night">
+                <span>So senden – ich meine es genau so.</span>
+            </label>
+        @endif
     </div>
 
     @if ($images)
@@ -56,19 +63,32 @@
     @endif
 
     <div class="flex flex-wrap items-end justify-between gap-4">
-        @if ($forced)
-            <input type="hidden" name="visibility" value="members">
-            <p class="m-0 text-sm text-muted">Sichtbar nur für Mitglieder, wie der Ort, an dem du schreibst.</p>
-        @else
-            <div class="flex flex-col gap-1.5">
-                <label for="{{ $id }}-visibility" class="text-sm font-bold">Wer darf lesen?</label>
-                <select id="{{ $id }}-visibility" name="visibility" class="o-input">
-                    @foreach (\App\Enums\Network\Visibility::cases() as $option)
-                        <option value="{{ $option->value }}" @selected(old('visibility', $profileVisibility) === $option->value)>{{ $option->label() }}</option>
-                    @endforeach
-                </select>
-            </div>
-        @endif
+        <div class="flex flex-wrap items-end gap-4">
+            @if (! $replyTo && ! $carried)
+                <div class="flex flex-col gap-1.5">
+                    <label for="{{ $id }}-kind" class="text-sm font-bold">Art des Tropfens</label>
+                    <select id="{{ $id }}-kind" name="kind" class="o-input">
+                        @foreach (\App\Enums\Network\PostKind::cases() as $kindOption)
+                            <option value="{{ $kindOption->value }}" @selected(old('kind', 'post') === $kindOption->value)>{{ $kindOption->label() }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
+
+            @if ($forced)
+                <input type="hidden" name="visibility" value="members">
+                <p class="m-0 text-sm text-muted">Sichtbar nur für Mitglieder, wie der Ort, an dem du schreibst.</p>
+            @else
+                <div class="flex flex-col gap-1.5">
+                    <label for="{{ $id }}-visibility" class="text-sm font-bold">Wer darf lesen?</label>
+                    <select id="{{ $id }}-visibility" name="visibility" class="o-input">
+                        @foreach (\App\Enums\Network\Visibility::cases() as $option)
+                            <option value="{{ $option->value }}" @selected(old('visibility', $profileVisibility) === $option->value)>{{ $option->label() }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
+        </div>
         <button type="submit" class="o-btn o-btn-md o-btn-dark">{{ $submit }}</button>
     </div>
 </form>

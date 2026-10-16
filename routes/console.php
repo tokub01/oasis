@@ -17,3 +17,6 @@ Schedule::command('oasis:trial-reminders')->dailyAt('09:00');
 
 // Stage 1: Retention pruning for expired accounts past retention_days (behind config switch)
 Schedule::command('oasis:prune-expired-accounts')->dailyAt('03:00');
+
+// Stage 10: re-queue automated content checks that never ran (e.g. queue worker down).
+Schedule::command('oasis:moderation-sweep')->everyTenMinutes()->withoutOverlapping();

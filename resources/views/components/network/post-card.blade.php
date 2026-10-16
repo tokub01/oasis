@@ -50,8 +50,18 @@
         </div>
     </header>
 
+    @if ($post->isQuestion())
+        <div class="inline-flex items-center gap-1.5 self-start rounded-full bg-sand px-3 py-1 text-xs font-bold text-night">
+            <x-oasis.icon name="users" :size="14" class="text-spring-text" />
+            <span>{{ $viewer && $viewer->id === $post->author->id ? 'Frage an meine Karawane' : 'Frage an die Karawane' }}</span>
+        </div>
+    @endif
+
     @if ($post->removed_from_oasis_at)
         <p class="m-0 rounded-2xl bg-dune px-4 py-3 text-sm">Die Gastgeber:innen haben diesen Tropfen aus der Oase entfernt. Nur du siehst ihn noch.</p>
+    @endif
+    @if ($post->held_at)
+        <p class="m-0 rounded-2xl bg-dune px-4 py-3 text-sm">Unsere automatische Prüfung hat in diesem Tropfen möglicherweise sexuelle Inhalte erkannt. Bis ein Mensch aus dem Moderationsteam ihn geprüft hat, siehst nur du ihn.</p>
     @endif
 
     <p class="m-0 text-[17px] leading-[1.55] whitespace-pre-line break-words"><x-network.rich-text :text="$post->body" /></p>
@@ -78,12 +88,62 @@
         @endif
     @endif
 
-    @can('viewStats', $post)
+    @if ($post->isQuestion() && $viewer && $viewer->id === $post->author->id)
+        <p class="m-0 flex items-center gap-2 rounded-2xl bg-sand px-4 py-2.5 text-[15px] font-bold text-night">
+            <x-oasis.icon name="reply" :size="18" class="text-spring-text" />
+            <span>
+                @if ($post->replies_count === 1)
+                    1 Mensch hat geantwortet
+                @elseif ($post->replies_count > 1)
+                    {{ $post->replies_count }} Menschen haben geantwortet
+                @else
+                    Noch hat niemand geantwortet
+                @endif
+                <span class="text-xs font-normal text-muted">(nur für dich sichtbar · {{ $post->reactions_count }} {{ $post->reactions_count === 1 ? 'Reaktion' : 'Reaktionen' }})</span>
+            </span>
+        </p>
+    @elseif ($viewer && $viewer->can('viewStats', $post))
         <p class="m-0 flex items-center gap-2 rounded-2xl bg-sand px-4 py-2.5 text-[15px]">
             <x-oasis.icon name="eye-off" :size="18" class="text-night" />
             <span><b>Nur für dich sichtbar:</b> {{ $post->reactions_count }} {{ $post->reactions_count === 1 ? 'Reaktion' : 'Reaktionen' }}, {{ $post->replies_count }} {{ $post->replies_count === 1 ? 'Antwort' : 'Antworten' }}</span>
         </p>
-    @endcan
+    @endif
+
+    @if ($link && $post->relationLoaded('conversationReplies') && $post->conversationReplies->isNotEmpty())
+        <div class="flex flex-col gap-2 rounded-2xl border border-dune-line bg-sand/40 p-3.5">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-muted uppercase tracking-wider">
+                    {{ $post->isQuestion() ? 'Antworten aus der Karawane' : 'Gesprächsverlauf' }}
+                </span>
+                @if ($post->has_more_replies || ($post->replies_count ?? 0) > $post->conversationReplies->count())
+                    <a href="{{ $postUrl }}#antworten" class="text-xs font-bold text-night underline underline-offset-4">weitere Antworten</a>
+                @endif
+            </div>
+            <div class="flex flex-col gap-2.5">
+                @foreach ($post->conversationReplies as $reply)
+                    <div class="flex items-start gap-2.5 text-sm">
+                        <a href="{{ route('oasis.profil', $reply->author->username) }}" class="flex-none no-underline" tabindex="-1">
+                            <x-network.avatar :user="$reply->author" :size="32" />
+                        </a>
+                        <div class="flex min-w-0 flex-col leading-snug">
+                            <div class="flex items-baseline gap-1.5">
+                                <a href="{{ route('oasis.profil', $reply->author->username) }}" class="font-bold text-ink no-underline hover:underline">
+                                    {{ $reply->author->display_name }}
+                                </a>
+                                <span class="text-xs text-muted">{{ '@'.$reply->author->username }}</span>
+                            </div>
+                            <p class="m-0 text-ink-2 whitespace-pre-line break-words text-sm">
+                                <x-network.rich-text :text="$reply->body" />
+                            </p>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            @if ($post->has_more_replies || ($post->replies_count ?? 0) > $post->conversationReplies->count())
+                <a href="{{ $postUrl }}#antworten" class="self-start text-xs font-bold text-night underline underline-offset-4">weitere Antworten</a>
+            @endif
+        </div>
+    @endif
 
     <footer class="flex flex-wrap items-center gap-1.5 text-muted">
         @if ($canInteract)
@@ -181,4 +241,19 @@
             @endcan
         </span>
     </footer>
+
+    @if ($link && $canInteract && $viewer && $viewer->id !== $post->author->id && $viewer->followsMutually($post->author))
+        <form method="POST" action="{{ route('network.posts.store') }}" class="mt-1 flex items-center gap-2 rounded-2xl border border-dune-line bg-sand/40 p-2">
+            @csrf
+            <input type="hidden" name="reply_to" value="{{ $post->id }}">
+            <input type="hidden" name="visibility" value="{{ $post->visibility->value }}">
+            @if ($post->oasis)
+                <input type="hidden" name="oasis" value="{{ $post->oasis->slug }}">
+            @endif
+            <label for="quick-reply-{{ $post->id }}" class="sr-only">Antworten an {{ '@'.$post->author->username }}</label>
+            <input id="quick-reply-{{ $post->id }}" type="text" name="body" maxlength="{{ \App\Models\Post::MAX_LENGTH }}" required
+                   placeholder="Antworten …" class="o-input flex-1 bg-paper py-2 text-sm" />
+            <button type="submit" class="o-btn o-btn-sm o-btn-dark flex-none">Antworten</button>
+        </form>
+    @endif
 </article>

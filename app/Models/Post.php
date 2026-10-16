@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Network\PostKind;
 use App\Enums\Network\Visibility;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,8 @@ use Illuminate\Support\Carbon;
  *
  * Visibility (single source of truth: {@see scopeVisibleTo()} / {@see isVisibleTo()}):
  * - public Tropfen are readable by guests, members-only Tropfen only by verified members;
- * - a Tropfen a host removed from an oasis is only visible to its author.
+ * - a Tropfen a host removed from an oasis, or one held by the automated check for review, is only visible to its
+ *   author (and to staff, who review it).
  *
  * @property int $id
  * @property int $user_id
@@ -24,7 +26,9 @@ use Illuminate\Support\Carbon;
  * @property int|null $carried_post_id
  * @property string $body
  * @property Visibility $visibility
+ * @property PostKind $kind
  * @property Carbon|null $removed_from_oasis_at
+ * @property Carbon|null $held_at set while the automated check holds it for human review (stage 10)
  * @property Carbon $created_at
  * @property User $author
  * @property Oasis|null $oasis
@@ -39,12 +43,23 @@ class Post extends Model
     /** Maximum images per Tropfen. */
     public const MAX_IMAGES = 4;
 
-    protected $fillable = ['user_id', 'oasis_id', 'reply_to_id', 'carried_post_id', 'body', 'visibility'];
+    protected $fillable = ['user_id', 'oasis_id', 'reply_to_id', 'carried_post_id', 'body', 'visibility', 'kind'];
 
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['visibility' => Visibility::class, 'removed_from_oasis_at' => 'datetime'];
+        return [
+            'visibility' => Visibility::class,
+            'kind' => PostKind::class,
+            'removed_from_oasis_at' => 'datetime',
+            'held_at' => 'datetime',
+        ];
+    }
+
+    /** Whether this Tropfen is a question to one's followers ("Frage an meine Karawane"). */
+    public function isQuestion(): bool
+    {
+        return $this->kind === PostKind::Question;
     }
 
     /** @return BelongsTo<User, $this> */
@@ -106,6 +121,7 @@ class Post extends Model
         $query->where(fn (Builder $visible) => $visible
             ->where(fn (Builder $shown) => $shown
                 ->whereNull('removed_from_oasis_at')
+                ->whereNull('held_at')
                 ->when(! $member, fn (Builder $guest) => $guest->where('visibility', Visibility::Public->value)))
             ->when($viewer !== null, fn (Builder $own) => $own->orWhere('user_id', $viewer->id)));
     }
@@ -118,7 +134,11 @@ class Post extends Model
         if ($viewer !== null && $viewer->id === $this->user_id) {
             return true;
         }
-        if ($this->removed_from_oasis_at !== null) {
+        // Staff open reported, removed and held Tropfen from a moderation case (the queue links here).
+        if ($viewer?->role?->isStaff()) {
+            return true;
+        }
+        if ($this->removed_from_oasis_at !== null || $this->held_at !== null) {
             return false;
         }
 

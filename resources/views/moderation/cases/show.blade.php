@@ -2,7 +2,7 @@
     One moderation case (route moderation.cases.show).
 
     Variables (see docs/oasis-moderation.md):
-      $case      ModerationCase with source (ContentReport or ChatReport), subjectUser, assignee, decisions.decider,
+      $case      ModerationCase with source (ContentReport, ChatReport or ContentCheck), subjectUser, assignee, decisions.decider,
                  complaints.reviewer, events.actor
       $staff     Collection<User>  staff members for the assignment select
       $outcomes  list<Outcome>, $grounds list<Ground>  for the decision form
@@ -42,6 +42,37 @@
                             <dd class="m-0 whitespace-pre-wrap rounded-xl bg-sand p-3 font-mono text-sm">{{ $case->source->plaintext }}</dd>
                             <dt class="font-bold">Hinweis zur Prüfung</dt>
                             <dd class="m-0 text-sm text-muted">Vom meldenden Mitglied übermittelt. Absender, Chat und Zeit sind per Signatur geprüft; ob der Text zur verschlüsselten Nachricht passt, kann der Server nicht prüfen.</dd>
+                        @endif
+                        @if ($case->source instanceof \App\Models\ContentCheck)
+                            @php
+                                $check = $case->source;
+                                $checked = $check->checkable;
+                                $checkedText = match (true) {
+                                    $checked instanceof \App\Models\Post => $checked->body,
+                                    $checked instanceof \App\Models\Profile => trim($checked->bio.' · '.$checked->location, ' ·'),
+                                    $checked instanceof \App\Models\Oasis => $checked->name."\n".$checked->description."\n".$checked->house_rules,
+                                    default => null,
+                                };
+                            @endphp
+                            <dt class="font-bold">Quelle</dt>
+                            <dd class="m-0">Automatische Erkennung ({{ $check->source === 'wordlist' ? 'Wortliste – KI war nicht erreichbar' : 'Sprachmodell, Mistral, EU' }}) · {{ $check->checked_at?->timezone('Europe/Berlin')->format('d.m.Y H:i') }}</dd>
+                            <dt class="font-bold">Geprüfter Text</dt>
+                            <dd class="m-0 whitespace-pre-wrap rounded-xl bg-sand p-3 text-sm">{{ $checkedText ?? 'Inhalt existiert nicht mehr.' }}</dd>
+                            <dt class="font-bold">Einschätzung</dt>
+                            <dd class="m-0">
+                                <ul class="m-0 flex list-none flex-wrap gap-2 p-0">
+                                    @foreach (\App\Support\Moderation\ContentVerdict::CATEGORIES as $key => $label)
+                                        @php($score = $check->scores[$key] ?? 0)
+                                        <li @class(['rounded-full px-3 py-1 text-sm', 'bg-sun text-sun-ink font-bold' => $score >= config('oasis.moderation.report_threshold'), 'bg-paper text-ink-2' => $score < config('oasis.moderation.report_threshold')])>{{ $label }}: {{ number_format($score * 100) }} %</li>
+                                    @endforeach
+                                </ul>
+                                @if ($check->reason)
+                                    <p class="mt-2 mb-0 text-sm text-ink-2">{{ $check->reason }}</p>
+                                @endif
+                                @if ($checked instanceof \App\Models\Post && $checked->held_at)
+                                    <p class="mt-2 mb-0 text-sm font-bold text-sun-text">Vorläufig ausgeblendet seit {{ $checked->held_at->timezone('Europe/Berlin')->format('d.m.Y H:i') }}. „Keine Maßnahme“ macht ihn wieder sichtbar.</p>
+                                @endif
+                            </dd>
                         @endif
                         <dt class="font-bold">Begründung der Meldung</dt>
                         <dd class="m-0 whitespace-pre-wrap">{{ $case->source?->reason ?? '–' }}</dd>

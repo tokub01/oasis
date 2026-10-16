@@ -28,11 +28,15 @@ use RuntimeException;
  * `@demo.oasis.tld`), the four oases from the design, Tropfen with replies, carries, reactions and a few generated
  * images, one transparency report and two votes. Every existing account follows the sample members and oases.
  *
+ * Sample members sign in with their e-mail or username and the password `oasis-demo-2026` (self::PASSWORD).
  * Run: `sail artisan db:seed --class=DemoContentSeeder`. Refuses to run in production: the figures and people are
  * invented and must never appear on the live site. Running it twice adds nothing twice (keyed by email/slug).
  */
 class DemoContentSeeder extends Seeder
 {
+    /** Shared password of the sample members, so they can be tried out locally (this seeder never runs in production). */
+    public const PASSWORD = 'oasis-demo-2026';
+
     private const PEOPLE = [
         'mira' => ['Mira Sol', 'Fotografiert analog, meistens zu früh am Morgen. Gastgeberin von Korn & Licht.', 'Leipzig', 'sun'],
         'jonas' => ['Jonas Weber', 'Gärtnert auf 12 Quadratmetern Balkon und tauscht Ableger gegen gute Geschichten.', 'Köln', 'spring'],
@@ -152,7 +156,7 @@ class DemoContentSeeder extends Seeder
     private function person(string $handle, string $name, string $bio, string $location, string $color): User
     {
         $user = User::firstOrCreate(['email' => $handle.'@demo.oasis.tld'], [
-            'display_name' => $name, 'username' => $handle, 'birth_date' => '1990-01-01', 'password' => str()->random(32),
+            'display_name' => $name, 'username' => $handle, 'birth_date' => '1990-01-01', 'password' => self::PASSWORD,
             'terms_accepted_at' => now()->subMonths(2), 'trial_ends_at' => now()->addDays(20),
         ]);
         $user->forceFill(['email_verified_at' => now()->subMonths(2), 'created_at' => now()->subMonths(rand(1, 6))])->save();

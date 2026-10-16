@@ -5,6 +5,8 @@
  * Vite is disabled so these feature assertions do not depend on a frontend build.
  */
 
+use App\Models\User;
+
 beforeEach(function () {
     $this->withoutVite();
     config(['oasis.demo_pages' => true, 'oasis.checkout_enabled' => false]);
@@ -216,3 +218,13 @@ it('marks the active main-navigation link on each matching page', function ($pag
     $response = $this->get(route('oasis.'.$page))->assertOk();
     expect($response->getContent())->toContain('href="'.route('oasis.'.$page).'" wire:navigate aria-current="page"');
 })->with(['funktionen', 'preise', 'transparenz', 'manifest', 'gemeinsam']);
+
+it('sends signed-in members from login and registration into the app, never in a circle', function (string $page) {
+    $this->actingAs(User::factory()->create())->get(route($page))->assertRedirect(route('app.home'));
+})->with(['login', 'register']);
+
+it('offers signed-in members the way into the app instead of login and trial', function () {
+    $this->get(route('oasis.home'))->assertSee(route('login'), false)->assertDontSee('>Zur App<', false);
+    $this->actingAs(User::factory()->create())->get(route('oasis.home'))->assertOk()
+        ->assertSee('>Zur App<', false)->assertDontSee('href="'.route('login').'"', false);
+});

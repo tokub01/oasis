@@ -12,7 +12,12 @@
             ['Transparenz', route('oasis.transparenz')],
             ['Manifest', route('oasis.manifest')],
         ],
-        'Mitmachen' => [
+        // Signed-in members get the way into the app instead of trial and login.
+        'Mitmachen' => auth()->check() ? [
+            ['Zur App', route('app.home')],
+            ['Gemeinsam starten', route('oasis.gemeinsam')],
+            ['Gründungsmitglied', route('oasis.gruendung')],
+        ] : [
             [config('oasis.trial_days').' Tage testen', route('register')],
             ['Gemeinsam starten', route('oasis.gemeinsam')],
             ['Gründungsmitglied', route('oasis.gruendung')],

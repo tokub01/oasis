@@ -22,6 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'mollie/webhook',
         ]);
+        // Signed-in visitors of guest-only pages (/anmelden, /testen) go straight into the app.
+        $middleware->redirectUsersTo(fn () => route('app.home'));
         // CSP with per-request nonce and the other security headers on every web response (stage 7).
         $middleware->web(append: [SecurityHeaders::class]);
     })

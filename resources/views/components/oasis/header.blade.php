@@ -52,8 +52,12 @@
                 @endforeach
             </nav>
             <div class="flex flex-wrap items-center gap-x-[18px] gap-y-2">
-                <a href="{{ route('login') }}" wire:navigate class="inline-flex min-h-11 items-center text-base font-semibold text-night no-underline">Anmelden</a>
-                <a href="{{ route('register') }}" wire:navigate class="o-btn o-btn-sm o-btn-primary">{{ config('oasis.trial_days') }} Tage testen</a>
+                @auth
+                    <a href="{{ route('app.home') }}" wire:navigate class="o-btn o-btn-sm o-btn-primary">Zur App</a>
+                @else
+                    <a href="{{ route('login') }}" wire:navigate class="inline-flex min-h-11 items-center text-base font-semibold text-night no-underline">Anmelden</a>
+                    <a href="{{ route('register') }}" wire:navigate class="o-btn o-btn-sm o-btn-primary">{{ config('oasis.trial_days') }} Tage testen</a>
+                @endauth
             </div>
         @endif
     </div>

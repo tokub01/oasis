@@ -103,6 +103,7 @@
             <ul class="m-0 flex list-disc flex-col gap-1 pl-5">
                 <li>Hosting: {{ $privacy['hosting'] }}</li>
                 <li>E-Mail-Versand und -Empfang: {{ $open($privacy['mail_provider']) }}</li>
+                <li>Speicherung hochgeladener Bilder: {{ $privacy['media_storage'] }} – die Bilder liegen verschlüsselt in Frankfurt und werden nur über unsere Server ausgeliefert. Für einen möglichen Zugriff der US-Muttergesellschaft gelten der Angemessenheitsbeschluss zum EU-US Data Privacy Framework (Art. 45 DSGVO) und EU-Standardvertragsklauseln (Art. 46 Abs. 2 lit. c DSGVO).</li>
                 <li>Automatische Prüfung öffentlicher Texte auf Regelverstöße: {{ $privacy['ai_provider'] }} – erhält nur den jeweiligen Text, keine Namen, Benutzernamen oder anderen Angaben zu deinem Konto</li>
                 <li>Zahlungsabwicklung und Abrechnung: Mollie B.V., Keizersgracht 126, 1015 CW Amsterdam, Niederlande – verarbeitet Zahlungs- und Abrechnungsdaten (z. B. Kartendaten, IBAN, Rechnungsadresse) zur Abwicklung der Mitgliedsbeiträge (Art. 6 Abs. 1 lit. b DSGVO) sowie zur Erfüllung gesetzlicher steuer- und handelsrechtlicher Aufbewahrungspflichten (Art. 6 Abs. 1 lit. c DSGVO).</li>
             </ul>

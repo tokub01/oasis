@@ -131,6 +131,8 @@ return [
         // Provider that sends the confirmation mails, incl. region. Planned: Amazon SES via SMTP (see PROMPT.md).
         'mail_provider' => null,
         // Automated content check (stage 10): only the text is sent. Verify DPA and retention terms before launch.
+        // Storage of uploaded images (S3, eu-central-1). Verify against the signed AWS DPA before launch.
+        'media_storage' => 'Amazon Web Services EMEA SARL, 38 Avenue John F. Kennedy, L-1855 Luxemburg, Rechenzentrum in Frankfurt am Main (Muttergesellschaft: Amazon.com, Inc., USA)',
         'ai_provider' => 'Mistral AI SAS, 15 rue des Halles, 75001 Paris, Frankreich – Verarbeitung in der EU',
         // Realtime delivery of encrypted chat messages runs on our own server via Laravel Reverb (null = no third-party provider).
         'realtime_provider' => null,

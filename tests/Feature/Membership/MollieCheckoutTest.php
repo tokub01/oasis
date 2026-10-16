@@ -57,6 +57,13 @@ test('the webhook URL is sent unless webhooks are switched off for a local setup
     'local' => [false],
 ]);
 
+test('the membership page preselects card and never asks for bank details itself', function () {
+    config()->set('oasis.checkout_enabled', true);
+    $this->actingAs(User::factory()->create())->get(route('oasis.mitglied'))->assertOk()
+        ->assertSee('name="zahlart" value="karte" data-label="Kreditkarte" checked', false)
+        ->assertDontSee('name="iban"', false)->assertDontSee('name="inhaber"', false);
+});
+
 test('new customers are persisted and gifts use oneoff payments', function () {
     config()->set('oasis.checkout_enabled', true);
     $user = User::factory()->create();

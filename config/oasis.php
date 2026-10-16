@@ -24,10 +24,10 @@ return [
     'domain' => env('OASIS_DOMAIN', 'get-oasis.com'),
 
     /*
-     * Operator details for the Impressum (§ 5 DDG), the footer © line and the SEPA mandate.
+     * Operator details for the Impressum (§ 5 DDG), the footer © line.
      */
     'operator' => [
-        // Short name in the footer and the SEPA mandate.
+        // Short name in the footer.
         'name' => env('OASIS_OPERATOR_NAME', 'Tobias Kubina – VelWebSolutions'),
         // Full legal name, legal form, address and phone for the Impressum.
         'legal_name' => env('OASIS_OPERATOR_LEGAL_NAME', 'Tobias Kubina, B.Sc. – VelWebSolutions'),
@@ -171,8 +171,6 @@ return [
     'payment' => [
         // Card payment provider named in the checkout hint.
         'provider' => 'Mollie',
-        // SEPA creditor identifier for the mandate text.
-        'sepa_creditor_id' => '[GLÄUBIGER-ID]',
         // Send a webhook URL with payments and subscriptions. Mollie rejects URLs it cannot reach (localhost),
         // so local setups switch this off and `oasis:mollie-sync` picks up the payment status instead.
         'webhooks' => (bool) env('MOLLIE_WEBHOOKS', true),

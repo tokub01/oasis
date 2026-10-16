@@ -1,7 +1,7 @@
 {{--
     Mitglied werden (checkout): route oasis.mitglied via PageController::membership(), template Mitglied.dc.html.
     404 while oasis.checkout_enabled is false. The order summary is the JS module "membership"; without JS the
-    default tier (Oase, monthly, SEPA) is preselected and its summary is rendered server-side.
+    default tier (Oase, monthly, card) is preselected and its summary is rendered server-side.
     Optional variables from a future checkout controller: $trialDaysLeft (int), $trialEndDate (string).
 --}}
 @extends('layouts.oasis', [
@@ -36,7 +36,7 @@
 
     $payments = ['sepa' => 'SEPA-Lastschrift', 'paypal' => 'PayPal', 'karte' => 'Kreditkarte'];
 
-    // Defaults shown without JavaScript: standard tier, monthly, SEPA.
+    // Defaults shown without JavaScript: standard tier, monthly, card (SEPA is not active at Mollie yet).
     $defaultAmount = $tiers[$defaultTier]['monthly'];
     $defaultVat = $defaultAmount * $vatRate / (100 + $vatRate);
 
@@ -46,7 +46,6 @@
     $trialEndDate = $trialEndDate ?? null;
 
     $choiceClasses = 'flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl border border-dune-line bg-field px-[18px] text-[17px] font-bold';
-    $inputClasses = 'min-h-[52px] rounded-xl border border-field-line bg-field px-4 text-[17px] text-ink';
 @endphp
 
 @section('content')
@@ -123,27 +122,15 @@
                         <div class="flex flex-wrap gap-3">
                             @foreach ($payments as $key => $label)
                                 <label class="{{ $choiceClasses }} flex-[1_1_160px]">
-                                    <input type="radio" name="zahlart" value="{{ $key }}" data-label="{{ $label }}" @checked($key === 'sepa')
+                                    <input type="radio" name="zahlart" value="{{ $key }}" data-label="{{ $label }}" @checked($key === 'karte')
                                            class="m-0 size-5 accent-night">{{ $label }}
                                 </label>
                             @endforeach
                         </div>
 
-                        <div data-pay="sepa" class="flex flex-col gap-3">
-                            <div class="o-auto-grid mt-1.5 gap-x-5 gap-y-4 [--min:240px]">
-                                <div class="flex flex-col gap-1.5">
-                                    <label for="m-inhaber" class="text-[15px] font-bold">Kontoinhaber:in</label>
-                                    <input id="m-inhaber" name="inhaber" type="text" autocomplete="name" class="{{ $inputClasses }}">
-                                </div>
-                                <div class="flex flex-col gap-1.5">
-                                    <label for="m-iban" class="text-[15px] font-bold">IBAN</label>
-                                    <input id="m-iban" name="iban" type="text" inputmode="text" placeholder="DE00 0000 0000 0000 0000 00" class="{{ $inputClasses }}">
-                                </div>
-                            </div>
-                            <p class="m-0 text-sm leading-normal text-ink-2">Mit der Bestellung erteilst du {{ config('oasis.operator.name') }} ein SEPA-Lastschriftmandat. Gläubiger-ID: {{ config('oasis.payment.sepa_creditor_id') }}.</p>
-                        </div>
+                        <p data-pay="sepa" hidden class="mt-1.5 mb-0 text-[15px] text-ink-2">Die Lastschrift richtest du im nächsten Schritt direkt bei {{ config('oasis.payment.provider') }} ein. Wir speichern keine Bankdaten.</p>
                         <p data-pay="paypal" hidden class="mt-1.5 mb-0 text-[15px] text-ink-2">Nach der Bestellung leiten wir dich zu PayPal weiter, um die Zahlung zu bestätigen.</p>
-                        <p data-pay="karte" hidden class="mt-1.5 mb-0 text-[15px] text-ink-2">Deine Kartendaten gibst du im nächsten Schritt direkt bei {{ config('oasis.payment.provider') }} ein. Wir speichern sie nicht.</p>
+                        <p data-pay="karte" class="mt-1.5 mb-0 text-[15px] text-ink-2">Deine Kartendaten gibst du im nächsten Schritt direkt bei {{ config('oasis.payment.provider') }} ein. Wir speichern sie nicht.</p>
                     </fieldset>
                 </form>
 
@@ -152,7 +139,7 @@
                     <dl class="m-0 flex flex-col gap-3 text-base">
                         <div class="flex justify-between gap-4"><dt class="text-on-night-muted">Stufe</dt><dd class="m-0 font-bold" data-out="stufe">{{ $tiers[$defaultTier]['name'] }}</dd></div>
                         <div class="flex justify-between gap-4"><dt class="text-on-night-muted">Zahlweise</dt><dd class="m-0 font-bold" data-out="rhythmus">{{ $rhythms['monat']['summary'] }}</dd></div>
-                        <div class="flex justify-between gap-4"><dt class="text-on-night-muted">Zahlungsart</dt><dd class="m-0 font-bold" data-out="zahlart">{{ $payments['sepa'] }}</dd></div>
+                        <div class="flex justify-between gap-4"><dt class="text-on-night-muted">Zahlungsart</dt><dd class="m-0 font-bold" data-out="zahlart">{{ $payments['karte'] }}</dd></div>
                         <div class="flex justify-between gap-4"><dt class="text-on-night-muted">Erste Zahlung</dt><dd class="m-0 text-right font-bold">@if ($trialEndDate !== null)am {{ $trialEndDate }}, @endif zum Ende deines Tests</dd></div>
                     </dl>
                     <div aria-live="polite" class="flex flex-col gap-1 border-y border-night-line py-[18px]">

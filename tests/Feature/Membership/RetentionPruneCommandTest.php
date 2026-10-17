@@ -95,3 +95,7 @@ test('retention prune command keeps the download period after a paid membership 
         ->and(User::find($expired->id))->toBeNull();
     Storage::disk(config('oasis.media_disk'))->assertMissing('network/posts/'.$post->id.'/bild.jpg');
 });
+
+test('retention prune command is switched on by default, as AGB and privacy policy promise', function () {
+    expect(config('oasis.retention.auto_delete_expired'))->toBeTrue();
+});

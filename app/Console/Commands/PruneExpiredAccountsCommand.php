@@ -10,7 +10,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Scheduled command to prune accounts whose retention period has passed after trial end or cancellation.
- * Guarded by config('oasis.retention.auto_delete_expired') which defaults to false.
+ * Guarded by config('oasis.retention.auto_delete_expired') (default true, OASIS_RETENTION_AUTO_DELETE).
  *
  * The download period (`oasis.retention_days`, AGB § 13) runs from the end of the trial, the paid period or the gift,
  * whichever is last. Deletion goes through DeleteAccount, so images, oasis hand-over and automated checks are handled

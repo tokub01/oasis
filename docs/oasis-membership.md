@@ -98,7 +98,8 @@ Gründungsplätze mit Preisgarantie erhalten. `remainingFoundingSeats()` liest d
 
 Kostenlose Tests starten bei Registrierung ohne Zahlungsdaten, enden selbständig und verlängern sich nicht.
 `oasis:trial-reminders` erinnert zwei Tage vorher; Gruppenstarts verwenden weiterhin `GroupTrialService`.
-`oasis:prune-expired-accounts` bleibt über `oasis.retention.auto_delete_expired` standardmäßig deaktiviert.
+`oasis:prune-expired-accounts` (täglich 3 Uhr) löscht Konten 30 Tage nach Test-, Bezahl- oder Geschenkende über
+`DeleteAccount`; ab Werk an (`oasis.retention.auto_delete_expired`, abschaltbar mit `OASIS_RETENTION_AUTO_DELETE=false`).
 `MembershipStats` liefert lokale aggregierte Test-, Mitglieder-, Umsatz-, Kündigungs-, Geschenk- und Gründungszahlen
 ohne externe API-Aufrufe. Bezahlte Restlaufzeiten zählen weiterhin als Zugang; gekündigte Abos erzeugen keinen MRR.
 

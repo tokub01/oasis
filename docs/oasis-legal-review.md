@@ -47,11 +47,12 @@ Diese Punkte sind keine Formulierungsfragen. Ohne sie wären einzelne Aussagen d
    `null` gesetzt; Rechnungsdaten und Mollie-IDs bleiben, gesperrt für alles außer Buchhaltung und die Admin-
    Zahlungssuche (`/admin/zahlungen`, docs/oasis-admin.md). Nach `payment_records_years` werden sie automatisch
    gelöscht. Zu prüfen: ob die Admin-Suche als Zugriff auf gesperrte Daten so zulässig ist (Art. 18 DSGVO analog).
-2. **Automatische Löschung abgelaufener Konten ist ausgeschaltet.** AGB § 13 und Datenschutzerklärung Abschnitt 18
-   sagen zu, ein Konto 30 Tage nach Test- oder Mitgliedschaftsende zu löschen. Das geschieht nur mit
-   `OASIS_RETENTION_AUTO_DELETE=true` in der Produktiv-`.env`. Der Befehl löscht seit diesem Stand genauso wie die
-   Löschung durch das Mitglied (Bilder, Oasen-Übergabe, Prüf-Einträge) und hält die 30-Tage-Frist nach dem Ende einer
-   bezahlten Mitgliedschaft ein.
+2. **Erledigt: Automatische Löschung abgelaufener Konten ist an.** AGB § 13 und Datenschutzerklärung Abschnitt 18
+   sagen zu, ein Konto 30 Tage nach Test- oder Mitgliedschaftsende zu löschen. `oasis:prune-expired-accounts` läuft
+   täglich um 3 Uhr und ist ab Werk eingeschaltet (`OASIS_RETENTION_AUTO_DELETE`, Standard `true`). Er löscht genauso
+   wie die Löschung durch das Mitglied (Bilder, Oasen-Übergabe, Prüf-Einträge) und hält die 30-Tage-Frist nach dem Ende
+   einer bezahlten Mitgliedschaft oder eines Geschenks ein. Voraussetzung im Betrieb: der Scheduler läuft
+   (`schedule:run` jede Minute per Cron).
 3. **Auftragsverarbeitungsverträge (Art. 28 DSGVO)** mit IONOS (Hosting, ggf. E-Mail), AWS (Bilder) und Mistral
    (Textprüfung) abschließen und ablegen. Für AWS die DPF-Zertifizierung und die Standardvertragsklauseln prüfen. Für
    Mistral prüfen, dass Eingaben nicht zum Training genutzt und nur kurz gespeichert werden.

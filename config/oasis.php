@@ -188,8 +188,9 @@ return [
      * Account retention policies after trial or cancellation.
      */
     'retention' => [
-        // Automatically prune and delete content of expired accounts past retention_days.
-        'auto_delete_expired' => (bool) env('OASIS_RETENTION_AUTO_DELETE', false),
+        // Delete expired accounts once retention_days have passed after the end of the trial, the paid period or the
+        // gift (daily, oasis:prune-expired-accounts). On by default: AGB § 13 and the privacy policy promise it.
+        'auto_delete_expired' => (bool) env('OASIS_RETENTION_AUTO_DELETE', true),
     ],
 
     // /mitglied-werden returns 404 until a payment provider is connected: no order button without a real checkout.

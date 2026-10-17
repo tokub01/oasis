@@ -28,7 +28,7 @@ class ExportAccount
         $zip = new ZipArchive;
         $zip->open($path, ZipArchive::OVERWRITE);
 
-        $posts = Post::where('user_id', $user->id)->with(['images', 'oasis'])->orderBy('id')->get();
+        $posts = Post::where('user_id', $user->id)->with(['images', 'oasis', 'revisions'])->orderBy('id')->get();
         $disk = Storage::disk(config('oasis.media_disk'));
         $images = [];
         foreach ($posts as $post) {
@@ -84,6 +84,10 @@ class ExportAccount
                 'antwort_auf_tropfen' => $post->reply_to_id,
                 'weitergetragen_von_tropfen' => $post->carried_post_id,
                 'geschrieben_am' => $post->created_at->toIso8601String(),
+                'bearbeitet_am' => $post->edited_at?->toIso8601String(),
+                'fruehere_fassungen' => $post->revisions->map(fn ($revision) => [
+                    'text' => $revision->body, 'gueltig_bis' => $revision->replaced_at->toIso8601String(),
+                ])->values()->all(),
                 'bilder' => $images[$post->id] ?? [],
             ])->values()->all(),
             'ich_folge' => [

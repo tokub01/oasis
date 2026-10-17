@@ -157,3 +157,18 @@ also prevents indexing its public Tropfen, even if the stored search-engine pref
 This requests exclusion from compliant search engines; it does not make otherwise public content private.
 The account export contains an explicit `privatsphaere` allowlist with all nine privacy choices, including defaults.
 See [Privatsphäre-Center](oasis-privacy.md) for the settings UI and guided check.
+
+## Bearbeiten
+
+The author may change the text of a Tropfen for `Post::EDIT_MINUTES` (60) after writing it
+(`PostPolicy::update`: own Tropfen, may still write, not removed, held or quarantined). Route `network.posts.edit`
+(`App\Livewire\Network\PostEdit`), logic in `App\Actions\Network\EditPost`:
+
+- the earlier text is stored in `post_revisions` (`replaced_at`), `posts.edited_at` is set;
+- the new text is checked again (`CheckContent::for`) and limited like a new one for new accounts
+  (`AccountLimits::checkLinksAndMentions`);
+- images, audience and oasis stay; new mentions send no hints, so editing cannot be used to ping people.
+
+Cards show "bearbeitet" with a link to `#versionen` on the Tropfen page, where every earlier version can be opened by
+everyone who may read the Tropfen. Versions are part of the data export and are deleted with the Tropfen. Tests:
+`tests/Feature/Network/PostEditTest.php`.

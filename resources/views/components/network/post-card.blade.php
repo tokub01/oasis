@@ -56,6 +56,9 @@
                 @if ($post->visibility->value === 'members')
                     · <span title="Nur für Mitglieder">nur Mitglieder</span>
                 @endif
+                @if ($post->edited_at)
+                    · <a wire:navigate href="{{ $postUrl }}#versionen" class="py-2 text-muted underline underline-offset-4" title="Bearbeitet {{ $post->edited_at->timezone('Europe/Berlin')->format('d.m.Y H:i') }}">bearbeitet</a>
+                @endif
             </span>
         </div>
 
@@ -71,6 +74,9 @@
                         <form wire:submit="removePostFromOasis({{ $post->id }})">
                             <button type="submit" wire:loading.attr="disabled" class="{{ $menuItem }}">Aus Oase entfernen</button>
                         </form>
+                    @endcan
+                    @can('update', $post)
+                        <a wire:navigate href="{{ route('network.posts.edit', $post) }}" class="{{ $menuItem }}">Bearbeiten</a>
                     @endcan
                     @can('delete', $post)
                         <details>

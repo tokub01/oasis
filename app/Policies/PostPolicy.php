@@ -44,6 +44,17 @@ class PostPolicy
         return $this->interact($user, $post) && $post->author->privacy()->allows('carry_audience', $user);
     }
 
+    /**
+     * Authors may change the text of their own Tropfen for Post::EDIT_MINUTES, as long as it is in place (not removed,
+     * held or quarantined) and they may still write.
+     */
+    public function update(User $user, Post $post): bool
+    {
+        return $post->user_id === $user->id && $this->create($user)
+            && $post->removed_from_oasis_at === null && $post->held_at === null && $post->quarantined_at === null
+            && $post->created_at->greaterThan(now()->subMinutes(Post::EDIT_MINUTES));
+    }
+
     /** Authors delete their own Tropfen at any time, also read-only accounts (data minimisation). */
     public function delete(User $user, Post $post): bool
     {

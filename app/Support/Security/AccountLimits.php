@@ -68,6 +68,16 @@ final class AccountLimits
             BotProtection::count('duplicate');
             throw ValidationException::withMessages(['body' => 'Diesen Text hast du gerade schon geteilt.']);
         }
+        self::checkLinksAndMentions($user, $body);
+    }
+
+    /**
+     * Links and mentions of new accounts – also for an edited Tropfen, so editing cannot add them later.
+     *
+     * @throws ValidationException at 'body'
+     */
+    public static function checkLinksAndMentions(User $user, string $body): void
+    {
         if (! self::isNew($user)) {
             return;
         }

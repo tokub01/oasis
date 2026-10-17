@@ -10,6 +10,7 @@ use App\Livewire\Network\OasisIndex;
 use App\Livewire\Network\OasisShow;
 use App\Livewire\Network\OasisStatistics;
 use App\Livewire\Network\PostCarry;
+use App\Livewire\Network\PostEdit;
 use App\Livewire\Network\PostShow;
 use App\Livewire\Network\ProfileEdit;
 use App\Livewire\Network\Statistics;
@@ -25,6 +26,7 @@ Route::name('network.')->group(function () {
     Route::middleware(['auth', 'verified'])->group(function () {
         Route::livewire('/app/entdecken', Discover::class)->name('discover');
         Route::livewire('/tropfen/{post}/weitertragen', PostCarry::class)->whereNumber('post')->name('posts.carry');
+        Route::livewire('/tropfen/{post}/bearbeiten', PostEdit::class)->whereNumber('post')->name('posts.edit');
         Route::livewire('/app/oasen', OasisIndex::class)->name('oases.index');
         Route::livewire('/app/oasen/neu', OasisForm::class)->name('oases.create');
         Route::livewire('/oasen/{oasis}/bearbeiten', OasisForm::class)->name('oases.edit');

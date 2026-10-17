@@ -16,6 +16,20 @@
         <h1 class="sr-only">Tropfen von {{ $author->display_name }}</h1>
         <x-network.post-card :post="$post" :link="false" />
 
+        @if ($post->edited_at && $post->revisions->isNotEmpty())
+            <details id="versionen" class="rounded-[20px] border border-paper-line bg-paper px-5 py-3">
+                <summary class="flex min-h-11 cursor-pointer items-center font-bold text-night">Frühere Fassungen ({{ $post->revisions->count() }})</summary>
+                <ol class="m-0 flex list-none flex-col gap-3 p-0 pb-2">
+                    @foreach ($post->revisions as $revision)
+                        <li wire:key="fassung-{{ $revision->id }}" class="flex flex-col gap-1 border-t border-paper-line pt-3">
+                            <span class="text-sm text-muted">Gültig bis {{ $revision->replaced_at->timezone('Europe/Berlin')->locale('de')->isoFormat('D. MMMM YYYY, HH:mm') }} Uhr</span>
+                            <p class="m-0 whitespace-pre-line break-words text-ink-2">{{ $revision->body }}</p>
+                        </li>
+                    @endforeach
+                </ol>
+            </details>
+        @endif
+
         <section id="antworten" aria-labelledby="antworten-titel" class="flex flex-col gap-4">
             <h2 id="antworten-titel" class="m-0 text-[21px] font-extrabold text-night">Antworten</h2>
 

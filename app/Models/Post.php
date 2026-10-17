@@ -32,6 +32,7 @@ use Illuminate\Support\Collection;
  * @property bool $has_more_replies
  * @property Carbon|null $held_at set while the automated check holds it for human review (stage 10)
  * @property Carbon|null $quarantined_at escalated as child abuse: images are served to nobody (EscalateCase)
+ * @property Carbon|null $edited_at last change of the text (EditPost); earlier texts in revisions
  * @property Carbon $created_at
  * @property User $author
  * @property Oasis|null $oasis
@@ -47,6 +48,9 @@ class Post extends Model
     /** Maximum images per Tropfen. */
     public const MAX_IMAGES = 4;
 
+    /** Minutes after writing in which the author may still change the text (EditPost). */
+    public const EDIT_MINUTES = 60;
+
     protected $fillable = ['user_id', 'oasis_id', 'reply_to_id', 'carried_post_id', 'body', 'visibility', 'kind'];
 
     /** @return array<string, string> */
@@ -58,6 +62,7 @@ class Post extends Model
             'removed_from_oasis_at' => 'datetime',
             'held_at' => 'datetime',
             'quarantined_at' => 'datetime',
+            'edited_at' => 'datetime',
         ];
     }
 
@@ -101,6 +106,16 @@ class Post extends Model
     public function images(): HasMany
     {
         return $this->hasMany(PostImage::class)->orderBy('position');
+    }
+
+    /**
+     * Earlier texts, newest first (EditPost).
+     *
+     * @return HasMany<PostRevision, $this>
+     */
+    public function revisions(): HasMany
+    {
+        return $this->hasMany(PostRevision::class)->orderByDesc('id');
     }
 
     /** @return HasMany<Reaction, $this> */

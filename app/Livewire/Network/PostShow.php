@@ -40,6 +40,8 @@ class PostShow extends NetworkPage
     public function mount(Post $post): void
     {
         $this->postId = $post->id;
+        // Confirmation from a page that returned here (e.g. "Dein Tropfen ist geändert." from PostEdit).
+        $this->postStatus = (string) session('status', '');
     }
 
     /** Recheck visibility for guests and members whenever an interaction refreshes the page. */
@@ -49,6 +51,7 @@ class PostShow extends NetworkPage
         abort_unless(Gate::allows('view', $post), 404);
         $feed = app(PostFeed::class);
         $post = $feed->withCardData(Post::whereKey($post->id), auth()->user())->firstOrFail();
+        $post->load('revisions');
 
         Mentions::preloadPosts([$post]);
 

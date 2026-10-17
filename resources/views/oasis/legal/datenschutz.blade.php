@@ -74,7 +74,7 @@
                 <li>Was nur du siehst: gemerkte Tropfen, stummgeschaltete, eingeschränkte und blockierte Personen und deine verborgenen Wörter. Niemand erfährt, dass du jemanden eingeschränkt hast oder welche Wörter du verbirgst.</li>
                 <li>Abstimmungen der Gemeinschaft: nur dass du teilgenommen hast und an welchem Tag – nie, wofür du gestimmt hast.</li>
             </ul>
-            <p class="m-0">Rechtsgrundlage ist der Vertrag mit dir (Art. 6 Abs. 1 lit. b DSGVO). Deine Statistik berechnen wir nur aus diesen Daten (zum Beispiel Antworten und Reaktionen); wir erfassen nicht, wer welche Tropfen liest. Einen Tropfen kannst du jederzeit löschen; dann löschen wir ihn mit seinen Bildern sofort. Antworten anderer auf ihn bleiben als deren Inhalte bestehen und zeigen „Tropfen nicht mehr verfügbar“.</p>
+            <p class="m-0">Rechtsgrundlage ist der Vertrag mit dir (Art. 6 Abs. 1 lit. b DSGVO). Deine Statistik berechnen wir nur aus diesen Daten (zum Beispiel Antworten und Reaktionen); wir erfassen nicht, wer welche Tropfen liest. Den Text eines Tropfens kannst du in der ersten Stunde ändern; frühere Fassungen bleiben gespeichert und für alle sichtbar, die den Tropfen lesen dürfen. Einen Tropfen kannst du jederzeit löschen; dann löschen wir ihn mit seinen Bildern und früheren Fassungen sofort. Antworten anderer auf ihn bleiben als deren Inhalte bestehen und zeigen „Tropfen nicht mehr verfügbar“.</p>
             <p class="{{ $required }}">Alle Angaben in diesem Abschnitt sind freiwillig. Bilder brauchen eine Beschreibung, damit Menschen mit Screenreader sie verstehen.</p>
         </section>
 

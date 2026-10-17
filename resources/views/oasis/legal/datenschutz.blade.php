@@ -87,7 +87,7 @@
         <section class="flex flex-col gap-[6px]">
             <h2 class="{{ $h2 }}">8. Hinweise und E-Mails</h2>
             <p class="m-0">Wenn dir jemand folgt, dich erwähnt, dir antwortet, deinen Tropfen weiterträgt, deine Einladung annimmt oder dich in einer Oase zur Gastgeber:in macht, bekommst du einen Hinweis in der App. Dafür speichern wir, wer was wann getan hat. Hinweise löschen wir nach 90 Tagen automatisch. In den Einstellungen wählst du, welche Hinweise du bekommst (Art. 6 Abs. 1 lit. b DSGVO).</p>
-            <p class="m-0">Eine tägliche E-Mail-Zusammenfassung schicken wir nur, wenn du sie selbst einschaltest. Sie enthält die Zahl neuer Hinweise und einen Link, aber keine Texte von Tropfen. Du kannst sie jederzeit wieder ausschalten. Newsletter oder Werbe-E-Mails verschicken wir nicht.</p>
+            <p class="m-0">Mit Ruhezeiten und einer Pause bestimmst du, wann wir dir keine E-Mails und Push-Hinweise schicken; dafür speichern wir die Uhrzeiten und das Ende der Pause. Eine tägliche E-Mail-Zusammenfassung schicken wir nur, wenn du sie selbst einschaltest. Sie enthält die Zahl neuer Hinweise und einen Link, aber keine Texte von Tropfen. Du kannst sie jederzeit wieder ausschalten. Newsletter oder Werbe-E-Mails verschicken wir nicht.</p>
         </section>
 
         <section class="flex flex-col gap-[6px]">

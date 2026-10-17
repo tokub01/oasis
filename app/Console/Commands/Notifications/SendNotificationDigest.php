@@ -10,7 +10,10 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
-/** Daily, idempotent opt-in email digest, scheduled at 18:00 Europe/Berlin. */
+/**
+ * Daily, idempotent opt-in email digest, run hourly from 18:00 to 23:00 Europe/Berlin: each member gets it once, in the
+ * first run outside their quiet hours or pause (NotificationPreference::isQuiet()).
+ */
 class SendNotificationDigest extends Command
 {
     protected $signature = 'oasis:notification-digest';
@@ -28,11 +31,16 @@ class SendNotificationDigest extends Command
                     || $preference->last_digest_at?->copy()->timezone('Europe/Berlin')->isSameDay($cutoff->copy()->timezone('Europe/Berlin'))) {
                     return;
                 }
+                // Quiet hours or pause: no mail now and no checkpoint, so the next summary still covers these hints.
+                if ($preference->isQuiet($cutoff)) {
+                    return;
+                }
                 $user = User::find($preference->user_id);
                 if ($user === null || ! $user->hasVerifiedEmail()) {
                     return;
                 }
-                $since = $preference->last_digest_at ?? $cutoff->copy()->subDay();
+                // Without an earlier summary: the last week, so a pause of up to seven days loses nothing.
+                $since = $preference->last_digest_at ?? $cutoff->copy()->subWeek();
                 $hints = $user->unreadNotifications()->where('created_at', '>', $since)
                     ->where('created_at', '<=', $cutoff)->get();
                 $count = count($presentation->forMany($hints, $user));

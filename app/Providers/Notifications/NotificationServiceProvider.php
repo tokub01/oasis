@@ -27,7 +27,8 @@ class NotificationServiceProvider extends ServiceProvider
         Event::listen(PostPublished::class, OnPostPublished::class.'@process');
         Event::listen(Followed::class, OnFollowed::class.'@process');
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
-            $schedule->command('oasis:notification-digest')->timezone('Europe/Berlin')->dailyAt('18:00')->withoutOverlapping();
+            // Hourly from 18 to 23 o'clock: each member gets it once, in the first hour outside their quiet hours.
+            $schedule->command('oasis:notification-digest')->timezone('Europe/Berlin')->hourly()->between('18:00', '23:59')->withoutOverlapping();
             $schedule->command('oasis:prune-notifications')->daily()->withoutOverlapping();
         });
     }

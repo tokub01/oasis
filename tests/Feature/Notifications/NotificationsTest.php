@@ -280,7 +280,8 @@ it('registers notification jobs with the required digest time and timezone', fun
     $digest = collect($events)->first(fn ($event) => str_contains($event->command ?? '', 'oasis:notification-digest'));
     $prune = collect($events)->first(fn ($event) => str_contains($event->command ?? '', 'oasis:prune-notifications'));
     expect($digest)->not->toBeNull();
-    expect($digest->expression)->toBe('0 18 * * *');
+    // Hourly; NotificationServiceProvider limits it to 18:00–23:59 (quiet hours may push the summary later).
+    expect($digest->expression)->toBe('0 * * * *');
     expect($digest->timezone)->toBe('Europe/Berlin');
     expect($prune)->not->toBeNull();
 });

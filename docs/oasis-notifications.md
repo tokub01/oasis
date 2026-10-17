@@ -76,6 +76,21 @@ php artisan oasis:notification-digest
 php artisan oasis:prune-notifications
 ```
 
+## Ruhezeiten und Pause
+
+`notification_preferences.quiet_enabled`, `quiet_from`, `quiet_until` (German time, may span midnight, default
+22:00–07:00) and `paused_until` (1, 3 or 7 days, `Settings::PAUSE_DAYS`). `NotificationPreference::isQuiet()` is true
+during either. Effects:
+
+- no hint mails: `oasis:notification-digest` runs hourly from 18:00 to 23:59 and sends each member the summary once,
+  in the first run outside quiet hours and pause; without a checkpoint nothing is lost (the first summary covers up to
+  seven days);
+- no push hints (stage PWA);
+- during a pause the unread dot in the navigation stays off; hints still collect in the inbox;
+- account, security and moderation mails are always sent.
+
+Tests: `tests/Feature/Notifications/QuietHoursTest.php`.
+
 ## Prüfung
 
 ```sh

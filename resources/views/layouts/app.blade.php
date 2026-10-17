@@ -41,8 +41,9 @@
     if ($user?->role?->isStaff()) {
         $more['moderation'] = ['Moderation', route('moderation.index')];
     }
-    // Calm indicator for unread hints: a small dot, never a red counter.
-    $hasUnread = $user?->unreadNotifications()->exists() ?? false;
+    // Calm indicator for unread hints: a small dot, never a red counter – and none at all during a pause.
+    $hasUnread = $user !== null && ! \App\Models\Notifications\NotificationPreference::where('user_id', $user->id)->first()?->isPaused()
+        && $user->unreadNotifications()->exists();
     $trialDaysLeft = $user?->trial_ends_at?->isFuture()
         ? (int) ceil(now()->diffInDays($user->trial_ends_at))
         : null;

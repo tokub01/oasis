@@ -7,6 +7,7 @@ use App\Models\Follow;
 use App\Models\Post;
 use App\Models\User;
 use App\Support\Privacy\PrivacyOptions;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\Support\NetworkFixtures as N;
 
@@ -66,4 +67,11 @@ it('offers the setting in the privacy center and keeps members under 18 from sho
 
     $minor = N::member(['birth_date' => now()->subYears(15)->toDateString()]);
     expect(array_keys(PrivacyOptions::choices('images_audience', $minor)))->toBe(['contacts', 'following', 'nobody']);
+});
+
+it('answers a lost image file with 404 instead of a server error', function () {
+    Storage::fake(config('oasis.media_disk'));
+    $post = postWithImage(N::member());
+
+    $this->get(imageUrl($post->fresh()))->assertNotFound();
 });

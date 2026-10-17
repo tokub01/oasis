@@ -21,8 +21,11 @@ class PostImageController extends Controller
     {
         abort_unless($post->quarantined_at === null && Gate::forUser($request->user())->allows('view', $post), 404);
         $file = $post->images()->whereKey($image)->firstOrFail();
+        $disk = Storage::disk(config('oasis.media_disk'));
+        // A record whose file is gone (e.g. lost in storage) is a missing image, not a server error.
+        abort_unless($disk->exists($file->path), 404);
 
-        return Storage::disk(config('oasis.media_disk'))->response($file->path, null, [
+        return $disk->response($file->path, null, [
             'Content-Type' => 'image/webp',
             'Cache-Control' => $post->visibility->value === 'public' ? 'public, max-age=86400' : 'private, max-age=3600',
             'X-Content-Type-Options' => 'nosniff',

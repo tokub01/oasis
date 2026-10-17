@@ -22,8 +22,10 @@ class ProfilePhotoController extends Controller
         abort_unless($path !== null && basename($path) === $file, 404);
         abort_if($request->user()?->isBlockedWith($user) ?? false, 404);
         abort_unless($user->profileOrDefault()->isVisibleTo($request->user()), 404);
+        $disk = Storage::disk(config('oasis.media_disk'));
+        abort_unless($disk->exists($path), 404);
 
-        return Storage::disk(config('oasis.media_disk'))->response($path, null, [
+        return $disk->response($path, null, [
             'Content-Type' => 'image/webp',
             'Cache-Control' => 'private, max-age=86400',
             'X-Content-Type-Options' => 'nosniff',

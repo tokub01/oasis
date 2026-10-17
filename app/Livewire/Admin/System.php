@@ -5,13 +5,14 @@ namespace App\Livewire\Admin;
 use App\Models\SystemHeartbeat;
 use App\Support\Operations\Backups;
 use App\Support\Operations\HealthCheck;
+use App\Support\Security\BotProtection;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
 /**
  * Systemzustand on /admin/system (route admin.system): the same checks as /gesundheit with a "Jetzt prüfen" button,
- * the latest backup and the last runs of every operation. Admins only; contains no personal data.
+ * the latest backup, the last runs of every operation and today's refused bot attempts. Admins only; contains no personal data.
  */
 class System extends Component
 {
@@ -36,6 +37,7 @@ class System extends Component
             'heartbeats' => SystemHeartbeat::orderBy('key')->get(),
             'tokenSet' => (string) config('oasis.operations.health_token') !== '',
             'backupKeySet' => (string) config('oasis.operations.backup_key') !== '',
+            'botRefusals' => BotProtection::today(),
         ])->layout('layouts.staff', ['title' => 'Systemzustand', 'active' => 'system']);
     }
 }

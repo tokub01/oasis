@@ -29,6 +29,9 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <!-- Never send test texts to the AI provider; AutoModeration tests switch it on with a faked agent. -->
         <env name="OASIS_AI_MODERATION" value="false"/>
+        <!-- Bot protection: most tests submit forms instantly with fresh accounts; tests/Feature/Security enables it. -->
+        <env name="OASIS_BOT_TIME_TRAP" value="false"/>
+        <env name="OASIS_NEW_ACCOUNT_HOURS" value="0"/>
         <env name="MISTRAL_API_KEY" value=""/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>

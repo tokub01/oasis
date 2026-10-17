@@ -1,6 +1,7 @@
 {{--
     Systemzustand, component App\Livewire\Admin\System (route admin.system). Variables: $results (HealthCheck::run()),
-    $latestBackup (string|null), $heartbeats (Collection<SystemHeartbeat>), $tokenSet, $backupKeySet (bool).
+    $latestBackup (string|null), $heartbeats (Collection<SystemHeartbeat>), $tokenSet, $backupKeySet (bool),
+    $botRefusals (reason => count today, BotProtection::today()).
 --}}
 @php($berlin = fn ($date) => $date?->timezone('Europe/Berlin')->format('d.m.Y H:i') ?? '–')
 <div class="flex flex-col gap-8">
@@ -34,6 +35,18 @@
             <li>Sicherungsschlüssel: {{ $backupKeySet ? 'gesetzt' : 'fehlt – mit „php artisan oasis:backup-key“ erzeugen' }}</li>
             <li>Überwachungs-URL /gesundheit: {{ $tokenSet ? 'aktiv (mit OASIS_HEALTH_TOKEN)' : 'aus – OASIS_HEALTH_TOKEN setzen' }}</li>
         </ul>
+    </section>
+
+    <section aria-labelledby="bots-titel" class="flex flex-col gap-3 rounded-[24px] bg-paper p-5 sm:p-6">
+        <h2 id="bots-titel" class="m-0 text-[21px] font-extrabold text-night">Abgewehrte Bot-Versuche heute</h2>
+        @forelse ($botRefusals as $reason => $count)
+            <p wire:key="bot-{{ $reason }}" class="m-0 flex justify-between gap-4 border-t border-paper-line pt-2 text-[15px]">
+                <span>{{ \App\Support\Security\BotProtection::REASONS[$reason] }}</span><span class="font-bold text-night">{{ $count }}</span>
+            </p>
+        @empty
+            <p class="m-0 text-ink-2">Heute keine.</p>
+        @endforelse
+        <p class="m-0 text-sm text-muted">Nur Zähler, ohne Adressen oder Konten (docs/oasis-bot-protection.md).</p>
     </section>
 
     <section aria-labelledby="laeufe-titel" class="flex flex-col gap-3 rounded-[24px] bg-paper p-5 sm:p-6">

@@ -9,6 +9,7 @@ use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Http\Responses\NeutralPasswordResetLinkResponse;
 use App\Listeners\Privacy\RecordLoginDevice;
 use App\Models\User;
+use App\Support\Security\BotProtection;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -87,7 +88,16 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('password-reset', fn (Request $request) => Limit::perMinute(6)->by($request->ip()));
-        RateLimiter::for('registration', fn (Request $request) => Limit::perMinute(6)->by($request->ip()));
+        // Registration: per minute against bursts, per day against account farms from one address (bot protection).
+        RateLimiter::for('registration', fn (Request $request) => [
+            Limit::perMinute(6)->by($request->ip()),
+            Limit::perDay((int) config('oasis.bot_protection.registrations_per_ip_per_day'))->by('registration-day:'.$request->ip())
+                ->response(function () {
+                    BotProtection::count('registration_ip');
+
+                    return back()->withInput()->withErrors(['form' => 'Von diesem Anschluss wurden heute schon viele Konten angelegt. Bitte versuche es morgen noch einmal oder schreib uns.']);
+                }),
+        ]);
         RateLimiter::for('two-factor', fn (Request $request) => Limit::perMinute(5)
             ->by($request->session()->get('login.id').'|'.$request->ip()));
 

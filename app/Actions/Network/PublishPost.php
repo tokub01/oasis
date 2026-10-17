@@ -8,6 +8,7 @@ use App\Events\Network\PostPublished;
 use App\Models\Oasis;
 use App\Models\Post;
 use App\Models\User;
+use App\Support\Security\AccountLimits;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -30,6 +31,9 @@ class PublishPost
      */
     public function handle(User $author, array $input, array $images = []): Post
     {
+        // Bot protection (docs/oasis-bot-protection.md): duplicates, links and mentions of new accounts, hourly budget.
+        AccountLimits::checkText($author, (string) $input['body']);
+        AccountLimits::hit($author, 'posts', 'body');
         $context = $input['reply_to'] ?? null;
         $oasis = $input['oasis'] ?? $context?->oasis;
         $visibility = Visibility::from($input['visibility']);
@@ -74,6 +78,7 @@ class PublishPost
             throw $failure;
         }
 
+        AccountLimits::remember($author, $post->body);
         event(new PostPublished($post));
 
         return $post;

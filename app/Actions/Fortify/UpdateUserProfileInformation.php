@@ -3,6 +3,7 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use App\Rules\NotDisposableEmail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -27,7 +28,8 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
 
         Validator::make($input, [
             'display_name' => ['required', 'string', 'max:50'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id),
+                Rule::when(($input['email'] ?? null) !== $user->email, [new NotDisposableEmail])],
         ])->validateWithBag('updateProfileInformation');
 
         $emailChanged = $input['email'] !== $user->email;

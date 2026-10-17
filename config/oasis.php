@@ -131,6 +131,21 @@ return [
     'server_location' => 'Auf Servern von IONOS in Deutschland; hochgeladene Bilder liegen verschlüsselt bei Amazon Web Services in Frankfurt am Main',
 
     /*
+     * Bot protection without captcha or tracking (docs/oasis-bot-protection.md).
+     */
+    'bot_protection' => [
+        // Refuse forms sent faster than 3 seconds or with an old/missing time stamp. phpunit.xml switches it off for
+        // tests that submit instantly; tests/Feature/Security covers it.
+        'time_trap' => (bool) env('OASIS_BOT_TIME_TRAP', true),
+        // Accounts younger than this many hours have tighter limits (AccountLimits); 0 = none (phpunit.xml).
+        'new_account_hours' => (int) env('OASIS_NEW_ACCOUNT_HOURS', 24),
+        // New accounts per IP address and day.
+        'registrations_per_ip_per_day' => 10,
+        // Domains wrongly on the throwaway list, e.g. ['example-uni.de'].
+        'allowed_email_domains' => [],
+    ],
+
+    /*
      * Operations (docs/oasis-operations.md): encrypted backups with a weekly restore test, the health check and error
      * mails. Secrets only in .env.
      */

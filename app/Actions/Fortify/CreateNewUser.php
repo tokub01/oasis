@@ -3,13 +3,15 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use App\Rules\NotDisposableEmail;
+use App\Support\Security\BotProtection;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 
-/** Validates the Oasis sign-up form and starts the configured trial through Fortify. */
+/** Validates the Oasis sign-up form (incl. bot traps and throwaway addresses) and starts the trial through Fortify. */
 class CreateNewUser implements CreatesNewUsers
 {
     use PasswordValidationRules;
@@ -23,6 +25,10 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
+        if (BotProtection::check($input[BotProtection::FIELD] ?? null, $input[BotProtection::TOKEN] ?? null) !== null) {
+            throw ValidationException::withMessages(['form' => 'Das hat nicht geklappt. Bitte prüfe deine Angaben und schick das Formular noch einmal ab.']);
+        }
+
         // Normalize only strings so malformed requests still produce validation errors.
         foreach (['username', 'email'] as $field) {
             if (isset($input[$field]) && is_string($input[$field])) {
@@ -35,7 +41,7 @@ class CreateNewUser implements CreatesNewUsers
             'username' => ['required', 'string', 'min:3', 'max:30', 'regex:/^[a-z0-9_]+$/',
                 Rule::unique('users'), Rule::notIn(['admin', 'administrator', 'oasis', 'support', 'moderation',
                     'moderator', 'api', 'app', 'www', 'help', 'hilfe', 'root', 'system'])],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users'), new NotDisposableEmail],
             'birth_date' => ['required', 'date_format:Y-m-d',
                 'before_or_equal:'.now('Europe/Berlin')->subYears(16)->toDateString()],
             'password' => $this->passwordRules(),

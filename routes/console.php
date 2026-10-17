@@ -29,5 +29,8 @@ Schedule::command('oasis:backup')->dailyAt('02:30')->withoutOverlapping();
 Schedule::command('oasis:backup-verify')->weeklyOn(0, '04:30')->withoutOverlapping();
 Schedule::command('oasis:health-check')->everyFifteenMinutes()->withoutOverlapping();
 
+// Bot protection: refresh the list of throwaway e-mail domains (docs/oasis-bot-protection.md).
+Schedule::command('oasis:disposable-domains-update')->monthlyOn(1, '05:00');
+
 // Stage 10: re-queue automated content checks that never ran (e.g. queue worker down).
 Schedule::command('oasis:moderation-sweep')->everyTenMinutes()->withoutOverlapping();

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Chat;
 use App\Actions\Chat\ManageConversation;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
+use App\Support\Security\AccountLimits;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -30,6 +31,8 @@ class ConversationController extends Controller
             'member_ids.*' => ['required', 'integer', 'min:1', 'max:9007199254740991', 'distinct'],
             'lifetime_days' => ['required', 'integer', 'in:1,7,30'],
         ]);
+        // Bot protection: new chats per hour, tighter for new accounts (docs/oasis-bot-protection.md).
+        AccountLimits::hit($request->user(), 'chats', 'member_ids');
 
         return response()->json(['data' => $manage->create($request->user(), $input)->apiData()], 201);
     }

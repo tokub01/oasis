@@ -26,6 +26,7 @@
             <form method="POST" action="{{ route('register') }}" aria-labelledby="test-titel" novalidate
                   class="flex min-w-0 flex-[999_1_520px] flex-col gap-5 rounded-[32px] border border-paper-line bg-paper p-5 sm:p-[clamp(28px,3.5vw,48px)]">
                 @csrf
+                <x-oasis.bot-trap />
                 <div class="flex flex-col gap-2.5">
                     <p class="m-0 text-[15px] font-bold text-ink-2">Schritt 1 von 3 · Konto</p>
                     <div aria-hidden="true" class="flex max-w-[280px] gap-1.5">
@@ -44,7 +45,7 @@
                 @endif
 
                 @if ($errors->any())
-                    <p role="alert" class="o-error m-0 rounded-2xl border border-sun-text px-[18px] py-3.5">Bitte prüfe die markierten Felder.</p>
+                    <p role="alert" class="o-error m-0 rounded-2xl border border-sun-text px-[18px] py-3.5">{{ $errors->first('form') ?: 'Bitte prüfe die markierten Felder.' }}</p>
                 @endif
 
                 <div class="o-auto-grid gap-x-5 gap-y-[18px] [--min:240px]">

@@ -45,7 +45,7 @@
         <section class="flex flex-col gap-[6px]">
             <h2 class="{{ $h2 }}">3. Aufruf der Website</h2>
             <p class="m-0">Wenn du eine Seite aufrufst, verarbeitet unser Server technisch notwendige Daten: IP-Adresse, Datum und Uhrzeit, aufgerufene Adresse, übertragene Datenmenge und die Angaben deines Browsers. Das ist nötig, um die Website auszuliefern und vor Angriffen zu schützen (Art. 6 Abs. 1 lit. f DSGVO). Diese Server-Logdateien löschen wir nach {{ $open($privacy['server_log_days'], ' Tagen') }}. Gibt ein Logeintrag Hinweise auf einen Angriff, bewahren wir ihn auf, bis der Vorfall geklärt ist.</p>
-            <p class="m-0">Zum Schutz vor Missbrauch begrenzen wir, wie oft Anmeldung, Registrierung, Passwort-Zurücksetzen und unsere Formulare in kurzer Zeit genutzt werden können. Dafür merken wir uns deine IP-Adresse – bei der Anmeldung zusammen mit der eingegebenen E-Mail-Adresse – für wenige Minuten (Art. 6 Abs. 1 lit. f DSGVO).</p>
+            <p class="m-0">Zum Schutz vor Missbrauch begrenzen wir, wie oft Anmeldung, Registrierung, Passwort-Zurücksetzen und unsere Formulare in kurzer Zeit genutzt werden können. Dafür merken wir uns deine IP-Adresse – bei der Anmeldung zusammen mit der eingegebenen E-Mail-Adresse – für wenige Minuten, für die Zahl neuer Konten pro Anschluss bis zu einem Tag (Art. 6 Abs. 1 lit. f DSGVO). Gegen automatisierte Anmeldungen enthalten unsere Formulare außerdem ein unsichtbares Feld und einen verschlüsselten Zeitstempel; Wegwerf-E-Mail-Adressen nehmen wir für Konten und die Startliste nicht an. Abgewehrte Versuche zählen wir nur als Zahl, ohne Adressen oder Konten.</p>
         </section>
 
         <section class="flex flex-col gap-[6px]">

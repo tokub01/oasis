@@ -7,6 +7,7 @@ use App\Events\Network\Followed;
 use App\Models\Follow;
 use App\Models\Oasis;
 use App\Models\User;
+use App\Support\Security\AccountLimits;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -25,6 +26,7 @@ class ManageFollows
         if ($target instanceof User && $follower->isBlockedWith($target)) {
             throw ValidationException::withMessages(['follow' => 'Diese Person kann nicht gefolgt werden.']);
         }
+        AccountLimits::hit($follower, 'follows', 'follow');
 
         DB::transaction(function () use ($follower, $target): void {
             $follow = Follow::firstOrCreate([

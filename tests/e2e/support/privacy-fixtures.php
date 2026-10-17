@@ -62,6 +62,8 @@ try {
                     'display_name' => 'PrivE2E '.ucfirst($role).' '.substr($input['run'], 0, 12),
                     'password' => $input['password'],
                     'email_verified_at' => now(),
+                    // Two days old: these accounts test privacy and chat, not the limits of new accounts.
+                    'created_at' => now()->subDays(2),
                     'trial_ends_at' => now()->addDays(30),
                 ]);
                 $accounts[$role] = ['id' => $user->id, 'email' => $user->email, 'username' => $user->username,

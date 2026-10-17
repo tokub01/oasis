@@ -8,6 +8,7 @@ use App\Models\ConversationKeyGrant;
 use App\Models\ConversationMember;
 use App\Models\PrivacySetting;
 use App\Models\User;
+use App\Support\Security\AccountLimits;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -63,6 +64,8 @@ class ManageConversation
                 throw ValidationException::withMessages(['member_ids' => 'Mit blockierten Personen kann kein Chat gestartet werden.']);
             }
             $this->requireInvitable($owner, $ids);
+            // Bot protection: only allowed chats count against the hourly budget (docs/oasis-bot-protection.md).
+            AccountLimits::hit($owner, 'chats', 'member_ids');
             $conversation = Conversation::create(['type' => $input['type'], 'title' => $input['title'] ?? null,
                 'created_by' => $owner->id, 'lifetime_days' => $input['lifetime_days'],
                 'key_version' => 1, 'rotation_required' => true]);

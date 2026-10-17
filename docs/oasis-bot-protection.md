@@ -29,7 +29,7 @@ open to everyone.
 ## Network
 
 `App\Support\Security\AccountLimits`, enforced in `PublishPost` (every Tropfen, reply and carry), `ManageFollows` and
-`ConversationController::store`:
+`ManageConversation::create` (after the privacy checks, so a refused chat stays a 403 and costs no budget):
 
 | Limit | New account (< `new_account_hours`, 24 h) | Established account |
 |---|---|---|

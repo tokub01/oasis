@@ -79,7 +79,7 @@ New module: add `modules.name = (root) => { … }` with a header comment, put `d
 | `tests/Feature/Oasis/FormsTest.php`, `ReviewRegressionTest.php` | Forms: validation, storing, mails, regressions |
 | `tests/Feature/Oasis/CrossCheck/` | Independent checks of the forms against PROMPT.md |
 | `tests/Feature/Oasis/Pages/` | Every page: status, one h1, meta, flags, config values |
-| `tests/js/`, `tests/JavaScript/` | JS modules with Node's test runner (`node --test tests/js/ tests/JavaScript/`) |
+| `tests/js/`, `tests/JavaScript/` | JS modules with Node's test runner (`node --test 'tests/js/**/*.test.mjs' 'tests/JavaScript/**/*.test.cjs'`) |
 
 Run with Sail: `./vendor/bin/sail up -d`, `./vendor/bin/sail artisan migrate`, `./vendor/bin/sail artisan test`.
 Feature tests use the MySQL `testing` database from `phpunit.xml`.

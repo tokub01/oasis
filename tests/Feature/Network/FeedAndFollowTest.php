@@ -75,7 +75,8 @@ it('lets read-only accounts unfollow but not follow', function () {
 it('shows profiles to guests only when public and falls back to sample profiles', function () {
     $hidden = N::member();
     $public = N::member();
-    $public->profile()->create(['visibility' => 'public', 'bio' => 'Ich fotografiere.', 'location' => 'Leipzig']);
+    $public->profile()->create(['bio' => 'Ich fotografiere.', 'location' => 'Leipzig']);
+    $public->privacySetting()->create(['profile_audience' => 'everyone']);
     N::post($public, ['body' => 'Öffentlicher Tropfen']);
     N::post($public, ['body' => 'Geheimer Tropfen', 'visibility' => 'members']);
 
@@ -92,15 +93,15 @@ it('edits the own profile', function () {
     $me = N::member();
     $this->actingAs($me)->get(route('network.profile.edit'))->assertOk()->assertSee('Dein Profil');
 
-    NetworkActions::saveProfile(['bio' => 'Hallo', 'location' => 'Krefeld', 'visibility' => 'public', 'avatar_color' => 'night'])->assertHasNoErrors();
+    NetworkActions::saveProfile(['bio' => 'Hallo', 'location' => 'Krefeld', 'avatar_color' => 'night'])->assertHasNoErrors();
     expect($me->fresh()->profile->only(['bio', 'location']))->toBe(['bio' => 'Hallo', 'location' => 'Krefeld'])
         ->and($me->fresh()->profile->avatar_color->value)->toBe('night');
-    NetworkActions::saveProfile(['visibility' => 'everyone', 'avatar_color' => 'pink'])->assertHasErrors(['visibility', 'avatar_color']);
+    NetworkActions::saveProfile(['avatar_color' => 'pink'])->assertHasErrors(['avatar_color']);
 });
 
 it('lists public Tropfen of public profiles in Entdecken', function () {
     $public = N::member();
-    $public->profile()->create(['visibility' => 'public']);
+    $public->privacySetting()->create(['profile_audience' => 'everyone']);
     N::post($public, ['body' => 'Sichtbar beim Entdecken']);
     N::post(N::member(), ['body' => 'Profil nur für Mitglieder']);
 

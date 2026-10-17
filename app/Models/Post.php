@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * A "Tropfen": a short post with text and up to four images. It can be a reply (`reply_to_id`) or carry another
@@ -34,6 +35,7 @@ use Illuminate\Support\Carbon;
  * @property User $author
  * @property Oasis|null $oasis
  * @property Post|null $carried
+ * @property-read Collection<int, Post> $conversationReplies
  * @property Post|null $replyTo
  */
 class Post extends Model

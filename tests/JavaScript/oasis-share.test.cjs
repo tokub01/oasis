@@ -13,7 +13,7 @@ function setup(navigator) {
         querySelectorAll: () => [],
         addEventListener: (event, callback) => { listeners[event] = callback; },
     };
-    const context = vm.createContext({ navigator, document });
+    const context = vm.createContext({ navigator, document, window: { addEventListener: () => {} } });
     vm.runInContext(fs.readFileSync(path.join(__dirname, "../../resources/js/oasis.js"), "utf8"), context);
     const share = vm.runInContext("modules.share", context);
     const attributes = {};
@@ -52,6 +52,7 @@ test("clicks outside a share button do nothing", () => {
     const listeners = {};
     const context = vm.createContext({
         navigator: { clipboard: { writeText: async () => { copied = true; } } },
+        window: { addEventListener: () => {} },
         document: { querySelectorAll: () => [], addEventListener: (event, callback) => { listeners[event] = callback; } },
     });
     vm.runInContext(fs.readFileSync(path.join(__dirname, "../../resources/js/oasis.js"), "utf8"), context);

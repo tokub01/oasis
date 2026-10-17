@@ -129,7 +129,7 @@ it('lets the word list decide after the last retry so nothing stays unchecked', 
 it('checks profile and oasis texts when they change', function () {
     ContentCheckAgent::fake([verdict(['hate' => 0.9], 'Hetze.'), verdict()]);
     $me = N::member();
-    NetworkActions::saveProfile(['bio' => 'hetzerischer Text', 'visibility' => 'public', 'avatar_color' => 'sun'], $me);
+    NetworkActions::saveProfile(['bio' => 'hetzerischer Text', 'avatar_color' => 'sun'], $me);
 
     $case = ModerationCase::sole();
     expect($case->subject_url)->toBe(route('oasis.profil', $me->username))->and($case->subject_user_id)->toBe($me->id);

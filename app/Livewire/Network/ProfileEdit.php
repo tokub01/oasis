@@ -4,7 +4,6 @@ namespace App\Livewire\Network;
 
 use App\Actions\Network\UpdateProfile;
 use App\Enums\Network\AvatarColor;
-use App\Enums\Network\Visibility;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 
@@ -15,8 +14,6 @@ class ProfileEdit extends NetworkPage
 
     public string $location = '';
 
-    public string $visibility = 'public';
-
     public string $avatar_color = 'sun';
 
     /** Populate only the current account's editable profile fields. */
@@ -25,7 +22,6 @@ class ProfileEdit extends NetworkPage
         $profile = $this->actor()->profileOrDefault();
         $this->bio = $profile->bio ?? '';
         $this->location = $profile->location ?? '';
-        $this->visibility = $profile->visibility->value;
         $this->avatar_color = $profile->avatar_color->value;
     }
 
@@ -34,7 +30,6 @@ class ProfileEdit extends NetworkPage
     {
         $user = $this->actor();
         $data = $this->validate(['bio' => ['nullable', 'string', 'max:300'], 'location' => ['nullable', 'string', 'max:80'],
-            'visibility' => ['required', Rule::enum(Visibility::class)],
             'avatar_color' => ['required', Rule::enum(AvatarColor::class)]]);
         $data['bio'] = $data['bio'] === '' ? null : $data['bio'];
         $data['location'] = $data['location'] === '' ? null : $data['location'];

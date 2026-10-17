@@ -29,7 +29,7 @@ beforeEach(fn () => $this->withoutVite());
 function safetyCrossCheckMember(string $name): User
 {
     $user = Network::member(['username' => 'crosscheck_'.$name, 'display_name' => 'Crosscheck '.$name]);
-    $user->profile()->create(['visibility' => 'public']);
+    $user->privacySetting()->create(['profile_audience' => 'everyone']);
 
     return $user;
 }

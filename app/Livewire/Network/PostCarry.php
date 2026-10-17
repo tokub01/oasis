@@ -13,7 +13,7 @@ class PostCarry extends NetworkPage
     #[Locked]
     public int $postId;
 
-    /** Only an interactive, visible target may be carried; mount is not the sole authorization check. */
+    /** Bind the carry target; render and the nested composer recheck carry authorization. */
     public function mount(Post $post): void
     {
         $this->postId = $post->id;
@@ -24,7 +24,7 @@ class PostCarry extends NetworkPage
     {
         $this->actor();
         $post = Post::with(['author.profile', 'images'])->findOrFail($this->postId);
-        Gate::authorize('interact', $post);
+        Gate::authorize('carry', $post);
 
         return $this->page('livewire.network.post-carry', ['post' => $post], 'Weitertragen');
     }

@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\Network\AvatarColor;
-use App\Enums\Network\Visibility;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -14,7 +13,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $user_id
  * @property string|null $bio
  * @property string|null $location
- * @property Visibility $visibility
  * @property AvatarColor $avatar_color
  * @property User $user
  */
@@ -24,15 +22,15 @@ class Profile extends Model
 
     public $incrementing = false;
 
-    protected $fillable = ['bio', 'location', 'visibility', 'avatar_color'];
+    protected $fillable = ['bio', 'location', 'avatar_color'];
 
-    /** New profiles are members-only until the member decides to be readable by guests. */
-    protected $attributes = ['visibility' => 'members', 'avatar_color' => 'sun'];
+    /** New profiles use the default avatar; audience lives in the privacy settings. */
+    protected $attributes = ['avatar_color' => 'sun'];
 
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['visibility' => Visibility::class, 'avatar_color' => AvatarColor::class];
+        return ['avatar_color' => AvatarColor::class];
     }
 
     /**
@@ -48,6 +46,7 @@ class Profile extends Model
     /** Whether a viewer (null = guest) may open this profile. */
     public function isVisibleTo(?User $viewer): bool
     {
-        return $this->visibility === Visibility::Public || $viewer?->hasVerifiedEmail() === true;
+        return ! ($viewer?->isBlockedWith($this->user) ?? false)
+            && $this->user->privacy()->allows('profile_audience', $viewer);
     }
 }

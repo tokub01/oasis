@@ -8,7 +8,7 @@ Internal links use `wire:navigate`; JavaScript is required for component actions
 
 | Table | Model | Purpose |
 |---|---|---|
-| `profiles` | `Profile` | bio, location, visibility (`public`/`members`, default members), avatar colour; one per account, created on first save (`User::profileOrDefault()`) |
+| `profiles` | `Profile` | bio, location, avatar colour; audience in `privacy_settings`; one per account, created on first save (`User::profileOrDefault()`) |
 | `posts` | `Post` | a Tropfen: body ≤ 500, visibility, optional `oasis_id`, `reply_to_id`, `carried_post_id` (weitertragen), `removed_from_oasis_at` |
 | `post_images` | `PostImage` | up to 4 per Tropfen, required alt text, WebP on the private media disk (`oasis.media_disk`: `local` or `s3`) |
 | `follows` | `Follow` | follower → person or oasis (`followable` morph, class names) |
@@ -22,7 +22,7 @@ Tropfen keep their (dangling) reference, stay replies/carries and show "nicht me
 
 ## Rules
 
-- **Visibility** (`Post::scopeVisibleTo` / `isVisibleTo`, `Profile`/`Oasis::isVisibleTo`): public content is
+- **Visibility** (`Post::scopeVisibleTo` / `isVisibleTo`, `Oasis::isVisibleTo`): public content is
   readable by guests, members-only content by verified members. Unknown and unreadable resources are both 404.
   A Tropfen in a members-only oasis, and a reply to or carry of a members-only Tropfen, is always members-only.
 - **Participation**: every write (post, reply, carry, react, follow, found an oasis, create an invitation) needs the
@@ -130,3 +130,30 @@ Cursor pagination uses `WithPagination`; creating a Tropfen refreshes its contai
   controllers, obsolete network FormRequests and their old page views were removed.
 - Existing regression tests invoke real components through `Tests\Support\NetworkActions`; additional Livewire tests
   cover locked context, revoked permissions, posting budgets and live tone confirmation.
+
+## Privacy enforcement (stage 13)
+
+`User::privacy()` supplies stored settings or unsaved members-only defaults. `Profile::isVisibleTo` delegates to
+`profile_audience` and keeps bidirectional blocks above every audience. `following` means people the owner follows,
+never the owner's followers. Owners pass their own audience choices. The old `profiles.visibility` column is removed
+by `2026_10_17_200000_drop_visibility_from_profiles`; the earlier migration preserves existing profile choices.
+`ProfileEdit` edits profile content only and links to `app.privacy`. `Compose::mount` independently selects
+`default_post_visibility`; per-post and oasis visibility restrictions still apply. Entdecken requires an explicitly
+stored `profile_audience=everyone`, including for signed-in readers. Profile follower counts are omitted entirely
+unless `follower_count_audience` allows the reader. Profile biography is also hidden on a post detail page when the
+reader cannot open that profile.
+
+`PostPolicy::reply` and `carry` combine `interact` with the target author's respective privacy audience. Composer
+mount, update and publication, carry confirmation, detail/card buttons and mutual-follow quick replies enforce
+these separate abilities. Reactions continue to use `interact`, bookmarks `view`. Existing replies/carries remain
+readable according to their original Tropfen visibility. Card authors and their privacy settings are eager loaded. Follow checks use request-local copies with explicit
+checked viewer IDs (`withKnownFollows`); other IDs always use the database fallback. Hint presentation prepares
+a copy of the signed-in user; mention targets and author-relative safety/follow edges are batched before rendering.
+
+`DirectorySearch` excludes `searchable=false` in SQL before the result limit; accounts without a settings row remain
+searchable. Guest profile and Tropfen pages pass `noindex` to the layout unless `PrivacySetting::indexable()` allows it:
+both `search_engines=true` and `profile_audience=everyone` are required. Closing a previously public profile therefore
+also prevents indexing its public Tropfen, even if the stored search-engine preference remains enabled.
+This requests exclusion from compliant search engines; it does not make otherwise public content private.
+The account export contains an explicit `privatsphaere` allowlist with all nine privacy choices, including defaults.
+See [Privatsphäre-Center](oasis-privacy.md) for the settings UI and guided check.

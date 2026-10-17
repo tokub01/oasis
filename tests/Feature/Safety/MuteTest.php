@@ -62,7 +62,8 @@ it('unmutes an account and restores posts in feeds', function (): void {
     $alice = Fixtures::member(['username' => 'alice']);
     $bob = Fixtures::member(['username' => 'bob']);
 
-    $bob->profile()->create(['visibility' => 'public', 'avatar_color' => 'sun']);
+    $bob->profile()->create(['avatar_color' => 'sun']);
+    $bob->privacySetting()->create(['profile_audience' => 'everyone']);
     $bobPost = Fixtures::post($bob, ['body' => 'Bobs Tropfen']);
     app(ManageFollows::class)->follow($alice, $bob);
 

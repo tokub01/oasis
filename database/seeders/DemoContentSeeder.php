@@ -159,7 +159,8 @@ class DemoContentSeeder extends Seeder
             'terms_accepted_at' => now()->subMonths(2), 'trial_ends_at' => now()->addDays(20),
         ]);
         $user->forceFill(['email_verified_at' => now()->subMonths(2), 'created_at' => now()->subMonths(rand(1, 6))])->save();
-        $user->profile()->updateOrCreate([], ['bio' => $bio, 'location' => $location, 'visibility' => 'public', 'avatar_color' => $color]);
+        $user->profile()->updateOrCreate([], ['bio' => $bio, 'location' => $location, 'avatar_color' => $color]);
+        $user->privacySetting()->firstOrCreate([], ['profile_audience' => 'everyone', 'default_post_visibility' => 'public', 'search_engines' => true]);
 
         return $user;
     }

@@ -69,8 +69,12 @@ class ExportAccount
             ]),
             'profil' => [
                 'beschreibung' => $profile->bio, 'ort' => $profile->location,
-                'sichtbarkeit' => $profile->visibility->value, 'farbe' => $profile->avatar_color->value,
+                'farbe' => $profile->avatar_color->value,
             ],
+            'privatsphaere' => $user->privacy()->only([
+                'profile_audience', 'default_post_visibility', 'follower_count_audience', 'mentions_audience',
+                'replies_audience', 'carry_audience', 'chat_invites_audience', 'searchable', 'search_engines',
+            ]),
             'tropfen' => $posts->map(fn (Post $post) => [
                 'id' => $post->id,
                 'text' => $post->body,

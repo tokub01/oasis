@@ -75,10 +75,10 @@ it('omits the prompt for a Tropfen without http links', function () {
 });
 
 it('renders external links safely without splitting fragments or mentions inside their paths', function () {
-    N::member(['username' => 'alice']);
+    $author = N::member(['username' => 'alice']);
     $text = 'Grün <script>alert(1)</script> https://wissen.tld/@alice?q=1&b=2#Thema. @alice #Thema';
 
-    $html = Blade::render('<x-network.rich-text :text="$text" />', compact('text'));
+    $html = Blade::render('<x-network.rich-text :text="$text" :author="$author" />', compact('text', 'author'));
 
     expect($html)->toContain('href="https://wissen.tld/@alice?q=1&amp;b=2#Thema"', 'rel="noopener noreferrer nofollow"',
         'target="_blank"', '>wissen.tld</a>.', '&lt;script&gt;', route('oasis.profil', 'alice'), route('search.tags.show', 'Thema'))

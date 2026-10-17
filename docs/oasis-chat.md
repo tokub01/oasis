@@ -151,3 +151,16 @@ History excludes blocked senders before the 50-message cursor page is selected, 
 cursors. Exact-username chat discovery also hides blocked accounts in either direction. The historical public-key
 directory remains available to active members for verification of old signatures. Blocking cannot erase ciphertext
 or keys already obtained by a client.
+
+## Invitation privacy (stage 13)
+
+Creating a conversation and adding/readding a group member require every invitee's `chat_invites_audience` to allow
+the inviting owner. The check runs server-side inside the existing membership transaction/locks and returns HTTP
+403 with `Diese Person erlaubt dir keine Chat-Einladungen.` on refusal. Members-only defaults also apply without a
+stored privacy row. `following` means the recipient follows the inviter, not the reverse. Existing membership,
+message history and public-key verification remain available when invitation preferences change.
+
+The exact-username picker omits accounts that reject the searcher's invitation, as well as blocked or non-chat-ready
+accounts. `searchable` controls the Oasis people search; it does not override the separate chat invitation setting.
+Bidirectional blocks continue to win above a permissive audience. See `tests/Feature/Chat/ChatPrivacyTest.php` and
+the opt-in real Reverb test in `tests/e2e/chat-reverb.e2e.mjs` (instructions in `oasis-chat-client.md`).

@@ -24,10 +24,13 @@ trait HasNetwork
         return $this->hasOne(Profile::class);
     }
 
-    /** The stored profile, or an unsaved default one (members-only, sun avatar) for accounts that never edited it. */
+    /**
+     * The stored profile, or an unsaved default (sun avatar) for accounts that never edited it.
+     * The audience comes from privacy settings.
+     */
     public function profileOrDefault(): Profile
     {
-        return $this->profile ?? new Profile(['user_id' => $this->id]);
+        return ($this->profile ?? new Profile(['user_id' => $this->id]))->setRelation('user', $this);
     }
 
     /**

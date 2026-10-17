@@ -3,6 +3,8 @@
 use App\Http\Controllers\Account\ExportAccountController;
 use App\Livewire\Account\Settings;
 use App\Livewire\Network\Source;
+use App\Livewire\Privacy\Center;
+use App\Livewire\Privacy\Checkup;
 use Illuminate\Support\Facades\Route;
 
 /* Account routes use web sessions/CSRF via routes/web.php; only verified users enter the app. */
@@ -11,6 +13,11 @@ Route::livewire('/app', Source::class)->middleware(['auth', 'verified'])->name('
 // Settings (incl. account deletion, GDPR Art. 17) stay reachable while a changed e-mail address is unverified, so the
 // member can correct a mistyped address or delete the account; every action still checks what it needs itself.
 Route::livewire('/app/einstellungen', Settings::class)->middleware('auth')->name('app.settings');
+// Privatsphäre-Center and the guided check (stage 13); the settings are enforced through PrivacySetting::allows().
+Route::middleware(['auth', 'verified'])->group(function (): void {
+    Route::livewire('/app/privatsphaere', Center::class)->name('app.privacy');
+    Route::livewire('/app/privatsphaere/check', Checkup::class)->name('app.privacy.check');
+});
 // Encrypted chat page; all chat data comes from the JSON API in routes/chat.php.
 Route::view('/app/nachrichten', 'app.chat.index')->middleware(['auth', 'verified'])->name('app.chat');
 

@@ -137,6 +137,12 @@ const startModules = () => {
 
 document.addEventListener("livewire:navigated", startModules);
 
+// Livewire components move the keyboard focus with $this->dispatch('oasis:focus', id: '…'), e.g. to the heading
+// of a new step, so screen reader users hear where they are after the content was replaced.
+window.addEventListener("oasis:focus", (event) => {
+    document.getElementById(event.detail?.id)?.focus();
+});
+
 // A Livewire re-render morphs a component in place and resets its markup (including the start marker), so modules
 // inside components start again after every update; modules must therefore be safe to run twice on an element.
 document.addEventListener("livewire:init", () => {

@@ -93,3 +93,18 @@ Blockieren, Stummschalten und Merken aus Feeds oder Profilen heraus laufen direk
   - Zweispaltiges Layout (`x-network.columns`, `'wide' => true`) mit erklärenden Infokarten.
 - **`resources/views/livewire/safety/bookmarks.blade.php`**:
   - Darstellung über `<x-network.feed>` mit `wire:key` pro Beitrag und Hinweisen zur privaten Natur der Lesezeichen.
+
+## Privatsphäre-Center (Stufe 13)
+
+Die Zielgruppen aus `privacy_settings` ergänzen die Sicherheitsregeln; eine Blockade gewinnt immer.
+„Menschen, denen du folgst“ meint vom Mitglied selbst gewählte Personen, nicht die Karawane.
+Profilzugriff, Karawane-Zahl, Antworten und Weitertragen werden serverseitig getrennt geprüft. Eine sichtbare
+Nachricht allein berechtigt deshalb nicht mehr zu Antworten oder Weitertragen; Reaktionen und Merken bleiben
+unverändert. Bereits offene Composer prüfen die Freigabe vor jedem Schreiben erneut.
+
+`SendHint::allowed` prüft bei Erwähnungen zusätzlich `mentions_audience` der erwähnten Person gegenüber dem Autor.
+Diese Prüfung gilt auch beim späteren Lesen von Hinweisen und beim Digest. Ein nicht erlaubtes `@name` bleibt als
+Text erhalten, bekommt aber keinen Profillink. Rich-Text erhält dafür den tatsächlichen Textautor, auch bei Zitaten
+und gebündelten Antworten; der aktuelle Leser ändert die Erlaubnis nicht. Ziele, Follow- und Block-Kanten werden
+für die Liste gesammelt geladen. Profil- und Suchmaschinenfreigaben sind unabhängig von Blockiert/Stumm und der
+Sichtbarkeit einzelner Tropfen; `noindex` ersetzt keine Zugriffskontrolle.

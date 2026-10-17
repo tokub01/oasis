@@ -5,7 +5,9 @@ namespace App\Queries\Network;
 use App\Enums\Network\PostKind;
 use App\Models\Oasis;
 use App\Models\Post;
+use App\Models\PrivacySetting;
 use App\Models\User;
+use App\Support\Network\Mentions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\CursorPaginator;
@@ -68,7 +70,7 @@ class PostFeed
     public function discover(?User $viewer): CursorPaginator
     {
         return $this->paginate(null, Post::query()->whereNull('reply_to_id')
-            ->whereHas('author.profile', fn (Builder $profile) => $profile->where('visibility', 'public')), $viewer);
+            ->whereHas('author.privacySetting', fn (Builder $privacy) => $privacy->where('profile_audience', 'everyone')), $viewer);
     }
 
     /**
@@ -103,8 +105,11 @@ class PostFeed
     {
         $query = Post::query()->where('reply_to_id', $post->id)->visibleTo($viewer);
 
-        return $this->withCardData($this->filterSafety($query, $viewer), $viewer)
+        $replies = $this->withCardData($this->filterSafety($query, $viewer), $viewer)
             ->orderBy('id')->limit(200)->get();
+        Mentions::preloadPosts($replies);
+
+        return $replies;
     }
 
     /**
@@ -116,8 +121,11 @@ class PostFeed
     {
         $actor = $reactor ?? $viewer;
 
-        return $this->withCardData($this->filterSafety($query->visibleTo($viewer), $actor), $actor)
+        $paginator = $this->withCardData($this->filterSafety($query->visibleTo($viewer), $actor), $actor)
             ->orderByDesc('id')->cursorPaginate(self::PER_PAGE);
+        Mentions::preloadPosts($paginator->getCollection());
+
+        return $paginator;
     }
 
     /**
@@ -158,7 +166,21 @@ class PostFeed
         $viewer?->mutualFollowUserIds();
 
         return $query
-            ->with(['author.profile', 'oasis', 'images', 'carried.author.profile', 'carried.images', 'replyTo.author'])
+            ->with(['author.profile', 'author.privacySetting', 'oasis', 'images', 'carried.author.profile', 'carried.author.privacySetting', 'carried.images', 'replyTo.author'])
+            ->when($viewer !== null, fn (Builder $cards) => $cards->afterQuery(function (Collection $posts) use ($viewer): Collection {
+                /** @var Collection<int, Post> $posts */
+                /** @var Collection<int, User> $authors */
+                $authors = new Collection;
+                foreach ($posts as $post) {
+                    $authors->push($post->author);
+                    if ($post->carried !== null) {
+                        $authors->push($post->carried->author);
+                    }
+                }
+                PrivacySetting::preloadFollows($authors, [$viewer->id]);
+
+                return $posts;
+            }))
             ->withCount(['reactions', 'replies'])
             ->when($viewer !== null, fn (Builder $mine) => $mine->withExists([
                 'reactions as reacted' => fn (Builder $reaction) => $reaction->where('user_id', $viewer->id),
@@ -208,7 +230,7 @@ class PostFeed
         });
 
         $replies = $repliesQuery
-            ->with(['author.profile'])
+            ->with(['author.profile', 'author.privacySetting'])
             ->orderBy('id', 'asc')
             ->get()
             ->groupBy('reply_to_id');
@@ -218,5 +240,6 @@ class PostFeed
             $post->setRelation('conversationReplies', $postReplies->take(2));
             $post->has_more_replies = ($post->replies_count ?? 0) > 2 || $postReplies->count() > 2;
         }
+        Mentions::preloadPosts($posts);
     }
 }

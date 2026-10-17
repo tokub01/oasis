@@ -13,6 +13,7 @@ const oasisCode = fs.readFileSync(oasisJsPath, "utf8");
 function loadOasisScript(globals = {}) {
     const sandbox = {
         navigator: {},
+        window: { addEventListener: () => {} },
         ...globals,
         document: { querySelectorAll: () => [], addEventListener: () => {}, ...globals.document },
     };

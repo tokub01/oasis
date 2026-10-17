@@ -4,6 +4,7 @@ namespace App\Livewire\Network;
 
 use App\Models\Post;
 use App\Queries\Network\PostFeed;
+use App\Support\Network\Mentions;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Locked;
@@ -49,7 +50,9 @@ class PostShow extends NetworkPage
         $feed = app(PostFeed::class);
         $post = $feed->withCardData(Post::whereKey($post->id), auth()->user())->firstOrFail();
 
+        Mentions::preloadPosts([$post]);
+
         return $this->page('livewire.network.post-show', ['post' => $post, 'replies' => $feed->replies($post, auth()->user())],
-            'Tropfen von '.$post->author->display_name, public: true);
+            'Tropfen von '.$post->author->display_name, public: true, noindex: ! $post->author->privacy()->indexable());
     }
 }

@@ -10,9 +10,9 @@ use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Finds people and oases for the search page. No ranking by popularity: exact handle matches first, then
- * alphabetical. The search page is for verified members only, and verified members may open every profile and every
- * oasis (public or members-only), so visibility needs no extra filter; blockades are excluded in SQL so the limit
- * always applies to results the viewer may see.
+ * alphabetical. The search page is for verified members only. Accounts may opt out of name discovery independently
+ * of their profile audience; opening a result still checks that audience. Search opt-outs and bidirectional
+ * blockades are excluded in SQL before the result limit.
  */
 class DirectorySearch
 {
@@ -36,6 +36,7 @@ class DirectorySearch
         return User::query()
             ->whereNotNull('email_verified_at')
             ->whereNotIn('id', $viewer->blockedUserIds())
+            ->whereDoesntHave('privacySetting', fn (Builder $privacy) => $privacy->where('searchable', false))
             ->where(function (Builder $query) use ($term, $handle): void {
                 $query->where('display_name', 'like', '%'.PostFeed::escapeLike($term).'%');
                 // "@@" leaves an empty handle, which would match every username – search names only then.
@@ -43,7 +44,7 @@ class DirectorySearch
                     $query->orWhere('username', 'like', '%'.PostFeed::escapeLike($handle).'%');
                 }
             })
-            ->with('profile')
+            ->with(['profile', 'privacySetting'])
             ->orderByRaw('username = ? desc', [$handle])
             ->orderBy('display_name')
             ->limit(self::LIMIT)

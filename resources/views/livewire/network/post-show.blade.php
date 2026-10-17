@@ -19,7 +19,7 @@
         <section id="antworten" aria-labelledby="antworten-titel" class="flex flex-col gap-4">
             <h2 id="antworten-titel" class="m-0 text-[21px] font-extrabold text-night">Antworten</h2>
 
-            @can('interact', $post)
+            @can('reply', $post)
                 <x-network.compose :reply-to="$post" :images="false" />
             @endcan
 
@@ -39,7 +39,7 @@
                         <span class="text-sm text-muted">{{ '@'.$author->username }}</span>
                     </span>
                 </a>
-                @if ($author->profileOrDefault()->bio)
+                @if ($author->profileOrDefault()->isVisibleTo(auth()->user()) && $author->profileOrDefault()->bio)
                     <p class="m-0 text-[15px] text-ink-2">{{ $author->profileOrDefault()->bio }}</p>
                 @endif
                 <a wire:navigate href="{{ route('oasis.profil', $author->username) }}" class="o-link self-start text-[15px]">Zum Profil</a>

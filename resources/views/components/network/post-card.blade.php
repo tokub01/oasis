@@ -15,6 +15,8 @@
 @php
     $viewer = auth()->user();
     $canInteract = $viewer?->can('interact', $post) ?? false;
+    $canReply = $viewer?->can('reply', $post) ?? false;
+    $canCarry = $viewer?->can('carry', $post) ?? false;
     $carried = $post->carried;
     $carriedMuted = $carried && $viewer && in_array($carried->user_id, $viewer->mutedUserIds(), true);
     $postUrl = route('network.posts.show', $post);
@@ -66,7 +68,7 @@
         <p class="m-0 rounded-2xl bg-dune px-4 py-3 text-sm">Unsere automatische Prüfung hat in diesem Tropfen möglicherweise sexuelle Inhalte erkannt. Bis ein Mensch aus dem Moderationsteam ihn geprüft hat, siehst nur du ihn.</p>
     @endif
 
-    <p class="m-0 text-[17px] leading-[1.55] whitespace-pre-line break-words"><x-network.rich-text :text="$post->body" /></p>
+    <p class="m-0 text-[17px] leading-[1.55] whitespace-pre-line break-words"><x-network.rich-text :text="$post->body" :author="$post->author" /></p>
 
     @if ($post->images->isNotEmpty())
         <div @class(['grid gap-2', 'grid-cols-2' => $post->images->count() > 1])>
@@ -85,7 +87,7 @@
             {{-- No outer link: the text may contain @/# links, and links must not be nested. --}}
             <div class="flex flex-col gap-1 rounded-2xl border border-dune-line p-4 text-ink">
                 <a wire:navigate href="{{ route('network.posts.show', $carried) }}" class="text-sm font-bold text-night no-underline">{{ $carried->author->display_name }} <span class="font-medium text-muted">{{ '@'.$carried->author->username }}</span></a>
-                <span class="line-clamp-4 whitespace-pre-line"><x-network.rich-text :text="$carried->body" /></span>
+                <span class="line-clamp-4 whitespace-pre-line"><x-network.rich-text :text="$carried->body" :author="$carried->author" /></span>
             </div>
         @else
             <p class="m-0 rounded-2xl border border-dashed border-dune-line p-4 text-sm text-muted">Dieser Tropfen ist nicht mehr verfügbar.</p>
@@ -137,7 +139,7 @@
                                 <span class="text-xs text-muted">{{ '@'.$reply->author->username }}</span>
                             </div>
                             <p class="m-0 text-ink-2 whitespace-pre-line break-words text-sm">
-                                <x-network.rich-text :text="$reply->body" />
+                                <x-network.rich-text :text="$reply->body" :author="$reply->author" />
                             </p>
                         </div>
                     </div>
@@ -151,12 +153,16 @@
 
     <footer class="flex flex-wrap items-center gap-1.5 text-muted">
         @if ($canInteract)
-            <a wire:navigate href="{{ $postUrl }}#antworten" class="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-night no-underline">
-                <x-oasis.icon name="reply" :size="20" /><span>Antworten</span>
-            </a>
-            <a wire:navigate href="{{ route('network.posts.carry', $post) }}" class="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-night no-underline">
-                <x-oasis.icon name="repost" :size="20" /><span>Weitertragen</span>
-            </a>
+            @if ($canReply)
+                <a wire:navigate href="{{ $postUrl }}#antworten" class="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-night no-underline">
+                    <x-oasis.icon name="reply" :size="20" /><span>Antworten</span>
+                </a>
+            @endif
+            @if ($canCarry)
+                <a wire:navigate href="{{ route('network.posts.carry', $post) }}" class="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-night no-underline">
+                    <x-oasis.icon name="repost" :size="20" /><span>Weitertragen</span>
+                </a>
+            @endif
             @if ($post->reacted)
                 <form wire:submit="unreact({{ $post->id }})">
 
@@ -241,7 +247,7 @@
         </span>
     </footer>
 
-    @if ($link && $canInteract && $viewer && $viewer->id !== $post->author->id && $viewer->followsMutually($post->author))
+    @if ($link && $canReply && $viewer && $viewer->id !== $post->author->id && $viewer->followsMutually($post->author))
         <div id="quick-reply-{{ $post->id }}"><x-network.compose :reply-to="$post" :images="false" /></div>
     @endif
 </article>

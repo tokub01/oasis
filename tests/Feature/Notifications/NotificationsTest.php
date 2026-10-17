@@ -45,7 +45,7 @@ it('parses only whole distinct usernames and never email addresses', function ()
 it('escapes rich text and links only existing mentions plus bounded unicode topics', function () {
     $member = Fixtures::member(['username' => 'alice']);
     $text = "<script>alert('x')</script> @ALICE @unknown a@alice.tld\n#Grün_42 #a #".str_repeat('a', 41);
-    $html = Blade::render('<x-network.rich-text :text="$text" />', compact('text'));
+    $html = Blade::render('<x-network.rich-text :text="$text" :author="$member" />', compact('text', 'member'));
     expect($html)->toContain('&lt;script&gt;', route('oasis.profil', 'alice'), route('search.tags.show', 'Grün_42'), '@unknown', "\n")
         ->not->toContain('<script>', route('oasis.profil', 'unknown'));
     expect(substr_count($html, '<a '))->toBe(2);
@@ -301,17 +301,18 @@ it('links host hints to their oasis and hides them after the oasis is deleted', 
 });
 
 it('skips empty mention lookups and caches hits and misses for this request only', function () {
-    Fixtures::member(['username' => 'alice']);
+    $author = Fixtures::member(['username' => 'alice']);
+    $author->blockedUserIds();
     DB::enableQueryLog();
     DB::flushQueryLog();
     Blade::render('<x-network.rich-text text="Ohne Erwähnung #Garten" />');
     expect(DB::getQueryLog())->toBeEmpty();
     foreach (range(1, 20) as $i) {
-        Blade::render('<x-network.rich-text text="@ALICE @noch_nicht" />');
+        Blade::render('<x-network.rich-text text="@ALICE @noch_nicht" :author="$author" />', compact('author'));
     }
-    expect(DB::getQueryLog())->toHaveCount(1);
+    expect(DB::getQueryLog())->toHaveCount(4);
     expect(Mentions::existing(['ALICE', 'noch_nicht']))->toBe(['alice']);
-    expect(DB::getQueryLog())->toHaveCount(1);
+    expect(DB::getQueryLog())->toHaveCount(4);
     DB::disableQueryLog();
 
     // A newly created account becomes linkable in the next real HTTP request, despite the previous cached miss.

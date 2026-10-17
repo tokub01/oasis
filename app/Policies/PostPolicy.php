@@ -32,6 +32,18 @@ class PostPolicy
             && ! in_array($post->user_id, $user->blockedUserIds(), true);
     }
 
+    /** Replies respect the audience chosen by the author of the target Tropfen. */
+    public function reply(User $user, Post $post): bool
+    {
+        return $this->interact($user, $post) && $post->author->privacy()->allows('replies_audience', $user);
+    }
+
+    /** Carrying has a separate audience; reactions continue to use interact. */
+    public function carry(User $user, Post $post): bool
+    {
+        return $this->interact($user, $post) && $post->author->privacy()->allows('carry_audience', $user);
+    }
+
     /** Authors delete their own Tropfen at any time, also read-only accounts (data minimisation). */
     public function delete(User $user, Post $post): bool
     {

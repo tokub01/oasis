@@ -193,7 +193,7 @@ describe('pages', function () {
     it('does not follow a blocked profile or a members-only oasis for guests', function () {
         $me = N::member();
         $other = N::member();
-        $other->profile()->create(['visibility' => 'public']);
+        $other->privacySetting()->create(['profile_audience' => 'everyone']);
         app(ManageBlock::class)->block($other, $me);
         $this->actingAs($me->fresh());
 
@@ -207,7 +207,7 @@ describe('pages', function () {
     it('never puts foreign e-mail addresses or invitation tokens into the public snapshot', function () {
         $me = N::member();
         $other = N::member(['email' => 'geheim@example.tld']);
-        $other->profile()->create(['visibility' => 'public']);
+        $other->privacySetting()->create(['profile_audience' => 'everyone']);
         $oasis = N::oasis($me, ['slug' => 'schnappschuss']);
         $oasis->members()->attach($other->id, ['role' => 'member', 'joined_at' => now()]);
         $this->actingAs($me);
@@ -226,8 +226,8 @@ describe('pages', function () {
         $me = N::member();
         $this->actingAs($me);
 
-        Livewire::test(ProfileEdit::class)->set('visibility', 'secret')->set('avatar_color', 'neon')
-            ->call('save')->assertHasErrors(['visibility', 'avatar_color']);
+        Livewire::test(ProfileEdit::class)->set('avatar_color', 'neon')
+            ->call('save')->assertHasErrors(['avatar_color']);
         expect($me->profile()->exists())->toBeFalse();
     });
 });

@@ -44,7 +44,7 @@ it('journey: sign up, verify, set up a profile, post with mention and topic, get
     $this->get(URL::temporarySignedRoute('verification.verify', now()->addHour(), ['id' => $me->id, 'hash' => sha1($me->email)]));
     expect($me->fresh()->hasVerifiedEmail())->toBeTrue();
 
-    NetworkActions::saveProfile(['bio' => 'Hallo!', 'visibility' => 'public', 'avatar_color' => 'spring'])->assertHasNoErrors();
+    NetworkActions::saveProfile(['bio' => 'Hallo!', 'avatar_color' => 'spring'])->assertHasNoErrors();
     NetworkActions::profile('follow', $mira)->assertHasNoErrors();
     NetworkActions::publish(['body' => 'Erster Tropfen für @mira #Anfang', 'visibility' => 'public'])->assertHasNoErrors();
     $post = Post::where('user_id', $me->id)->sole();
@@ -166,7 +166,7 @@ it('FINDING F4: the last host can close an oasis instead of being stuck with it'
 
 it('FINDING F5: profiles and oases can be reported from the app, not only Tropfen', function () {
     $other = N::member();
-    $other->profile()->create(['visibility' => 'public']);
+    $other->privacySetting()->create(['profile_audience' => 'everyone']);
     $oasis = N::oasis($other);
     $this->actingAs(N::member());
 

@@ -18,6 +18,7 @@ it('downloads only the authenticated users allowlisted data without secrets', fu
     $owner = User::factory()->create(['two_factor_secret' => 'private-secret',
         'two_factor_recovery_codes' => 'private-codes']);
     $other = User::factory()->create();
+    $owner->privacySetting()->create(['profile_audience' => 'following', 'mentions_audience' => 'nobody']);
     $response = $this->actingAs($owner)->get(route('account.export'))
         ->assertOk()->assertDownload('oasis-daten.zip')->assertHeader('Content-Type', 'application/zip');
     $zip = new ZipArchive;
@@ -27,6 +28,9 @@ it('downloads only the authenticated users allowlisted data without secrets', fu
     expect($data['konto']['email'])->toBe($owner->email)->not->toBe($other->email);
     expect(array_keys($data['konto']))->toBe(['id', 'display_name', 'username', 'email', 'birth_date',
         'email_verified_at', 'terms_accepted_at', 'trial_ends_at', 'created_at', 'updated_at']);
+    expect($data['privatsphaere'])->toMatchArray(['profile_audience' => 'following', 'mentions_audience' => 'nobody', 'search_engines' => false]);
+    expect(array_keys($data['privatsphaere']))->toBe(['profile_audience', 'default_post_visibility', 'follower_count_audience', 'mentions_audience',
+        'replies_audience', 'carry_audience', 'chat_invites_audience', 'searchable', 'search_engines']);
     expect($json)->not->toContain('private-secret', 'private-codes', $other->username);
 });
 

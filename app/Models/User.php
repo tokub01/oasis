@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\Role;
 use App\Models\Concerns\HasNetwork;
+use App\Models\Concerns\HasPrivacy;
 use App\Models\Concerns\HasSafety;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -63,6 +64,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     // Stage 2: profile, Tropfen, follows, oases, invitations.
     use HasNetwork;
+    use HasPrivacy;
     use HasSafety;
     use TwoFactorAuthenticatable;
 

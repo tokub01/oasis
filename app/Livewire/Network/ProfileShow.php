@@ -33,7 +33,7 @@ class ProfileShow extends NetworkPage
     /** Resolve the current profile and recheck visibility and bidirectional blocks. */
     private function target(): ?User
     {
-        $user = User::where('username', $this->handle)->whereNotNull('email_verified_at')->with('profile')->first();
+        $user = User::where('username', $this->handle)->whereNotNull('email_verified_at')->with(['profile', 'privacySetting'])->first();
         if ($user) {
             abort_if(auth()->user()?->isBlockedWith($user) ?? false, 404);
             abort_unless($user->profileOrDefault()->isVisibleTo(auth()->user()), 404);
@@ -88,7 +88,7 @@ class ProfileShow extends NetworkPage
 
         return $this->page('livewire.network.profile-show', ['member' => $member, 'profile' => $member->profileOrDefault(),
             'posts' => app(PostFeed::class)->byAuthor($member, auth()->user()),
-            'followers' => $member->followers()->count(), 'oases' => $member->oases()->orderBy('name')->get()->filter->isVisibleTo(auth()->user()),
-            'following' => auth()->user()?->follows($member) ?? false], $member->display_name.' (@'.$member->username.')', 'profil', true);
+            'followers' => $member->privacy()->allows('follower_count_audience', auth()->user()) ? $member->followers()->count() : null, 'oases' => $member->oases()->orderBy('name')->get()->filter->isVisibleTo(auth()->user()),
+            'following' => auth()->user()?->follows($member) ?? false], $member->display_name.' (@'.$member->username.')', 'profil', true, noindex: ! $member->privacy()->indexable());
     }
 }

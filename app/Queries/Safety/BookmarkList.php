@@ -6,6 +6,7 @@ use App\Models\Bookmark;
 use App\Models\Post;
 use App\Models\User;
 use App\Queries\Network\PostFeed;
+use App\Support\Network\Mentions;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -46,6 +47,8 @@ class BookmarkList
 
         /** @var CursorPaginator<int, Post> $paginator */
         $paginator = $query->cursorPaginate(self::PER_PAGE);
+
+        Mentions::preloadPosts($paginator->items());
 
         return $paginator;
     }

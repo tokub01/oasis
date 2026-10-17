@@ -1,8 +1,8 @@
 {{-- Escaped network text with @accounts, #topics and HTTP links (visible destination host). Props: text (string). No JS or URL fetches. --}}
-@props(['text'])
+@props(['text', 'author' => null])
 @php
     $names = \App\Support\Network\Mentions::usernames($text);
-    $existing = \App\Support\Network\Mentions::existing($names);
+    $existing = \App\Support\Network\Mentions::linkable($names, $author);
     preg_match_all(\App\Support\Network\Mentions::PATTERN, $text, $mentions, PREG_OFFSET_CAPTURE);
     $tagPattern = '/(?<![\p{L}\p{N}_#])\#'.\App\Queries\Search\DirectorySearch::TAG_PATTERN.'(?![\p{L}\p{N}_])/u';
     preg_match_all($tagPattern, $text, $tags, PREG_OFFSET_CAPTURE);

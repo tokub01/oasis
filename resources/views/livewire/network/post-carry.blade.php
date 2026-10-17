@@ -14,7 +14,7 @@
 
         <blockquote class="m-0 flex flex-col gap-1 rounded-2xl border border-dune-line bg-paper p-4">
             <span class="text-sm font-bold text-night">{{ $post->author->display_name }} <span class="font-medium text-muted">{{ '@'.$post->author->username }}</span></span>
-            <x-network.rich-text :text="$post->body" />
+            <x-network.rich-text :text="$post->body" :author="$post->author" />
         </blockquote>
 
         <x-network.compose id="carry-form" :carried="$post" />

@@ -24,17 +24,8 @@
             </div>
             <x-oasis.field name="location" wire:model="location" label="Ort" :optional="true" maxlength="80" :value="$profile->location" hint="Zum Beispiel deine Stadt. Lass es leer, wenn du das nicht zeigen möchtest." />
 
-            <fieldset class="m-0 flex flex-col gap-2 border-none p-0">
-                <legend class="mb-2 text-[15px] font-bold">Wer darf dein Profil und neue Tropfen lesen?</legend>
-                @foreach (\App\Enums\Network\Visibility::cases() as $option)
-                    <label wire:key="profile-edit-1-{{ $option->value }}" class="flex items-center gap-2">
-                        <input type="radio" name="visibility" wire:model="visibility" aria-describedby="profile-edit-visibility-error" value="{{ $option->value }}" >
-                        {{ $option->label() }}
-                    </label>
-                @endforeach
-                <p class="m-0 text-sm text-muted">Bei jedem Tropfen kannst du das noch einmal einzeln wählen.</p>
-            </fieldset>
-            <p id="profile-edit-visibility-error" class="o-error">@error('visibility'){{ $message }}@enderror</p>
+            <p class="m-0 text-ink-2">Wer dein Profil lesen und mit dir interagieren darf, wählst du in den
+                <a wire:navigate href="{{ route('app.privacy') }}" class="o-link">Privatsphäre-Einstellungen</a>.</p>
 
             <fieldset class="m-0 flex flex-col gap-2 border-none p-0">
                 <legend class="mb-2 text-[15px] font-bold">Farbe deines Profilbilds</legend>
@@ -69,12 +60,7 @@
                 <p class="m-0 text-[15px] text-ink-2">{{ $profile->bio ?: 'Noch keine Beschreibung.' }}</p>
                 <a wire:navigate href="{{ route('oasis.profil', auth()->user()->username) }}" class="o-link self-start text-[15px]">Profil ansehen</a>
             </x-network.side-card>
-            <x-network.side-card title="Öffentlich oder nur Mitglieder?" tone="dune">
-                <ul class="m-0 flex list-disc flex-col gap-1.5 pl-5 text-[15px] text-ink-2">
-                    <li><b>Öffentlich:</b> auch Gäste ohne Konto sehen dein Profil und öffentliche Tropfen; sie erscheinen unter „Entdecken“.</li>
-                    <li><b>Nur Mitglieder:</b> nur angemeldete Mitglieder sehen dein Profil.</li>
-                </ul>
-            </x-network.side-card>
+
         </x-slot:aside>
     </x-network.columns>
 </div>

@@ -15,11 +15,12 @@ use Ramsey\Uuid\Uuid;
 class SendHint
 {
     /** Rechecked by the inbox and digest so later blocks/removals do not expose old excerpts. */
-    public function allowed(User $recipient, User $actor, ?Post $post = null): bool
+    public function allowed(User $recipient, User $actor, ?Post $post = null, ?NoticeKind $kind = null): bool
     {
         return ! $recipient->is($actor)
             && ! $recipient->isBlockedWith($actor)
             && ! in_array($actor->id, $recipient->mutedUserIds(), true)
+            && ($kind !== NoticeKind::Mention || $recipient->privacy()->allows('mentions_audience', $actor))
             && ($post === null || $post->isVisibleTo($recipient));
     }
 
@@ -30,7 +31,7 @@ class SendHint
      */
     public function handle(User $recipient, User $actor, NoticeKind $kind, string $eventKey, ?Post $post = null, array $ids = []): void
     {
-        if (! $this->allowed($recipient, $actor, $post)) {
+        if (! $this->allowed($recipient, $actor, $post, $kind)) {
             return;
         }
         DB::transaction(function () use ($recipient, $actor, $kind, $eventKey, $post, $ids): void {

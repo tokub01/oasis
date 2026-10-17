@@ -19,7 +19,8 @@ class PublicKeysController extends Controller
         $input = $request->validate(['username' => ['required', 'string', 'regex:/^[a-z0-9_]{3,30}$/D']]);
         $users = User::query()->where('username', $input['username'])->whereNotNull('email_verified_at')
             ->whereIn('id', ChatIdentity::query()->select('user_id'))
-            ->whereNotIn('id', $request->user()->blockedUserIds(true))->get();
+            ->whereNotIn('id', $request->user()->blockedUserIds(true))->with('privacySetting')->get()
+            ->filter(fn (User $user) => $user->privacy()->allows('chat_invites_audience', $request->user()));
 
         return response()->json(['data' => $this->data($users)]);
     }

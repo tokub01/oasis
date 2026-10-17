@@ -26,14 +26,14 @@ abstract class NetworkPage extends Component
      * @param  view-string  $view
      * @param  array<string, mixed>  $data
      */
-    protected function page(string $view, array $data, string $title, string $active = 'quelle', bool $public = false): View
+    protected function page(string $view, array $data, string $title, string $active = 'quelle', bool $public = false, bool $noindex = false): View
     {
         if (! $public) {
             $this->actor();
         }
 
         return view($view, $data)->layout($public && ! auth()->check() ? 'layouts.oasis' : 'layouts.app', [
-            'title' => $title, 'active' => $active, 'wide' => true,
+            'title' => $title, 'active' => $active, 'wide' => true, 'noindex' => $noindex,
         ]);
     }
 }

@@ -6,6 +6,7 @@ use App\Models\ChatIdentity;
 use App\Models\Conversation;
 use App\Models\ConversationKeyGrant;
 use App\Models\ConversationMember;
+use App\Models\PrivacySetting;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -24,6 +25,17 @@ class ManageConversation
             ->whereIn('id', ChatIdentity::query()->select('user_id'))->count();
         if ($ready !== count($ids)) {
             throw ValidationException::withMessages(['member_ids' => 'Alle Mitglieder müssen den Chat eingerichtet haben.']);
+        }
+    }
+
+    /** @param list<int> $ids */
+    private function requireInvitable(User $actor, array $ids): void
+    {
+        $invitees = User::whereIn('id', $ids)->whereKeyNot($actor->id)->with('privacySetting')->get();
+        PrivacySetting::preloadFollows($invitees, [$actor->id]);
+        foreach ($invitees as $invitee) {
+            abort_unless($invitee->privacy()->allows('chat_invites_audience', $actor), 403,
+                'Diese Person erlaubt dir keine Chat-Einladungen.');
         }
     }
 
@@ -50,6 +62,7 @@ class ManageConversation
             if (DB::table('blocks')->whereIn('user_id', $ids)->whereIn('blocked_user_id', $ids)->exists()) {
                 throw ValidationException::withMessages(['member_ids' => 'Mit blockierten Personen kann kein Chat gestartet werden.']);
             }
+            $this->requireInvitable($owner, $ids);
             $conversation = Conversation::create(['type' => $input['type'], 'title' => $input['title'] ?? null,
                 'created_by' => $owner->id, 'lifetime_days' => $input['lifetime_days'],
                 'key_version' => 1, 'rotation_required' => true]);
@@ -97,6 +110,7 @@ class ManageConversation
                     'Mit blockierten Personen kann kein Chat geführt werden.'
                 );
                 $this->requireReady([$userId]);
+                $this->requireInvitable($owner, [$userId]);
                 abort_if($member && $member->left_at === null, 422, 'Dieses Konto ist bereits Mitglied.');
                 abort_if($conversation->activeMembers()->count() >= 50, 422, 'Ein Chat hat höchstens 50 Mitglieder.');
                 ConversationKeyGrant::query()->where('conversation_id', $conversation->id)

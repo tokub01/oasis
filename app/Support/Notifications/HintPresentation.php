@@ -4,9 +4,12 @@ namespace App\Support\Notifications;
 
 use App\Actions\Notifications\SendHint;
 use App\Enums\Notifications\NoticeKind;
+use App\Enums\Privacy\Audience;
 use App\Models\Oasis;
 use App\Models\Post;
+use App\Models\PrivacySetting;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Notifications\DatabaseNotification;
 
 /** Resolves IDs only at read time and hides deleted, blocked, muted or unreadable hints. */
@@ -21,7 +24,7 @@ class HintPresentation
     }
 
     /**
-     * Load all referenced resources in at most three queries, then recheck every hint's visibility and safety.
+     * Batch referenced resources and the mention audience circle, then recheck every hint's visibility and safety.
      * Nothing is cached between calls, so newly removed content remains hidden.
      *
      * @param  iterable<DatabaseNotification>  $hints
@@ -37,10 +40,14 @@ class HintPresentation
         $actors = $actorIds === [] ? collect() : User::whereKey($actorIds)->get()->keyBy('id');
         $posts = $postIds === [] ? collect() : Post::whereKey($postIds)->get()->keyBy('id');
         $oases = $oasisIds === [] ? collect() : Oasis::whereKey($oasisIds)->get()->keyBy('id');
+        $recipient = clone $viewer;
+        if ($actorIds !== [] && $recipient->privacy()->mentions_audience === Audience::Following) {
+            PrivacySetting::preloadFollows(new Collection([$recipient]), array_values($actorIds));
+        }
         $items = [];
         foreach ($hints as $hint) {
             $data = $hint->data;
-            $item = $this->present($hint, $viewer, $actors->get($data['actor_id'] ?? 0),
+            $item = $this->present($hint, $recipient, $actors->get($data['actor_id'] ?? 0),
                 $posts->get($data['post_id'] ?? 0), $oases->get($data['oasis_id'] ?? 0));
             if ($item !== null) {
                 $items[(string) $hint->id] = $item;
@@ -56,7 +63,7 @@ class HintPresentation
         $data = $hint->data;
         $kind = NoticeKind::tryFrom($data['kind'] ?? '');
         if ($kind === null || $actor === null || (isset($data['post_id']) && $post === null)
-            || ! app(SendHint::class)->allowed($viewer, $actor, $post)) {
+            || ! app(SendHint::class)->allowed($viewer, $actor, $post, $kind)) {
             return null;
         }
         $url = route('oasis.profil', $actor->username);

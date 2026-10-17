@@ -64,7 +64,7 @@ class Compose extends Component
         $this->replyToId = $replyToId;
         $this->carriedId = $carriedId;
         $this->authorizeContexts();
-        $this->visibility = auth()->user()->profileOrDefault()->visibility->value;
+        $this->visibility = auth()->user()->privacy()->default_post_visibility->value;
     }
 
     /** Context records are always loaded fresh, so blocks, removals and lost oasis roles apply immediately.
@@ -78,10 +78,11 @@ class Compose extends Component
         $reply = $this->replyToId ? Post::findOrFail($this->replyToId) : null;
         $carried = $this->carriedId ? Post::findOrFail($this->carriedId) : null;
         abort_if($reply && $carried, 422);
-        foreach ([$reply, $carried] as $post) {
-            if ($post) {
-                Gate::authorize('interact', $post);
-            }
+        if ($reply) {
+            Gate::authorize('reply', $reply);
+        }
+        if ($carried) {
+            Gate::authorize('carry', $carried);
         }
         $oasis ??= $reply?->oasis;
         if ($oasis) {

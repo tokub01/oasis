@@ -48,7 +48,7 @@ it('finds oases and Tropfen, newest first, with LIKE wildcards taken literally',
 it('never shows Tropfen, profiles or oases the member may not read', function () {
     $me = N::member();
     $author = N::member();
-    $author->profile()->create(['visibility' => 'members']);
+    $author->privacySetting()->create(['profile_audience' => 'members']);
     N::post($author, ['body' => 'Versteckt geheim', 'removed_from_oasis_at' => now()]);
     N::oasis($author, ['name' => 'Geheimkreis', 'visibility' => 'members']);
 

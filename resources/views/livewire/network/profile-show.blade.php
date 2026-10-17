@@ -1,6 +1,6 @@
 {{--
     A member's profile (route oasis.profil, /profil/{handle}, App\Livewire\Network\ProfileShow). Guests see public profiles
-    only. The Karawane size is shown to everyone as on the design; per-Tropfen counts stay with the author.
+    only when the profile audience allows it. The Karawane size has its own audience; per-Tropfen counts stay with the author.
     Side column: about, oases and – for the owner – links to edit and to the own numbers.
 
     Variables:
@@ -69,7 +69,9 @@
                     @if ($profile->location)
                         <span class="inline-flex items-center gap-1.5"><x-oasis.icon name="map-pin" :size="18" /> {{ $profile->location }}</span>
                     @endif
+                    @if ($followers !== null)
                     <span class="inline-flex items-center gap-1.5"><x-oasis.icon name="users" :size="18" /> Karawane: {{ $followers }}</span>
+                    @endif
                 </p>
             </div>
         </header>
@@ -100,7 +102,7 @@
                     <a wire:navigate href="{{ route('network.stats') }}" class="o-btn o-btn-md self-start bg-on-night text-night">Deine Zahlen</a>
                 </x-network.side-card>
                 <x-network.side-card title="Sichtbarkeit" tone="dune">
-                    <p class="m-0 text-[15px] text-ink-2">{{ $profile->visibility->label() }}. Ändern kannst du das beim Bearbeiten deines Profils.</p>
+                    <p class="m-0 text-[15px] text-ink-2">{{ $member->privacy()->profile_audience->label() }}. <a wire:navigate href="{{ route('app.privacy') }}" class="o-link">Privatsphäre-Einstellungen</a></p>
                 </x-network.side-card>
             @else
                 <x-network.side-card title="Ein Netzwerk ohne Werbung" tone="dune">

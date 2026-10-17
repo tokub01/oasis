@@ -5,6 +5,7 @@ namespace App\Listeners\Notifications;
 use App\Actions\Notifications\SendHint;
 use App\Enums\Notifications\NoticeKind;
 use App\Events\Network\PostPublished;
+use App\Models\PrivacySetting;
 use App\Models\User;
 use App\Support\Network\Mentions;
 
@@ -23,11 +24,13 @@ class OnPostPublished
             }
         }
         $names = Mentions::usernames($post->body);
-        $users = User::whereIn('username', $names)->get()->keyBy(fn (User $user) => strtolower($user->username));
+        $users = User::whereIn('username', $names)->with('privacySetting')->get();
+        PrivacySetting::preloadFollows($users, [$post->user_id]);
+        $users = $users->keyBy(fn (User $user) => strtolower($user->username));
         $mentioned = 0;
         foreach ($names as $name) {
             $user = $users->get($name);
-            if ($user !== null && $sender->allowed($user, $post->author, $post)) {
+            if ($user !== null && $sender->allowed($user, $post->author, $post, NoticeKind::Mention)) {
                 $recipients[$user->id] ??= [$user, NoticeKind::Mention];
                 $mentioned++;
                 if ($mentioned === 10) {

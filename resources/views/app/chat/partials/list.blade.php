@@ -23,7 +23,10 @@
     <template data-conversation-item>
         <li>
             <a data-link class="flex flex-col gap-1 rounded-[20px] bg-paper px-5 py-4 text-ink no-underline hover:bg-field">
-                <span data-title class="font-bold text-night"></span>
+                <span class="flex items-center gap-2">
+                    <span data-title class="font-bold text-night"></span>
+                    <span data-unread hidden class="rounded-full bg-sun px-2 py-0.5 text-xs font-extrabold text-sun-ink">Neu</span>
+                </span>
                 <span data-meta class="text-sm text-muted"></span>
             </a>
         </li>

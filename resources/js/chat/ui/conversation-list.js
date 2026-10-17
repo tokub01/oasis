@@ -56,6 +56,7 @@ export class ConversationList {
             meta.push('wartet auf neuen Schlüssel');
         }
         setText($(element, '[data-meta]'), meta.join(' · '));
+        $(element, '[data-unread]').hidden = !conversation.unread;
         return element;
     }
 }

@@ -121,6 +121,11 @@ export class ChatApi {
         return this.request('GET', `/conversations/${id}/messages${beforeId ? `?before_id=${beforeId}` : ''}`);
     }
 
+    /** The chat is open: everything so far counts as seen (unread badge, e-mail/push notices). Metadata only. */
+    markRead(id) {
+        return this.request('POST', `/conversations/${id}/read`);
+    }
+
     sendMessage(id, envelope) {
         return this.request('POST', `/conversations/${id}/messages`, { envelope });
     }

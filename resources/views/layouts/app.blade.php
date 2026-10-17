@@ -45,6 +45,8 @@
     // Calm indicator for unread hints: a small dot, never a red counter – and none at all during a pause.
     $hasUnread = $user !== null && ! \App\Models\Notifications\NotificationPreference::where('user_id', $user->id)->first()?->isPaused()
         && $user->unreadNotifications()->exists();
+    // Chats with unread messages: a conspicuous count at "Chats", kept fresh by the `chat-unread` module.
+    $unreadChats = $user === null ? 0 : \App\Support\Chat\UnreadChats::count($user);
     $trialDaysLeft = $user?->trial_ends_at?->isFuture()
         ? (int) ceil(now()->diffInDays($user->trial_ends_at))
         : null;
@@ -111,12 +113,18 @@
                             <li class="min-w-0 flex-1 lg:flex-none">
                                 <a href="{{ $href }}" wire:navigate @if ($active === $key) aria-current="page" @endif
                                    @class([
-                                       'flex min-h-12 flex-col items-center justify-center gap-1 rounded-2xl px-1 text-xs font-bold no-underline sm:px-3 lg:flex-row lg:justify-start lg:gap-3 lg:px-4 lg:text-base',
+                                       'relative flex min-h-12 flex-col items-center justify-center gap-1 rounded-2xl px-1 text-xs font-bold no-underline sm:px-3 lg:flex-row lg:justify-start lg:gap-3 lg:px-4 lg:text-base',
                                        'bg-night text-on-night' => $active === $key,
                                        'text-ink-2' => $active !== $key,
                                    ])>
                                     <x-oasis.icon :name="$icon" :size="22" />
                                     <span class="max-w-full truncate max-[379px]:sr-only">@if ($short)<span class="lg:hidden">{{ $short }}</span><span class="hidden lg:inline">{{ $label }}</span>@else{{ $label }}@endif</span>
+                                    @if ($key === 'nachrichten')
+                                        <span data-chat-badge @if ($unreadChats === 0) hidden @endif
+                                              class="absolute top-0.5 left-1/2 ml-1.5 min-w-5 rounded-full border-2 border-paper bg-sun px-1 text-center text-[11px] leading-4 font-extrabold text-sun-ink lg:static lg:ml-auto lg:border-0">
+                                            <span data-chat-count>{{ $unreadChats }}</span><span class="sr-only"> Chats mit neuen Nachrichten</span>
+                                        </span>
+                                    @endif
                                 </a>
                             </li>
                         @endforeach
@@ -160,6 +168,18 @@
         </header>
 
         <div class="flex min-w-0 flex-col pb-[calc(6rem+env(safe-area-inset-bottom))] pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)] lg:p-0">
+            {{-- New chat messages while the member is elsewhere in the app (module `chat-unread`, polls every 30 s). --}}
+            <div data-oasis="chat-unread" data-url="{{ route('chat.api.unread') }}" data-count="{{ $unreadChats }}" data-on-chat="{{ $active === 'nachrichten' ? '1' : '0' }}"
+                 class="fixed inset-x-3 top-[calc(4.5rem+env(safe-area-inset-top))] z-30 flex justify-center lg:top-6 lg:right-6 lg:left-auto">
+                <div data-chat-toast role="status" hidden class="flex items-center gap-3 rounded-2xl bg-night px-4 py-3 text-on-night shadow-[var(--shadow-float)]">
+                    <x-oasis.icon name="mail" :size="20" />
+                    <span class="font-bold">Neue Chat-Nachricht</span>
+                    <a href="{{ route('app.chat') }}" wire:navigate class="o-btn o-btn-sm bg-sun text-sun-ink">Öffnen</a>
+                    <button type="button" data-chat-toast-close aria-label="Hinweis schließen" class="flex min-h-9 min-w-9 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-on-night">
+                        <x-oasis.icon name="close" :size="18" />
+                    </button>
+                </div>
+            </div>
             {{-- Shown by the `offline` module while the device has no connection; pages need the server. --}}
             <p data-oasis="offline" role="status" hidden class="m-0 bg-sun px-5 py-2 text-center text-sm font-bold text-sun-ink">Keine Verbindung – Oasis versucht es weiter.</p>
             @if ($trialDaysLeft !== null)

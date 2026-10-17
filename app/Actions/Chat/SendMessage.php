@@ -3,6 +3,7 @@
 namespace App\Actions\Chat;
 
 use App\Events\Chat\MessageSent;
+use App\Jobs\Chat\NotifyChatRecipients;
 use App\Models\ChatIdentity;
 use App\Models\Conversation;
 use App\Models\Message;
@@ -44,6 +45,9 @@ class SendMessage
                 'key_version' => $conversation->key_version, 'envelope' => $envelope,
                 'expires_at' => $expiry, 'created_at' => now()]);
             ChatBroadcast::afterCommit(new MessageSent($envelope));
+            // The sender has seen everything up to their own message; others may get an e-mail/push if they opted in.
+            $conversation->memberships()->where('user_id', $sender->id)->update(['last_read_at' => now()]);
+            NotifyChatRecipients::dispatch($conversation->id, $sender->id)->afterCommit()->delay(NotifyChatRecipients::DELAY_SECONDS);
 
             return $message;
         }, 3);

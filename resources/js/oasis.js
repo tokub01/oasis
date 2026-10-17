@@ -278,6 +278,41 @@ const showConnection = () => {
 window.addEventListener("online", showConnection);
 window.addEventListener("offline", showConnection);
 modules.offline = showConnection;
+// Markup: [data-oasis="chat-unread"] in the app layout with data-url (GET unread chats), data-count and data-on-chat.
+// Keeps the count at "Chats" fresh while the page is visible and shows a toast when it rises (not on the chat page).
+// Metadata only: which chats have new messages, never who wrote or what.
+let chatPoll = null;
+modules["chat-unread"] = (root) => {
+    const toast = root.querySelector("[data-chat-toast]");
+    let known = Number(root.dataset.count || 0);
+    const show = (count) => {
+        document.querySelectorAll("[data-chat-badge]").forEach((badge) => {
+            badge.hidden = count === 0;
+            badge.querySelector("[data-chat-count]").textContent = String(count);
+        });
+        if (count > known && root.dataset.onChat !== "1") {
+            toast.hidden = false;
+        }
+        known = count;
+    };
+    root.querySelector("[data-chat-toast-close]").addEventListener("click", () => {
+        toast.hidden = true;
+    });
+    clearInterval(chatPoll);
+    chatPoll = setInterval(async () => {
+        if (document.hidden || !root.isConnected) {
+            return;
+        }
+        try {
+            const response = await fetch(root.dataset.url, { headers: { Accept: "application/json" }, credentials: "same-origin" });
+            if (response.ok) {
+                show((await response.json()).count);
+            }
+        } catch {
+            // Offline: try again at the next tick.
+        }
+    }, 30000);
+};
 // --- /Installierbare App und Push-Hinweise ----------------------------------
 
 // Livewire's SPA navigation (wire:navigate) swaps the page without re-running this script, so modules start on

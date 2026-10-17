@@ -29,6 +29,8 @@ use InvalidArgumentException;
  * @property bool $searchable found by name and username in the Oasis search
  * @property bool $search_engines public profile and Tropfen may be indexed by search engines
  * @property bool $login_alerts mail when someone signs in from a browser or system not seen before
+ * @property bool $chat_email e-mail about a new chat message (off by default; no name, no text)
+ * @property bool $chat_push push about a new chat message (off by default)
  * @property array<int, string>|null $hidden_words words hidden from the member's lists, hints and replies ({@see hides()})
  */
 class PrivacySetting extends Model
@@ -73,7 +75,7 @@ class PrivacySetting extends Model
     protected $fillable = [
         'profile_audience', 'default_post_visibility', 'follower_count_audience', 'location_audience', 'oases_audience',
         'mentions_audience', 'replies_audience', 'carry_audience', 'chat_invites_audience', 'searchable',
-        'search_engines', 'login_alerts', 'hidden_words',
+        'search_engines', 'login_alerts', 'chat_email', 'chat_push', 'hidden_words',
     ];
 
     /** Privacy by default for accounts that never changed anything. */
@@ -82,6 +84,7 @@ class PrivacySetting extends Model
         'location_audience' => 'members', 'oases_audience' => 'members',
         'mentions_audience' => 'members', 'replies_audience' => 'members', 'carry_audience' => 'members',
         'chat_invites_audience' => 'members', 'searchable' => true, 'search_engines' => false, 'login_alerts' => true,
+        'chat_email' => false, 'chat_push' => false,
     ];
 
     /** @return array<string, string> */
@@ -93,7 +96,7 @@ class PrivacySetting extends Model
             'oases_audience' => Audience::class, 'mentions_audience' => Audience::class,
             'replies_audience' => Audience::class, 'carry_audience' => Audience::class,
             'chat_invites_audience' => Audience::class, 'searchable' => 'boolean', 'search_engines' => 'boolean',
-            'login_alerts' => 'boolean', 'hidden_words' => 'array', 'user_id' => 'integer',
+            'login_alerts' => 'boolean', 'chat_email' => 'boolean', 'chat_push' => 'boolean', 'hidden_words' => 'array', 'user_id' => 'integer',
         ];
     }
 

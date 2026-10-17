@@ -75,6 +75,7 @@ export class ConversationView {
             if (!this.isCurrent(token)) {
                 return;
             }
+            this.markRead(conversationId);
             this.ctx.realtime.watch(conversationId, {
                 onMessage: (envelope) => this.receive(envelope),
                 onKeyRotated: () => this.refresh(conversationId).catch((error) => this.handleFailure(error)),
@@ -207,8 +208,21 @@ export class ConversationView {
             this.renderMessages();
             if (item.senderId !== this.ctx.session.userId) {
                 this.ctx.announce(`Neue Nachricht von ${this.senderName(item.senderId)}.`);
+                if (!document.hidden) {
+                    this.markRead(this.conversation.id);
+                }
             }
         }
+    }
+
+    /** Tell the server the chat was seen and update the count at "Chats"; a failure only leaves the badge stale. */
+    markRead(conversationId) {
+        this.ctx.api.markRead(conversationId).then((result) => {
+            document.querySelectorAll('[data-chat-badge]').forEach((badge) => {
+                badge.hidden = result.count === 0;
+                badge.querySelector('[data-chat-count]').textContent = String(result.count);
+            });
+        }).catch(() => {});
     }
 
     /** Try again to decrypt messages that had no key (after a refresh brought new grants). */

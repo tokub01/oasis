@@ -20,10 +20,24 @@ final class PrivacyOptions
         'interaktionen' => ['Wer mit dir in Kontakt kommt', ['mentions_audience', 'replies_audience', 'carry_audience', 'chat_invites_audience']],
         'auffindbarkeit' => ['Wie man dich findet', ['searchable', 'search_engines']],
         'sicherheit' => ['Wie wir dein Konto schützen', ['login_alerts']],
+        'benachrichtigungen' => ['Wie wir dir neue Chat-Nachrichten melden', ['chat_email', 'chat_push']],
     ];
 
+    /** Sections of the guided Privatsphäre-Check: who sees and reaches the member, not how they are notified. */
+    public const CHECKUP_SECTIONS = ['sichtbarkeit', 'interaktionen', 'auffindbarkeit', 'sicherheit'];
+
+    /**
+     * Sections of the guided check in display order.
+     *
+     * @return list<array{0: string, 1: list<string>}>
+     */
+    public static function checkupSections(): array
+    {
+        return array_values(array_intersect_key(self::SECTIONS, array_flip(self::CHECKUP_SECTIONS)));
+    }
+
     /** Settings shown as a yes/no switch; all others are a choice of audiences. */
-    public const SWITCHES = ['searchable', 'search_engines', 'login_alerts'];
+    public const SWITCHES = ['searchable', 'search_engines', 'login_alerts', 'chat_email', 'chat_push'];
 
     /** @var array<string, array{title: string, help: string}> */
     private const TEXTS = [
@@ -38,6 +52,8 @@ final class PrivacyOptions
         'chat_invites_audience' => ['title' => 'Wer darf dir schreiben?', 'help' => 'Wer einen verschlüsselten Chat mit dir beginnen oder dich in einen Gruppenchat holen darf. Bestehende Chats bleiben.'],
         'searchable' => ['title' => 'In der Oasis-Suche auffindbar', 'help' => 'Mitglieder finden dich über deinen Namen oder Benutzernamen. Ausgeschaltet erscheinst du nicht in der Personensuche; über deine Tropfen und Links bleibt dein Profil erreichbar.'],
         'search_engines' => ['title' => 'Öffentliches Profil in Suchmaschinen', 'help' => 'Gilt nur, solange dein Profil für alle sichtbar ist: Dann dürfen Suchmaschinen es und deine öffentlichen Tropfen anzeigen.'],
+        'chat_email' => ['title' => 'E-Mail bei neuen Chat-Nachrichten', 'help' => 'Standardmäßig aus – schalte sie ein, wenn du nichts verpassen möchtest. Höchstens eine E-Mail pro Chat, bis du ihn geöffnet hast, nie in deiner Ruhezeit. Ohne Namen und ohne Text: Deine Chats bleiben verschlüsselt. In der App siehst du neue Nachrichten immer an der Zahl bei „Chats“.'],
+        'chat_push' => ['title' => 'Push-Hinweis bei neuen Chat-Nachrichten', 'help' => 'Standardmäßig aus. Gilt für Geräte, auf denen du Push-Hinweise eingeschaltet hast (Hinweise einstellen). Ebenfalls ohne Namen und ohne Text, höchstens einmal pro Chat, bis du ihn geöffnet hast.'],
         'login_alerts' => ['title' => 'E-Mail bei Anmeldung von einem neuen Gerät', 'help' => 'Meldet sich jemand mit einem Browser oder System an, das wir bei dir noch nicht kennen, schicken wir dir sofort eine E-Mail.'],
     ];
 

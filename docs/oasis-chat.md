@@ -130,6 +130,24 @@ A conversation participant may forward a single decrypted message to moderation 
    is retained while its moderation case remains open, and is pruned only after the case is closed and the retention period has elapsed.
 6. **Rate limiting**: Report submissions are limited to 5 requests per minute per authenticated account (`throttle:chat-reports`).
 
+## Benachrichtigungen (unread chats)
+
+Metadata only – the server never needs the content:
+
+- `conversation_members.last_read_at`: set by `POST /app/chat/api/conversations/{id}/read` (route `chat.api.read`,
+  sent by the client when a chat is opened and when a message arrives while it is visible) and for the sender when
+  they send. `App\Support\Chat\UnreadChats`: a chat is unread when it holds an unexpired message from someone else,
+  not blocked, newer than `last_read_at` (or the join).
+- In the app: `GET /app/chat/api/unread` (`chat.api.unread`) feeds the count at "Chats" in the app layout and the
+  toast "Neue Chat-Nachricht" (module `chat-unread` in `resources/js/oasis.js`, every 30 s while the page is visible,
+  no toast on the chat page). The conversation list marks unread chats with "Neu" (`unread` in the list API).
+- E-mail/push: privacy settings `chat_email` and `chat_push`, **off by default**, explained in the Privatsphäre-Center
+  ("benachrichtigungen"). `SendMessage` dispatches `NotifyChatRecipients` after commit with a 2-minute delay; it skips
+  members who read the chat meanwhile, blocked senders, quiet hours and pauses, and chats already notified since the
+  last read (`notified_at`). Mail `NewChatMessage` and the push say only "neue Chat-Nachricht" – no name, no text.
+
+Tests: `tests/Feature/Chat/ChatNotificationsTest.php`.
+
 ## Retention and limits
 
 Message uses MassPrunable on expires_at; the existing daily model:prune schedule deletes rows.

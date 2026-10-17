@@ -74,7 +74,7 @@ class ExportAccount
             'privatsphaere' => $user->privacy()->only([
                 'profile_audience', 'default_post_visibility', 'follower_count_audience', 'location_audience',
                 'oases_audience', 'mentions_audience', 'replies_audience', 'carry_audience', 'chat_invites_audience',
-                'searchable', 'search_engines', 'login_alerts',
+                'searchable', 'search_engines', 'login_alerts', 'chat_email', 'chat_push',
             ]) + ['verborgene_woerter' => $user->privacy()->hiddenWords()],
             'tropfen' => $posts->map(fn (Post $post) => [
                 'id' => $post->id,

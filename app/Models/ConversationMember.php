@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @property CarbonImmutable $joined_at
  * @property CarbonImmutable|null $left_at
+ * @property CarbonImmutable|null $last_read_at last time the member had the chat open (UnreadChats)
+ * @property CarbonImmutable|null $notified_at last e-mail/push about this chat (NotifyChatRecipients)
  * @property User $user
  */
 class ConversationMember extends Model
@@ -26,7 +28,8 @@ class ConversationMember extends Model
      */
     protected function casts(): array
     {
-        return ['joined_at' => 'immutable_datetime', 'left_at' => 'immutable_datetime'];
+        return ['joined_at' => 'immutable_datetime', 'left_at' => 'immutable_datetime', 'last_read_at' => 'immutable_datetime',
+            'notified_at' => 'immutable_datetime'];
     }
 
     /**

@@ -36,7 +36,7 @@ class Checkup extends Component
     /** The current section, or the summary after the last one. */
     public function render(): View
     {
-        $sections = array_values(PrivacyOptions::SECTIONS);
+        $sections = PrivacyOptions::checkupSections();
 
         return view('livewire.privacy.checkup', [
             'section' => $sections[$this->step - 1] ?? null,
@@ -51,7 +51,7 @@ class Checkup extends Component
     /** Clamp to the existing steps; the browser moves the focus to the new heading (oasis.js, event oasis:focus). */
     private function goTo(int $step): void
     {
-        $this->step = max(1, min($step, count(PrivacyOptions::SECTIONS) + 1));
+        $this->step = max(1, min($step, count(PrivacyOptions::CHECKUP_SECTIONS) + 1));
         $this->status = null;
         $this->dispatch('oasis:focus', id: 'check-titel');
     }

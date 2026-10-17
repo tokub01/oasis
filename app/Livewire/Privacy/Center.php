@@ -37,7 +37,7 @@ class Center extends Component
 
         return view('livewire.privacy.center', [
             'sections' => PrivacyOptions::SECTIONS,
-            'steps' => count(PrivacyOptions::SECTIONS),
+            'steps' => count(PrivacyOptions::CHECKUP_SECTIONS),
             'publicPosts' => Post::where('user_id', $member->id)->where('visibility', Visibility::Public->value)->count(),
             'hiddenWords' => count($member->privacy()->hiddenWords()),
             'restricted' => count($member->restrictedUserIds()),

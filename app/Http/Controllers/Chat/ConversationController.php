@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Chat;
 use App\Actions\Chat\ManageConversation;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
+use App\Support\Chat\UnreadChats;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -16,9 +17,26 @@ class ConversationController extends Controller
     {
         $page = Conversation::query()->whereHas('activeMembers',
             fn ($query) => $query->where('user_id', $request->user()->id))->orderByDesc('id')->paginate(30);
-        $page->through(fn ($conversation) => $conversation->apiData());
+        $unread = UnreadChats::conversationIds($request->user());
+        $page->through(fn ($conversation) => $conversation->apiData() + ['unread' => in_array($conversation->id, $unread, true)]);
 
         return response()->json($page);
+    }
+
+    /** Chats with unread messages, for the badge at "Chats" (metadata only, docs/oasis-chat.md). */
+    public function unread(Request $request): JsonResponse
+    {
+        $ids = UnreadChats::conversationIds($request->user());
+
+        return response()->json(['count' => count($ids), 'conversation_ids' => array_map('strval', $ids)]);
+    }
+
+    /** The member has the chat open: everything until now counts as seen, and a later message may notify again. */
+    public function read(Request $request, Conversation $conversation): JsonResponse
+    {
+        $conversation->requireMember($request->user())->forceFill(['last_read_at' => now()])->save();
+
+        return response()->json(['count' => UnreadChats::count($request->user())]);
     }
 
     /** Create a pending-key chat with distinct, explicitly selected account IDs. */

@@ -6,6 +6,7 @@ use App\Actions\Network\PublishPost;
 use App\Models\Oasis;
 use App\Models\Post;
 use App\Support\Moderation\ContentAssessor;
+use App\Support\Moderation\ToneHint;
 use App\Support\Moderation\WordListCheck;
 use App\Support\Network\PostInput;
 use App\Support\Network\TextLinks;
@@ -50,6 +51,9 @@ class Compose extends Component
 
     #[Locked]
     public bool $toneNudge = false;
+
+    /** Slang address found in the draft ("Digga", "Alter, …"): a short, non-blocking hint about the tone. */
+    public ?string $toneHint = null;
 
     /** @var array<int, TemporaryUploadedFile> */
     public array $images = [];
@@ -103,6 +107,7 @@ class Compose extends Component
         $this->authorizeContexts();
         $this->tone_confirmed = false;
         $this->toneNudge = false;
+        $this->toneHint = mb_strlen($this->body) <= Post::MAX_LENGTH ? ToneHint::find($this->body) : null;
         if (trim($this->body) !== '' && mb_strlen($this->body) <= Post::MAX_LENGTH) {
             RateLimiter::attempt('network-tone:'.auth()->id(), 30, function (): void {
                 $this->toneNudge = app(WordListCheck::class)->verdict($this->body)->shouldNudge();
@@ -161,7 +166,7 @@ class Compose extends Component
         }
         $post = app(PublishPost::class)->handle(auth()->user(), ['body' => $this->body, 'visibility' => $this->visibility,
             'kind' => $this->kind, 'oasis' => $context['oasis'], 'reply_to' => $context['reply'], 'carried' => $context['carried']], $images);
-        $this->reset('body', 'images', 'alts', 'tone_confirmed', 'toneNudge', 'link_read');
+        $this->reset('body', 'images', 'alts', 'tone_confirmed', 'toneNudge', 'toneHint', 'link_read');
         $this->status = match (true) {
             $post->held_at !== null => 'Gesendet, aber zurückgehalten: Unsere Prüfung hat möglicherweise '.$post->holdReason().' erkannt. Das Moderationsteam schaut ihn sich an; bis dahin siehst nur du ihn.',
             $post->reply_to_id !== null => 'Deine Antwort ist da.',

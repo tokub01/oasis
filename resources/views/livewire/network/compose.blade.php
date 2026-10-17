@@ -17,6 +17,9 @@
         <textarea id="body-{{ $id }}" wire:model.live.debounce.300ms="body" placeholder="{{ $reply ? 'Antworten …' : ($carried ? '' : 'Was möchtest du teilen?') }}" rows="3" maxlength="{{ \App\Models\Post::MAX_LENGTH }}"
             class="o-input" aria-describedby="body-error-{{ $id }}" aria-invalid="{{ $errors->has('body') ? 'true' : 'false' }}"></textarea>
         <p id="body-error-{{ $id }}" class="o-error m-0">@error('body'){{ $message }}@enderror</p>
+        @if ($toneHint)
+            <p role="status" class="m-0 rounded-xl bg-dune px-3 py-2 text-sm">Kurzer Hinweis: „{{ $toneHint }}“ wirkt schnell herablassend. Bitte achte auf einen freundlichen Ton – siehe <a href="{{ route('oasis.regeln') }}#umgangston" class="o-link" target="_blank">Regeln zum Umgangston</a>.</p>
+        @endif
     </div>
     @if ($toneNudge)
         <div role="status" class="flex flex-col gap-2 rounded-2xl bg-dune p-4">

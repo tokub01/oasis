@@ -5,6 +5,7 @@ use App\Actions\Moderation\DecideCase;
 use App\Ai\Agents\ContentCheck as ContentCheckAgent;
 use App\Enums\Role;
 use App\Jobs\Moderation\CheckContent;
+use App\Livewire\Network\Compose;
 use App\Mail\Moderation\ContentHeldNotice;
 use App\Mail\Moderation\DecisionNotice;
 use App\Models\AccountSuspension;
@@ -15,6 +16,7 @@ use App\Models\User;
 use App\Support\Moderation\ContentAssessor;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
+use Livewire\Livewire;
 use Tests\Support\NetworkActions;
 use Tests\Support\NetworkFixtures as N;
 
@@ -218,4 +220,15 @@ it('uses only the word list when the AI check is switched off', function () {
 
     ContentCheckAgent::assertNeverPrompted();
     expect(ContentCheck::sole()->source)->toBe('wordlist');
+});
+
+it('gives a short tone hint for slang addresses without blocking or reporting', function () {
+    ContentCheckAgent::fake([verdict()]);
+    $member = N::member();
+
+    Livewire::actingAs($member)->test(Compose::class)
+        ->set('body', 'Digga, schau dir das an')->assertSet('toneHint', 'Digga')->assertSee('Regeln zum Umgangston')
+        ->set('visibility', 'public')->call('publish')->assertHasNoErrors()->assertSet('toneHint', null);
+
+    expect(Post::sole()->held_at)->toBeNull()->and(ModerationCase::count())->toBe(0)->and($member->isSuspended())->toBeFalse();
 });

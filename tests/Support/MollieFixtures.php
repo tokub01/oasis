@@ -36,4 +36,15 @@ class MollieFixtures
     {
         Mollie::fake([GetPaymentRequest::class => new SequenceMockResponse(...array_map(fn ($payment) => MockResponse::ok($payment), $payments))]);
     }
+
+    /** A paid membership record as checkout and webhook leave it, with invoice snapshot and Mollie ids. */
+    public static function paidRecord(User $user, array $attributes = []): MembershipPayment
+    {
+        return MembershipPayment::create($attributes + [
+            'user_id' => $user->id, 'mollie_payment_id' => 'tr_paid'.$user->id, 'mollie_customer_id' => 'cst_member'.$user->id,
+            'kind' => 'membership', 'tier' => 'oase', 'rhythm' => 'monat', 'amount' => 500, 'status' => 'paid',
+            'paid_at' => now(), 'processed_at' => now(),
+            'invoice_data' => ['customer_name' => $user->display_name, 'customer_email' => $user->email, 'description' => 'Oasis Oase'],
+        ]);
+    }
 }

@@ -40,7 +40,7 @@ class MollieMembershipService
         $monthly = $tier === 'maezen' && $custom !== null ? max((int) config('oasis.tiers.maezen.monthly'), $custom) : (int) config('oasis.tiers.'.$tier.'.monthly');
         $amount = $kind === 'mandate' ? 100 : $monthly * 100 * ($rhythm === 'jahr' ? (int) config('oasis.year_months') : 1);
         $intent = MembershipPayment::create([
-            'user_id' => $user->id, 'subscription_id' => $subscriptionId, 'kind' => $kind,
+            'user_id' => $user->id, 'mollie_customer_id' => $user->mollie_customer_id, 'subscription_id' => $subscriptionId, 'kind' => $kind,
             'tier' => $tier, 'rhythm' => $rhythm, 'amount' => $amount, 'status' => 'open',
             'invoice_data' => ['seller' => config('oasis.operator'), 'vat_rate' => config('oasis.vat_rate'),
                 'customer_name' => $user->display_name, 'customer_email' => $user->email,
@@ -103,7 +103,7 @@ class MollieMembershipService
                     return;
                 }
                 $intent = MembershipPayment::firstOrCreate(['mollie_payment_id' => $id], [
-                    'user_id' => $owner->id, 'subscription_id' => $subscription->id, 'kind' => 'renewal',
+                    'user_id' => $owner->id, 'mollie_customer_id' => $owner->mollie_customer_id, 'subscription_id' => $subscription->id, 'kind' => 'renewal',
                     'tier' => $subscription->type, 'rhythm' => $subscription->rhythm, 'amount' => $subscription->amount, 'status' => 'open',
                     'invoice_data' => MembershipPayment::where('subscription_id', $subscription->id)->whereNotNull('invoice_data')->oldest('id')->value('invoice_data'),
                 ]);

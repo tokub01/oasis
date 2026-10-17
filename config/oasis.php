@@ -149,6 +149,10 @@ return [
         // Enforced automatically: models using PrunedAfterRecordRetention are deleted by the daily model:prune.
         // Three years = regular limitation period (§§ 195, 199 BGB) for claims these records may have to prove.
         'records_years' => 3,
+        // Years for which paid membership payments are kept as accounting documents, counted from the end of their
+        // calendar year (§ 147 Abs. 3 AO: 8 years for Buchungsbelege since 2025; confirm with the tax advisor).
+        // Enforced by MembershipPayment::prunable; null keeps them.
+        'payment_records_years' => 8,
         // Competent data protection supervisory authority for the operator (Krefeld, NRW).
         'authority' => 'Landesbeauftragte für Datenschutz und Informationsfreiheit Nordrhein-Westfalen, Kavalleriestraße 2–4, 40213 Düsseldorf',
         // Date of the current version, shown as "Stand".

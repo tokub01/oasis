@@ -20,6 +20,7 @@ use Illuminate\Validation\ValidationException;
  *   failed deletion never loses files of a still existing account.
  * - The cascade fires no model events, so the automated checks of the deleted texts are removed explicitly (except
  *   those a moderation case is based on, see ContentCheck).
+ * - Payment records are accounting documents and stay, without the account link (see MembershipPayment).
  */
 class DeleteAccount
 {

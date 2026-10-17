@@ -66,6 +66,11 @@ API-/Verarbeitungsfehler liefern HTTP 503 für einen späteren Wiederholungsvers
 Der eindeutige Zahlungsindex und `processed_at` verhindern doppelte Gutscheine und doppelte Verlängerungen.
 `vendor/bin/sail artisan oasis:mollie-sync` holt offene lokale Zahlungen und alle Seiten der Mollie-Abo-Zahlungen
 nach und gleicht Kündigungen im Dashboard ab. Der Scheduler führt ihn alle zehn Minuten ohne Überlappung aus.
+Gefragt wird nur nach Belegen, die sich noch ändern können (`MembershipPayment::unsettled()`: open, pending,
+authorized oder bezahlt, aber noch nicht verarbeitet). Abgelaufene, abgebrochene und fehlgeschlagene Zahlungen sind
+endgültig und werden nicht erneut abgefragt. Belege gelöschter Konten bekommen nur den aktuellen Status, ohne
+Leistung. Einzelne Belege gleicht die Admin-Zahlungssuche mit „Jetzt mit Mollie abgleichen“ sofort ab. Lokal läuft
+kein Cron: `vendor/bin/sail artisan schedule:work` startet den Scheduler im Vordergrund.
 Fehlgeschlagene Zahlungen verlängern `paid_until` nicht; nach Ablauf endet die Schreibberechtigung.
 
 ## Kündigung, Widerruf und Verwaltung (Livewire 4, Stage 12)

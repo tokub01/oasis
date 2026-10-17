@@ -8,7 +8,11 @@ use App\Services\Membership\MollieGateway;
 use App\Services\Membership\MollieMembershipService;
 use Illuminate\Console\Command;
 
-/** Repairs missed payment notifications and reconciles remote recurring agreements. Prices live in oasis.tiers. */
+/**
+ * Repairs missed payment notifications and reconciles remote recurring agreements. Prices live in oasis.tiers.
+ * Scheduled every ten minutes (routes/console.php). Only unsettled records are asked for: an expired, canceled or failed
+ * payment cannot change any more and is not fetched again.
+ */
 class MollieSyncCommand extends Command
 {
     protected $signature = 'oasis:mollie-sync';
@@ -19,7 +23,7 @@ class MollieSyncCommand extends Command
     public function handle(MollieMembershipService $service, MollieGateway $gateway): int
     {
         $failed = false;
-        foreach (MembershipPayment::whereNull('processed_at')->whereNotNull('mollie_payment_id')->cursor() as $payment) {
+        foreach (MembershipPayment::unsettled()->cursor() as $payment) {
             try {
                 $service->processPayment($payment->mollie_payment_id);
             } catch (\Throwable $e) {

@@ -98,6 +98,19 @@ describe('admin payment search', function () {
             ->assertSee('(2)')->assertSee('tr_first1')->assertSee('tr_second2')->assertSee('Fehlgeschlagen');
     });
 
+    it('takes over the current Mollie state of an unsettled record on request, and only of unsettled ones', function () {
+        $open = MollieFixtures::intent(N::member(), 'membership', 'tr_admin_sync1');
+        $settled = MollieFixtures::paidRecord(N::member());
+        MollieFixtures::fake(MollieFixtures::resource($open, 'expired', ['paidAt' => null]));
+
+        Livewire::actingAs(paymentAdmin())->test(Payments::class)->set('q', '#'.$open->id)
+            ->assertSee('Jetzt mit Mollie abgleichen')->call('syncRecord', $open->id)
+            ->assertSee('Beleg #'.$open->id.' abgeglichen: Abgelaufen.')->assertDontSee('Jetzt mit Mollie abgleichen');
+        expect($open->fresh()->status)->toBe('expired');
+
+        Livewire::actingAs(paymentAdmin())->test(Payments::class)->call('syncRecord', $settled->id)->assertNotFound();
+    });
+
     it('refuses lookups for non-admins even through a direct Livewire call', function () {
         $record = MollieFixtures::paidRecord(N::member());
         Livewire::actingAs(N::member())->test(Payments::class)->assertForbidden();

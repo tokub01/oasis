@@ -108,6 +108,14 @@ class MollieMembershipService
                     'invoice_data' => MembershipPayment::where('subscription_id', $subscription->id)->whereNotNull('invoice_data')->oldest('id')->value('invoice_data'),
                 ]);
             }
+            if ($intent->user_id === null) {
+                // The account was deleted: keep the accounting record current, there is nobody to fulfil for. A paid
+                // record counts as processed, so the sync does not ask for it again.
+                $intent->update(['status' => $payment->status, 'paid_at' => $payment->paidAt ?? $intent->paid_at,
+                    'processed_at' => $payment->status === 'paid' ? now() : null]);
+
+                return;
+            }
             $user = User::whereKey($intent->user_id)->lockForUpdate()->first();
             if (! $user || $payment->id !== $id || ($payment->customerId ?? null) !== $user->mollie_customer_id
                 || $payment->amount->currency !== 'EUR' || $payment->amount->value !== number_format($intent->amount / 100, 2, '.', '')) {

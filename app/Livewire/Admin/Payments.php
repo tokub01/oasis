@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Admin;
 
+use App\Exceptions\Membership\MembershipDomainException;
 use App\Models\MembershipPayment;
 use App\Services\Membership\MollieGateway;
+use App\Services\Membership\MollieMembershipService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
@@ -51,6 +53,10 @@ class Payments extends Component
     #[Locked]
     public ?string $mollieError = null;
 
+    /** Result of the last "Jetzt abgleichen", announced through role="status". */
+    #[Locked]
+    public ?string $syncStatus = null;
+
     public function mount(): void
     {
         Gate::authorize('administrate');
@@ -80,6 +86,26 @@ class Payments extends Component
         $record = $this->record($recordId);
         abort_if($record->mollie_customer_id === null, 404);
         $this->lookup('customer', $record->mollie_customer_id, fn () => $this->customer($gateway, $record->mollie_customer_id));
+    }
+
+    /**
+     * Take over the current state of one unsettled record from Mollie now, exactly like the scheduled oasis:mollie-sync
+     * (a paid membership is fulfilled, a deleted account's record only gets its status).
+     */
+    public function syncRecord(int $recordId, MollieMembershipService $service): void
+    {
+        $record = $this->record($recordId);
+        abort_unless($record->isUnsettled(), 404);
+        Log::info('Admin Mollie sync', ['admin_id' => auth()->id(), 'record_id' => $record->id, 'mollie_id' => $record->mollie_payment_id]);
+        try {
+            $service->processPayment((string) $record->mollie_payment_id);
+            $record->refresh();
+            $this->syncStatus = 'Beleg #'.$record->id.' abgeglichen: '.(self::STATUSES[$record->status] ?? $record->status)
+                .($record->processed_at !== null ? ', verarbeitet.' : '.');
+        } catch (MollieException|MembershipDomainException $failure) {
+            Log::warning('Admin Mollie sync failed', ['record_id' => $record->id, 'exception' => $failure::class]);
+            $this->syncStatus = 'Beleg #'.$record->id.' ließ sich nicht abgleichen. Die Angaben bei Mollie passen nicht zum Beleg oder Mollie ist nicht erreichbar.';
+        }
     }
 
     /** Search Mollie directly for a tr_… or cst_… id typed into the search field, also when no local record has it. */

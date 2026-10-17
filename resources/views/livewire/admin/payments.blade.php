@@ -24,6 +24,8 @@
         </p>
     </div>
 
+    <p role="status" aria-live="polite" class="m-0 rounded-2xl bg-dune px-[18px] py-3.5 font-bold text-night empty:sr-only">{{ $syncStatus }}</p>
+
     <form wire:submit="searchMollie" role="search" class="flex flex-col gap-4 rounded-[24px] bg-paper p-5 sm:p-6">
         <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
             <div class="flex flex-col gap-1.5">
@@ -123,6 +125,9 @@
                     · {{ $payment->mollie_payment_id ?? 'keine Mollie-Zahlung' }}
                 </p>
                 <div class="flex flex-wrap gap-2">
+                    @if ($payment->isUnsettled())
+                        <button type="button" wire:click="syncRecord({{ $payment->id }})" wire:loading.attr="disabled" class="o-btn o-btn-sm o-btn-dark">Jetzt mit Mollie abgleichen</button>
+                    @endif
                     @if ($payment->mollie_payment_id)
                         <button type="button" wire:click="checkPayment({{ $payment->id }})" wire:loading.attr="disabled" class="o-btn o-btn-sm o-btn-outline">Zahlung bei Mollie prüfen</button>
                     @endif

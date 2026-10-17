@@ -54,10 +54,33 @@ class MembershipPayment extends Model
     /** Days after which a checkout attempt that was never paid is removed. */
     public const UNPAID_DAYS = 90;
 
+    /**
+     * Mollie statuses that can still change ("paid" while fulfilment is not recorded yet). expired, canceled and failed
+     * are final: such records are never asked for again.
+     */
+    public const UNSETTLED_STATUSES = ['open', 'pending', 'authorized', 'paid'];
+
     /** Fulfillment is persisted separately to make repeated notifications harmless. */
     protected function casts(): array
     {
         return ['processed_at' => 'datetime', 'paid_at' => 'datetime', 'refunded' => 'boolean', 'invoice_data' => 'array'];
+    }
+
+    /**
+     * Records the Mollie sync still has to ask about: a Mollie payment exists, the result is not processed and the
+     * status can still change.
+     *
+     * @param  Builder<MembershipPayment>  $query
+     */
+    public function scopeUnsettled(Builder $query): void
+    {
+        $query->whereNull('processed_at')->whereNotNull('mollie_payment_id')->whereIn('status', self::UNSETTLED_STATUSES);
+    }
+
+    /** Whether Mollie may still report a different status for this record. */
+    public function isUnsettled(): bool
+    {
+        return $this->processed_at === null && $this->mollie_payment_id !== null && in_array($this->status, self::UNSETTLED_STATUSES, true);
     }
 
     /** @return BelongsTo<User, $this> */

@@ -35,6 +35,8 @@ admin page with personal data, limited to payments.
   `tr_…`/`cst_…` without a local record) call Mollie read-only through `MollieGateway::lookupPayment`,
   `lookupCustomer` and `customerPayments`. The "Im Mollie-Dashboard öffnen" link is Mollie's own `_links.dashboard`;
   only `https://…mollie.com/` links are shown.
+- "Jetzt mit Mollie abgleichen" (only on unsettled records) runs `MollieMembershipService::processPayment` for one
+  record, exactly like the scheduled `oasis:mollie-sync`, and is logged as `Admin Mollie sync`.
 - Every lookup is logged (`Admin Mollie lookup`: admin id, kind, Mollie id – no names or e-mail addresses). Mollie
   errors become a German message; details stay in the log.
 

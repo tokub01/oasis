@@ -15,12 +15,13 @@ final class ContentVerdict
         'threat' => 'Drohung',
         'extremism' => 'Extremismus/Volksverhetzung',
         'harassment' => 'Mobbing',
+        'solicitation' => 'Sexuelle Dienste anbieten',
         'sexual' => 'Sexueller Inhalt',
         'sexual_minors' => 'Sexueller Bezug zu Minderjährigen',
     ];
 
     /** Hostile categories: nudged before sending, held when clear (hold_abuse_threshold). */
-    private const ABUSE = ['insult', 'hate', 'threat', 'extremism', 'harassment'];
+    private const ABUSE = ['insult', 'hate', 'threat', 'extremism', 'harassment', 'solicitation'];
 
     /**
      * @param  non-empty-array<string, float>  $scores  category => 0..1
@@ -78,7 +79,8 @@ final class ContentVerdict
             return null;
         }
         $phrases = ['insult' => 'eine Beleidigung', 'hate' => 'Hass oder Hetze gegen Menschen', 'threat' => 'eine Drohung',
-            'extremism' => 'extremistische oder volksverhetzende Inhalte', 'harassment' => 'Mobbing gegen eine Person'];
+            'extremism' => 'extremistische oder volksverhetzende Inhalte', 'harassment' => 'Mobbing gegen eine Person',
+            'solicitation' => 'das Anbieten sexueller Dienste'];
         $strongest = 'insult';
         foreach (self::ABUSE as $category) {
             if ($this->scores[$category] > $this->scores[$strongest]) {

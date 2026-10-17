@@ -12,7 +12,8 @@ use Stringable;
 
 /**
  * Automated content check (stage 10, docs/oasis-auto-moderation.md): rates one public text (Tropfen, profile, oasis)
- * for insults, hate, threats, extremism, harassment (Mobbing) and sexual content and returns scores plus a short
+ * for insults, hate, threats, extremism, harassment (Mobbing), sexual solicitation and sexual content and returns
+ * scores plus a short
  * German reason. The line between a (protected) political opinion and hate is drawn in the instructions.
  *
  * Runs on Mistral in the EU (provider/model from `config('oasis.moderation')`). Only the text is sent – never names,
@@ -41,6 +42,8 @@ class ContentCheck implements Agent, HasStructuredOutput
           terroristische oder verbotene Organisationen und Aufrufe gegen die freiheitliche demokratische Grundordnung.
         - harassment: Mobbing – eine bestimmte Person gezielt bloßstellen, lächerlich machen, ausgrenzen, Gerüchte über
           sie verbreiten, andere gegen sie aufbringen, private Daten veröffentlichen oder sie wiederholt bedrängen.
+        - solicitation: sich selbst oder andere für Sex, Erotik-Dienste, "Sugar Dating" oder bezahlte Treffen anbieten
+          oder danach fragen, auch verschlüsselt ("Taschengeld-Treffen", "TG", "private Bilder gegen Bezahlung").
         - sexual: sexuell expliziter Inhalt oder sexuelle Belästigung.
         - sexual_minors: jeder sexuelle Bezug zu Minderjährigen.
         KEINE Verstöße sind: politische Meinungen und Kritik an Politik, Parteien, Religionen oder Regierungen ohne
@@ -59,6 +62,7 @@ class ContentCheck implements Agent, HasStructuredOutput
             'threat' => $schema->number()->min(0)->max(1)->required(),
             'extremism' => $schema->number()->min(0)->max(1)->required(),
             'harassment' => $schema->number()->min(0)->max(1)->required(),
+            'solicitation' => $schema->number()->min(0)->max(1)->required(),
             'sexual' => $schema->number()->min(0)->max(1)->required(),
             'sexual_minors' => $schema->number()->min(0)->max(1)->required(),
             'reason' => $schema->string()->required(),

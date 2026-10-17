@@ -27,7 +27,7 @@
             <li class="flex gap-[16px] items-start">
                 <span aria-hidden="true" class="flex-none [width:32px] o-display text-[22px] font-semibold text-sun-text">4</span>
                 <span>
-                    <b>Sei echt.</b> Keine falschen Profile, keine Täuschung, kein Spam.</span>
+                    <b>Sei echt.</b> Keine falschen Profile, keine Täuschung, kein Spam. Kein Anbieten oder Suchen sexueller oder bezahlter Dienste.</span>
             </li>
             <li class="flex gap-[16px] items-start">
                 <span aria-hidden="true" class="flex-none [width:32px] o-display text-[22px] font-semibold text-sun-text">5</span>

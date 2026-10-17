@@ -30,7 +30,7 @@ beforeEach(function () {
 /** Structured agent output with all categories at 0 except the given ones. */
 function verdict(array $scores = [], string $reason = ''): array
 {
-    return $scores + ['insult' => 0, 'hate' => 0, 'threat' => 0, 'extremism' => 0, 'harassment' => 0, 'sexual' => 0, 'sexual_minors' => 0,
+    return $scores + ['insult' => 0, 'hate' => 0, 'threat' => 0, 'extremism' => 0, 'harassment' => 0, 'solicitation' => 0, 'sexual' => 0, 'sexual_minors' => 0,
         'reason' => $reason];
 }
 
@@ -122,6 +122,7 @@ it('holds extremist slogans and Mobbing, and marks extremism as urgent', functio
     ['extremism', 'extremistische oder volksverhetzende Inhalte', 'urgent'],
     ['harassment', 'Mobbing gegen eine Person', 'normal'],
     ['hate', 'Hass oder Hetze gegen Menschen', 'normal'],
+    ['solicitation', 'das Anbieten sexueller Dienste', 'normal'],
 ]);
 
 it('lifts a hold from sending when the full check does not confirm it', function () {

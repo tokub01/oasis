@@ -21,7 +21,8 @@ Images are not checked (the model reads text only).
   political opinion (allowed, Art. 5 GG; DSA Art. 14(4) asks for proportionate rules) and hate: devaluing or
   dehumanising people, also in right-wing populist wording, is `hate`; Nazi glorification, Holocaust denial,
   banned symbols, slogans and codes and incitement (§§ 86a, 130 StGB) are `extremism`; targeting one person
-  (exposing, ridiculing, excluding, rumours, rallying others, doxxing) is `harassment`. Provider and model from `config('oasis.moderation')`
+  (exposing, ridiculing, excluding, rumours, rallying others, doxxing) is `harassment`; offering or asking for sex
+  or paid meetings (also coded: "TG", "Taschengeld") is `solicitation`, held like the abusive categories. Provider and model from `config('oasis.moderation')`
   (default Mistral `mistral-small-latest`, EU). The SDK's built-in classification supports only OpenAI/OpenRouter,
   hence a structured agent. **Only the text is sent** – no names, usernames, ids or e-mail addresses.
 - `App\Support\Moderation\ContentAssessor` – one entry point; caches a verdict 15 minutes by text hash (pre-check and
@@ -39,7 +40,7 @@ Images are not checked (the model reads text only).
 | `nudge_threshold` 0.6 (insult/hate/threat) | "Nochmal lesen?" before sending; the member can send unchanged ("So senden") |
 | `report_threshold` 0.7 (any category) | moderation case, source `content_check` (urgent for sexual content or threats) |
 | `hold_threshold` 0.85 (sexual) or report threshold for `sexual_minors` | Tropfen held (`posts.held_at`): only author and staff see it; Art. 17 mail to the author (`ContentHeldNotice`) |
-| `hold_abuse_threshold` 0.8 (insult, hate, threat, extremism, harassment) | Tropfen held, like above |
+| `hold_abuse_threshold` 0.8 (insult, hate, threat, extremism, harassment, solicitation) | Tropfen held, like above |
 
 Holding happens **when the Tropfen is sent**: `PublishPost` asks the assessor (usually a cache hit from the
 composer's check) and saves a clear case with `held_at` and a pending `content_checks` row, so nobody else ever sees

@@ -26,7 +26,7 @@ class ManageVotes
                 'title' => $input['title'], 'description' => $input['description'],
                 'starts_at' => $input['starts_at'], 'ends_at' => $input['ends_at'], 'created_by' => $admin->id,
             ]);
-            foreach (array_values($input['options']) as $position => $label) {
+            foreach ($input['options'] as $position => $label) {
                 $vote->options()->create(['label' => $label, 'position' => $position]);
             }
 

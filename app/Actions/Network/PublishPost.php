@@ -60,7 +60,7 @@ class PublishPost
         ]));
 
         try {
-            foreach (array_values($images) as $position => $image) {
+            foreach ($images as $position => $image) {
                 $this->images->handle($post, $image['file'], $image['alt'], $position);
             }
         } catch (Throwable $failure) {

@@ -161,3 +161,20 @@ it('prefills the report form with the Tropfen link', function () {
     Livewire::withQueryParams(['url' => 'https://oasis.tld/tropfen/5'])->test(ContentNotice::class)
         ->assertSet('form.url', 'https://oasis.tld/tropfen/5');
 });
+
+it('keeps the shorter edge at one pixel when scaling extremely narrow images', function (int $width, int $height, array $expectedSize) {
+    $author = N::member();
+
+    NetworkActions::publish([
+        'body' => 'Schmales Bild', 'visibility' => 'public',
+        'images' => [UploadedFile::fake()->image('schmal.png', $width, $height)], 'alts' => ['Ein schmaler Streifen'],
+    ], $author)->assertHasNoErrors();
+
+    $image = Post::sole()->images()->sole();
+    expect([$image->width, $image->height])->toBe($expectedSize);
+    $bytes = Storage::disk(config('oasis.media_disk'))->get($image->path);
+    expect(array_slice(getimagesizefromstring($bytes), 0, 2))->toBe($expectedSize);
+})->with([
+    'portrait' => [1, 12000, [1, 2048]],
+    'landscape' => [12000, 1, [2048, 1]],
+]);

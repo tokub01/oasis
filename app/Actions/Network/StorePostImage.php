@@ -62,7 +62,7 @@ class StorePostImage
         ]);
     }
 
-    /** @return array{int, int} */
+    /** @return array{int<1, max>, int<1, max>} */
     private function scaledSize(int $width, int $height): array
     {
         $scale = min(1, self::MAX_EDGE / max($width, $height));

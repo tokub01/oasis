@@ -22,8 +22,8 @@ class ApplyContentVerdict
 
     public function handle(ContentCheck $check, ContentVerdict $verdict): ?ModerationCase
     {
-        $hold = false;
-        $case = DB::transaction(function () use ($check, $verdict, &$hold): ?ModerationCase {
+        $heldPost = null;
+        $case = DB::transaction(function () use ($check, $verdict, &$heldPost): ?ModerationCase {
             $check->update([
                 'status' => 'checked', 'scores' => $verdict->scores, 'reason' => $verdict->reason ?: null,
                 'source' => $verdict->source, 'flagged' => $verdict->shouldReport(), 'checked_at' => now(),
@@ -35,14 +35,14 @@ class ApplyContentVerdict
             $post = $check->checkable;
             if ($post instanceof Post && $verdict->shouldHold() && $post->held_at === null) {
                 $post->forceFill(['held_at' => now()])->save();
-                $hold = true;
+                $heldPost = $post;
             }
 
             return $this->openCase->handle($check);
         });
 
-        if ($hold) {
-            Mail::to($check->checkable->author->email)->send(new ContentHeldNotice($check->checkable));
+        if ($heldPost instanceof Post) {
+            Mail::to($heldPost->author->email)->send(new ContentHeldNotice($heldPost));
         }
 
         return $case;

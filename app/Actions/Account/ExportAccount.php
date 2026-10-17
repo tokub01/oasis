@@ -7,6 +7,7 @@ use App\Models\Oasis;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 
@@ -58,6 +59,8 @@ class ExportAccount
     {
         $profile = $user->profileOrDefault();
         $follows = Follow::where('follower_id', $user->id)->get();
+        /** @var Collection<int, Oasis&object{pivot: Pivot}> $oases */
+        $oases = $user->oases()->get();
 
         return [
             'konto' => $user->only([
@@ -82,7 +85,7 @@ class ExportAccount
                 'menschen' => User::whereIn('id', $follows->where('followable_type', $user->getMorphClass())->pluck('followable_id'))->pluck('username')->values()->all(),
                 'oasen' => Oasis::whereIn('id', $follows->where('followable_type', (new Oasis)->getMorphClass())->pluck('followable_id'))->pluck('name')->values()->all(),
             ],
-            'oasen' => $user->oases()->get()->map(fn (Oasis $oasis) => ['name' => $oasis->name, 'rolle' => $oasis->pivot->role])->values()->all(),
+            'oasen' => $oases->map(fn ($oasis) => ['name' => $oasis->name, 'rolle' => $oasis->pivot->getAttribute('role')])->values()->all(),
             'gemerkt' => $user->bookmarks()->pluck('post_id')->values()->all(),
             'hinweise' => 'Verschlüsselte Chat-Nachrichten sind nicht enthalten: Sie liegen nur verschlüsselt auf unserem Server und lassen sich nur in deinem Browser lesen.',
         ];

@@ -41,7 +41,7 @@ class ConversationKeys
     public function distribute(Conversation $conversation, User $owner, array $input): Conversation
     {
         return DB::transaction(function () use ($conversation, $owner, $input) {
-            self::lockUsers($conversation->activeMembers()->pluck('user_id')->all());
+            self::lockUsers(array_values($conversation->activeMembers()->pluck('user_id')->map(fn ($id): int => (int) $id)->all()));
             $conversation = Conversation::query()->lockForUpdate()->findOrFail($conversation->id);
             $conversation->requireMember($owner, true);
             abort_unless($conversation->rotation_required && $conversation->key_version === (int) $input['key_version'],

@@ -3,22 +3,19 @@
 use App\Actions\Governance\ManageVotes;
 use App\Enums\Role;
 use App\Livewire\Admin\Dashboard;
-use App\Livewire\Admin\TransparencyReports;
 use App\Livewire\Admin\Votes;
 use App\Models\ChatIdentity;
 use App\Models\GiftMembership;
-use App\Models\TransparencyReport;
 use App\Models\User;
 use App\Models\Vote;
 use App\Models\VoteParticipation;
 use App\Queries\Admin\AdminStats;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
-use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Livewire;
 use Tests\Support\NetworkFixtures as N;
 
-/* Stage 6: admin access, statistics module, transparency reports and secret member votes. */
+/* Stage 6: admin access, statistics module and secret member votes. */
 beforeEach(fn () => $this->withoutVite());
 
 function staffUser(Role $role): User
@@ -50,7 +47,7 @@ it('opens the admin area only to admins with confirmed 2FA', function () {
 
     $this->actingAs(staffUser(Role::Admin))->get(route('admin.dashboard'))->assertOk()
         ->assertSeeLivewire(Dashboard::class)
-        ->assertSee('Mitglieder und Beiträge')->assertSee('nur Metadaten')->assertSee(route('admin.transparency.index'));
+        ->assertSee('Mitglieder und Beiträge')->assertSee('nur Metadaten');
     $this->get(route('admin.dashboard', ['tage' => 7]))->assertOk()->assertSee('letzten 7 Tage');
     // Periods outside the offered choices fall back to 30 days.
     $this->get(route('admin.dashboard', ['tage' => 3]))->assertOk()->assertSee('letzten 30 Tage');
@@ -72,47 +69,6 @@ it('aggregates network and chat metadata for the chosen period', function () {
         ->and($stats->chat($until->subDays(30), $until)['identities'])->toBe(1)
         ->and($stats->weekly()->last()['posts'])->toBe(1)
         ->and($stats->members($until->subDays(30), $until)['registered'])->toBe(1);
-});
-
-it('publishes the real membership figures of a month with the costs the admin enters', function () {
-    $admin = staffUser(Role::Admin);
-    // Two real members paying monthly: Oase (5 €) and Solidar (3 €), so 8 € income and one carried Solidar seat.
-    foreach ([['oase', 500], ['solidar', 300]] as [$tier, $amount]) {
-        User::factory()->create()->subscriptions()->create(['type' => $tier, 'mollie_id' => 'sub_'.$tier, 'status' => 'active',
-            'rhythm' => 'monat', 'amount' => $amount, 'paid_until' => now()->addMonth()]);
-    }
-    $this->actingAs($admin)->get(route('admin.transparency.index'))->assertOk()->assertSeeLivewire(TransparencyReports::class)
-        ->assertSee('Noch nichts veröffentlicht.')->assertSee('8 €');
-    $publish = fn (array $input) => Livewire::test(TransparencyReports::class)->set($input)->call('publish');
-
-    $publish([
-        'month' => '2026-09',
-        'items' => [['label' => 'Server', 'amount' => '4'], ['label' => 'Moderation', 'amount' => '6'], ['label' => '', 'amount' => '']],
-    ])->assertHasNoErrors()->assertSee('Die Zahlen sind auf der Transparenz-Seite veröffentlicht.');
-
-    $report = TransparencyReport::sole();
-    expect($report->members)->toBe(2)->and($report->sponsored_seats)->toBe(1)->and((float) $report->income)->toBe(8.0)
-        ->and($report->cost_items)->toBe(['Server' => 4, 'Moderation' => 6])->and($report->coverage())->toBe(80);
-
-    auth()->logout();
-    $this->get(route('oasis.transparenz'))->assertOk()
-        ->assertSee('September 2026')->assertSee('80 %')->assertSee('Moderation');
-
-    // Figures cannot be typed in (the component has no such fields); re-publishing a month corrects its costs;
-    // future months and half-filled items are refused.
-    $this->actingAs($admin);
-    expect(fn () => Livewire::test(TransparencyReports::class)->set('members', 99999))->toThrow(PublicPropertyNotFoundException::class);
-    $publish(['month' => '2026-09', 'items' => [['label' => 'Server', 'amount' => 1]]]);
-    expect(TransparencyReport::count())->toBe(1)->and(TransparencyReport::sole()->members)->toBe(2)
-        ->and(TransparencyReport::sole()->cost_items)->toBe(['Server' => 1]);
-    $publish(['month' => now()->addMonth()->format('Y-m'), 'items' => [['label' => 'Server', 'amount' => 1]]])->assertHasErrors('month');
-    $publish(['month' => '2026-08', 'items' => [['label' => 'Server', 'amount' => '']]])->assertHasErrors('items.0.amount');
-    $publish(['month' => '2026-08', 'items' => [['label' => '', 'amount' => '']]])->assertHasErrors('items');
-    expect(TransparencyReport::count())->toBe(1);
-    // A moderator without the admin role cannot publish, even with a component opened earlier.
-    $page = Livewire::test(TransparencyReports::class);
-    $admin->forceFill(['role' => Role::Moderator])->save();
-    $page->call('publish')->assertForbidden();
 });
 
 it('lets admins create votes with at least two distinct answers', function () {
@@ -174,17 +130,17 @@ it('refuses foreign options and votes that are not running', function () {
         ->assertHasErrors('option');
 });
 
-it('publishes results only after the end, in the app and on the Transparenz page', function () {
+it('publishes results in the app only after the end', function () {
     $vote = openVote(staffUser(Role::Admin));
     app(ManageVotes::class)->cast($vote, votingMember(), $vote->options[0]->id);
     app(ManageVotes::class)->cast($vote, votingMember(), $vote->options[0]->id);
     app(ManageVotes::class)->cast($vote, votingMember(), $vote->options[1]->id);
 
-    $this->get(route('oasis.transparenz'))->assertSee('Läuft')->assertSee('Wohin mit dem Überschuss?')->assertDontSee('67 %');
+    $member = N::member();
+    $this->actingAs($member)->get(route('app.votes'))->assertSee('Wohin mit dem Überschuss?')->assertDontSee('67 %');
 
     $this->travel(8)->days();
-    $this->get(route('oasis.transparenz'))->assertSee('Abgeschlossen')->assertSee('Mehr Patenplätze 67 %, Eine Rücklage 33 % (3 Stimmen)');
-    $this->actingAs(N::member())->get(route('app.votes'))->assertSee('3 Stimmen')->assertSee('67 %');
+    $this->actingAs($member)->get(route('app.votes'))->assertSee('3 Stimmen')->assertSee('67 %')->assertSee('33 %');
     expect($vote->fresh()->load('options')->winners())->toBe(['Mehr Patenplätze']);
 });
 
@@ -192,6 +148,6 @@ it('shows ended votes without ballots honestly', function () {
     $vote = openVote(staffUser(Role::Admin));
     $vote->forceFill(['ends_at' => now()->subMinute()])->save();
 
-    $this->get(route('oasis.transparenz'))->assertSee('keine Stimmen abgegeben');
+    $this->actingAs(N::member())->get(route('app.votes'))->assertSee('0 Stimmen');
     expect($vote->fresh()->load('options')->winners())->toBe([]);
 });

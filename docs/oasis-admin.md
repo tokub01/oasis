@@ -4,7 +4,7 @@
 
 `routes/admin.php`, prefix `/admin`, names `admin.*`, middleware `auth`, `verified`, `staff` (role + confirmed 2FA,
 otherwise redirect to 2FA setup) and `can:administrate` (gate in `GovernanceServiceProvider`: admins with confirmed
-2FA, same rule as role management). The staff layout shows "Statistik", "Transparenz" and "Abstimmungen" to admins.
+2FA, same rule as role management). The staff layout shows "Statistik" and "Abstimmungen" to admins.
 The first admin is made with `sail artisan oasis:role <email> admin`.
 
 ## Statistics modules
@@ -14,7 +14,6 @@ The first admin is made with `sail artisan oasis:role <email> admin`.
 | Admin statistics | `/admin` (period 7/30/90/365 days) | admins | `App\Queries\Admin\AdminStats` |
 | Deine Zahlen | `/app/statistik` | the member | `App\Queries\Network\MemberStats` (docs/oasis-network.md) |
 | Oase · Statistik | `/oasen/{slug}/statistik` | hosts | `App\Queries\Network\OasisStats` |
-| Transparenz | `/transparenz` | public | `App\Queries\Admin\PublicTransparency` |
 
 `AdminStats` combines:
 - members and money from `App\Queries\Membership\MembershipStats` (stage 1/5): accounts, trials active/started/
@@ -25,15 +24,10 @@ The first admin is made with `sail artisan oasis:role <email> admin`.
 
 All modules show sums only – never lists of people and never content.
 
-## Transparency reports
+## Transparency reports (removed)
 
-`/admin/transparenz` publishes one month (`transparency_reports`, unique per month; publishing a month again
-corrects it). Only real figures appear: paying members, carried seats (active Solidar subscriptions plus active gift
-memberships) and income (MRR) are taken from the memberships at the moment of publishing
-(`App\Queries\Membership\MembershipStats`) and cannot be typed in; the admin enters only the cost items
-(label → euro), prefilled with the labels of the previous report or `config('oasis.transparency.cost_items')`.
-The public page shows the newest report; before the first one it shows today's live figures and no costs
-("Veröffentlichen wir ab dem Start"). Coverage = income / costs. The demo seeder creates no report.
+The public Transparenz page and its admin form were removed in October 2026. The table `transparency_reports` is kept
+untouched (no data deleted) in case monthly figures are published again later.
 
 ## Member votes
 

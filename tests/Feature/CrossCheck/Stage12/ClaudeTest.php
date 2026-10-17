@@ -10,7 +10,6 @@ use App\Actions\Moderation\DecideCase;
 use App\Actions\Moderation\ReviewComplaint;
 use App\Enums\Role;
 use App\Livewire\Admin\Dashboard;
-use App\Livewire\Admin\TransparencyReports;
 use App\Livewire\Admin\Votes;
 use App\Livewire\Moderation\CaseDetail;
 use App\Livewire\Moderation\ComplaintForm;
@@ -25,7 +24,6 @@ use App\Models\ContentReport;
 use App\Models\ModerationComplaint;
 use App\Models\ModerationDecision;
 use App\Models\Notifications\NotificationPreference;
-use App\Models\TransparencyReport;
 use App\Models\User;
 use App\Models\Vote;
 use App\Models\WaitlistEntry;
@@ -441,7 +439,6 @@ describe('admin', function () {
 
         $this->actingAs($moderator)->get(route('admin.dashboard'))->assertForbidden();
         $this->actingAs($moderator)->get(route('admin.votes.index'))->assertForbidden();
-        $this->actingAs($moderator)->get(route('admin.transparency.index'))->assertForbidden();
     });
 
     it('falls back to 30 days for an unknown period', function () {
@@ -453,19 +450,17 @@ describe('admin', function () {
         $this->actingAs(s12cStaff(Role::Admin))->get(route('admin.dashboard', ['tage' => 'abc']))->assertStatus(200);
     });
 
-    it('refuses to create a vote or publish figures after losing the admin role', function () {
+    it('refuses to create a vote after losing the admin role', function () {
         $admin = s12cStaff(Role::Admin);
         $votes = Livewire::actingAs($admin)->test(Votes::class)
             ->set('title', 'Frage')->set('description', 'Text')->set('starts_at', now()->addDay()->format('Y-m-d\TH:i'))
             ->set('ends_at', now()->addDays(3)->format('Y-m-d\TH:i'))->set('options', ['Ja', 'Nein']);
-        $reports = Livewire::actingAs($admin)->test(TransparencyReports::class);
 
         $admin->forceFill(['role' => Role::Moderator])->save();
 
         $votes->call('create')->assertForbidden();
-        $reports->call('publish')->assertForbidden();
 
-        expect(Vote::count())->toBe(0)->and(TransparencyReport::count())->toBe(0);
+        expect(Vote::count())->toBe(0);
     });
 
     it('rejects too many answers and duplicate-only answers', function () {
@@ -479,10 +474,4 @@ describe('admin', function () {
         expect(Vote::count())->toBe(0);
     });
 
-    it('publishes nothing without a named cost item', function () {
-        Livewire::actingAs(s12cStaff(Role::Admin))->test(TransparencyReports::class)
-            ->set('items', [['label' => null, 'amount' => null]])->call('publish')->assertHasErrors('items');
-
-        expect(TransparencyReport::count())->toBe(0);
-    });
 });

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Oasis;
 
 use App\Http\Controllers\Controller;
-use App\Queries\Admin\PublicTransparency;
 use Illuminate\View\View;
 
 /**
@@ -12,12 +11,6 @@ use Illuminate\View\View;
  */
 class PageController extends Controller
 {
-    /** "Transparenz": published monthly figures and member votes (see PublicTransparency). */
-    public function transparency(PublicTransparency $transparency): View
-    {
-        return view('oasis.transparenz', ['transparency' => $transparency->data()]);
-    }
-
     /**
      * "Entdecken": guest preview of public posts with sample content.
      *

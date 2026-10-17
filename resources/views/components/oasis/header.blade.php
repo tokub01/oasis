@@ -13,7 +13,6 @@
     $nav = [
         'funktionen' => ['label' => 'Funktionen', 'route' => 'oasis.funktionen'],
         'preise' => ['label' => 'Preise', 'route' => 'oasis.preise'],
-        'transparenz' => ['label' => 'Transparenz', 'route' => 'oasis.transparenz'],
         'sicherheit' => ['label' => 'Sicherheit', 'route' => 'oasis.sicherheit'],
         'manifest' => ['label' => 'Manifest', 'route' => 'oasis.manifest'],
         'gemeinsam' => ['label' => 'Gemeinsam starten', 'route' => 'oasis.gemeinsam'],

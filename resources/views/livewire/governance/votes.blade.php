@@ -83,10 +83,6 @@
                     <li>Ergebnisse erst nach dem Ende, damit niemand dem Trend folgt.</li>
                 </ul>
             </x-network.side-card>
-            <x-network.side-card title="Transparenz" tone="dune">
-                <p class="m-0 text-[15px] text-ink-2">Was hereinkommt, was hinausgeht und wie abgestimmt wurde, steht öffentlich auf der Transparenz-Seite.</p>
-                <a wire:navigate href="{{ route('oasis.transparenz') }}" class="o-link self-start text-[15px]">Zur Transparenz-Seite</a>
-            </x-network.side-card>
         </x-slot:aside>
     </x-network.columns>
 </div>

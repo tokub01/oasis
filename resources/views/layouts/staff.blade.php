@@ -6,7 +6,7 @@
 
     Variables:
       title   string       page title (suffix " · Moderation" is added)
-      active  string|null  current navigation item: queue|roles|admin|transparency|votes
+      active  string|null  current navigation item: queue|roles|admin|votes
 --}}
 @php
     $user = auth()->user();
@@ -15,7 +15,6 @@
         'queue' => ['Warteschlange', route('moderation.index'), true],
         'roles' => ['Rollen', route('moderation.roles.index'), $user?->can('manageRoles')],
         'admin' => ['Statistik', route('admin.dashboard'), $user?->can('administrate')],
-        'transparency' => ['Transparenz', route('admin.transparency.index'), $user?->can('administrate')],
         'votes' => ['Abstimmungen', route('admin.votes.index'), $user?->can('administrate')],
     ];
 @endphp

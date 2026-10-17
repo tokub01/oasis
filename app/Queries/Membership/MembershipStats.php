@@ -133,19 +133,6 @@ class MembershipStats
     }
 
     /**
-     * Seats carried by others: active Solidar subscriptions (supported by higher contributions) and active gift
-     * memberships (paid by someone else). Shown as "getragene Solidar- und Patenplätze" on the Transparenz page.
-     */
-    public function sponsoredSeats(): int
-    {
-        $solidar = $this->activeSubscriptions()->where('type', 'solidar')->distinct('user_id')->count('user_id');
-        $gifts = GiftMembership::query()->where('expires_at', '>', now())
-            ->distinct('redeemed_by_user_id')->count('redeemed_by_user_id');
-
-        return $solidar + $gifts;
-    }
-
-    /**
      * Subscriptions that currently grant membership: paid up and not ended (a cancelled one runs until its end).
      *
      * @return Builder<Subscription>

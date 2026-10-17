@@ -28,7 +28,6 @@ Route::name('oasis.')->group(function () {
     Route::view('/', 'oasis.home')->name('home');
     Route::view('/funktionen', 'oasis.funktionen')->name('funktionen');
     Route::view('/preise', 'oasis.preise')->name('preise');
-    Route::get('/transparenz', [PageController::class, 'transparency'])->name('transparenz');
     Route::view('/manifest', 'oasis.manifest')->name('manifest');
     Route::view('/sicherheit', 'oasis.sicherheit')->name('sicherheit');
     Route::view('/hilfe', 'oasis.hilfe')->name('hilfe');

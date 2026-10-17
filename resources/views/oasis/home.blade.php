@@ -110,7 +110,7 @@
                 </p>
                 <div class="flex flex-wrap gap-x-6 gap-y-2">
                     <a href="{{ route('oasis.manifest') }}" class="o-link text-base text-on-night">Zum Manifest</a>
-                    <a href="{{ route('oasis.transparenz') }}" class="o-link text-base text-on-night">Jeder Euro offen gelegt</a>
+                    <a href="{{ route('oasis.sicherheit') }}" wire:navigate class="o-link text-base text-on-night">Datenschutz &amp; Sicherheit</a>
                 </div>
             </div>
         </div>

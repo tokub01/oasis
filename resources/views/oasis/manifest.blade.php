@@ -14,7 +14,7 @@
         ['title' => 'Ein Feed mit Ende.', 'text' => 'Wir trimmen nichts auf Verweildauer. Die Quelle läuft der Reihe nach und hört auf.'],
         ['title' => 'Moderation mit Begründung.', 'text' => 'Klare Regeln, Menschen in der Moderation und eine Begründung für jede Entscheidung.'],
         ['title' => 'Eine Stimme für jedes Mitglied.', 'text' => 'Über die Richtung entscheiden die, die Oasis tragen. Unabhängig davon, wie viel sie beitragen.'],
-        ['title' => 'Offene Zahlen.', 'text' => 'Einnahmen und Ausgaben veröffentlichen wir jeden Monat auf unserer Transparenzseite.'],
+        ['title' => 'Klartext beim Datenschutz.', 'text' => 'Was mit deinen Daten passiert und wie wir sie schützen, erklären wir in klaren Worten.'],
     ];
 @endphp
 

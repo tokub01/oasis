@@ -25,7 +25,7 @@ use RuntimeException;
 /**
  * Local demo content so the app can be tried out without an empty feed: sample members (emails end in
  * `@demo.oasis.tld`), the four oases from the design, Tropfen with replies, carries, reactions and a few generated
- * images and two votes. No transparency report: those figures come only from real memberships. Every existing account follows the sample members and oases.
+ * images and two votes. Every existing account follows the sample members and oases.
  *
  * Sample members sign in with their e-mail or username and the password `oasis-demo-2026` (self::PASSWORD).
  * Run: `sail artisan db:seed --class=DemoContentSeeder`. Refuses to run in production: the figures and people are

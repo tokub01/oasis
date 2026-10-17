@@ -192,15 +192,6 @@ return [
     'demo_pages' => (bool) env('OASIS_DEMO_PAGES', true),
 
     /*
-     * Transparenz page. Members, carried seats and income always come from the real memberships
-     * (App\Queries\Membership\MembershipStats); only the costs are entered by an admin each month.
-     */
-    'transparency' => [
-        // Cost items offered in the admin form until the first report sets its own.
-        'cost_items' => ['Server und Speicher', 'Entwicklung und Werkzeuge', 'Moderation', 'Zahlungsgebühren', 'Rücklage'],
-    ],
-
-    /*
      * Draft building blocks of the legal pages (Datenschutz, AGB, Widerrufsbelehrung).
      * Placeholders only: the final texts must be written or reviewed by a lawyer before launch.
      */

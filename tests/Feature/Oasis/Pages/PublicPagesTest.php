@@ -26,7 +26,6 @@ dataset('oasis public pages', [
     'home' => ['home', [], 'Social Media, das dir'],
     'features' => ['funktionen', [], 'Quelle'],
     'prices' => ['preise', [], 'Dieselbe Oase für alle.'],
-    'transparency' => ['transparenz', [], 'Jeder Euro, offen gelegt.'],
     'manifesto' => ['manifest', [], 'Ein Ort im Netz, der seinen Mitgliedern gehört.'],
     'help' => ['hilfe', [], 'Wie können wir helfen?'],
     'trial' => ['testen', [], 'Tage Oasis, kostenlos.'],
@@ -61,7 +60,7 @@ it('renders every public route with a single h1, German landmarks and direct con
 it('gives each public page a distinct title and description', function () {
     $titles = [];
     $descriptions = [];
-    foreach (['home', 'funktionen', 'preise', 'transparenz', 'manifest', 'hilfe', 'testen', 'anmelden',
+    foreach (['home', 'funktionen', 'preise', 'manifest', 'hilfe', 'testen', 'anmelden',
         'entdecken', 'gemeinsam', 'gruendung', 'kuendigen', 'widerrufen', 'melden', 'impressum',
         'datenschutz', 'agb', 'widerrufsbelehrung', 'regeln'] as $page) {
         $html = $this->get(oasisPublicPageUrl($page))->assertOk()->getContent();
@@ -168,15 +167,11 @@ it('only describes promises as codified when the corresponding config flag is en
     config(['oasis.promises_codified' => false, 'oasis.statutes' => 'Configured statutes']);
     $this->get(route('oasis.manifest'))->assertOk()->assertSee('Wird festgeschrieben:')
         ->assertSee('Configured statutes')->assertDontSee('Diese Versprechen stehen in unseren');
-    $this->get(route('oasis.transparenz'))->assertOk()->assertSee('Diese Punkte schreiben wir vor dem Start')
-        ->assertDontSee('Diese Punkte stehen in unseren Regeln.');
 
     config(['oasis.promises_codified' => true]);
     $this->get(route('oasis.manifest'))->assertOk()->assertSee('Festgeschrieben:')
         ->assertSee('Diese Versprechen stehen in unseren')->assertSee('Configured statutes')
         ->assertDontSee('Wird festgeschrieben:');
-    $this->get(route('oasis.transparenz'))->assertOk()->assertSee('Diese Punkte stehen in unseren Regeln.')
-        ->assertDontSee('Diese Punkte schreiben wir vor dem Start');
 });
 
 it('renders operator, contact, founder and service placeholders from changed config', function () {
@@ -196,21 +191,10 @@ it('renders operator, contact, founder and service placeholders from changed con
     $this->get(route('oasis.preise'))->assertOk()->assertSee('4.321 Mitglieder');
 });
 
-it('shows only real transparency figures: live memberships and no costs before the first report', function () {
-    config(['oasis.transparency.cost_items' => ['Hosting']]);
-    User::factory()->create()->subscriptions()->create(['type' => 'oase', 'mollie_id' => 'sub_live', 'status' => 'active',
-        'rhythm' => 'monat', 'amount' => 500, 'paid_until' => now()->addMonth()]);
-
-    $this->get(route('oasis.transparenz'))->assertOk()
-        ->assertSee('heute, '.now('Europe/Berlin')->locale('de')->isoFormat('D. MMMM YYYY'))
-        ->assertSee('5 €')->assertSee('Hosting')->assertSee('Veröffentlichen wir ab dem Start')
-        ->assertDontSee('%</', false)->assertDontSee('Antwortmöglichkeiten');
-});
-
 it('marks the active main-navigation link on each matching page', function ($page) {
     $response = $this->get(route('oasis.'.$page))->assertOk();
     expect($response->getContent())->toContain('href="'.route('oasis.'.$page).'" wire:navigate aria-current="page"');
-})->with(['funktionen', 'preise', 'transparenz', 'manifest', 'gemeinsam']);
+})->with(['funktionen', 'preise', 'sicherheit', 'manifest', 'gemeinsam']);
 
 it('sends signed-in members from login and registration into the app, never in a circle', function (string $page) {
     $this->actingAs(User::factory()->create())->get(route($page))->assertRedirect(route('app.home'));
@@ -230,4 +214,9 @@ it('explains privacy and security with the same providers as the privacy policy,
         ->assertSee('Configured Hosting GmbH')->assertSee('legen wir vor dem Start fest')
         ->assertSee(config('oasis.privacy.ai_provider'))->assertSee(route('oasis.datenschutz'), false);
     $this->get(route('oasis.home'))->assertSee(route('oasis.sicherheit'), false);
+});
+
+it('no longer offers a public transparency page', function () {
+    $this->get('/transparenz')->assertNotFound();
+    $this->get(route('oasis.home'))->assertDontSee('/transparenz', false);
 });

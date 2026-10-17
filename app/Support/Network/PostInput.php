@@ -2,10 +2,10 @@
 
 namespace App\Support\Network;
 
-use App\Actions\Network\StorePostImage;
 use App\Enums\Network\PostKind;
 use App\Enums\Network\Visibility;
 use App\Models\Post;
+use App\Support\Media\WebpImage;
 use Illuminate\Validation\Rule;
 
 /** Input rules shared by the reactive composer and its upload validation regressions. */
@@ -23,7 +23,7 @@ class PostInput
             'link_read' => [Rule::when(TextLinks::in($carried->body ?? '') !== [], ['accepted'])],
             'images' => ['nullable', 'array', 'max:'.Post::MAX_IMAGES],
             'images.*' => ['file', 'image', 'mimes:jpeg,png,webp,gif', 'max:'.self::IMAGE_MAX_KB,
-                Rule::dimensions()->maxWidth(StorePostImage::MAX_INPUT_EDGE)->maxHeight(StorePostImage::MAX_INPUT_EDGE)],
+                Rule::dimensions()->maxWidth(WebpImage::MAX_INPUT_EDGE)->maxHeight(WebpImage::MAX_INPUT_EDGE)],
             // Alternative text is required for every image (accessibility); index matches images.*.
             'alts' => ['nullable', 'array', 'max:'.Post::MAX_IMAGES],
             'alts.*' => ['nullable', 'string', 'max:300'],

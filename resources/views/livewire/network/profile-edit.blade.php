@@ -27,8 +27,26 @@
             <p class="m-0 text-ink-2">Wer dein Profil lesen und mit dir interagieren darf, wählst du in den
                 <a wire:navigate href="{{ route('app.privacy') }}" class="font-bold text-night underline underline-offset-4">Privatsphäre-Einstellungen</a>.</p>
 
+            {{-- Optional photo; without one the initials avatar in the chosen colour is shown. --}}
+            <div class="flex flex-col gap-2">
+                <span class="text-[15px] font-bold">Profilbild <span class="font-normal text-muted">(freiwillig)</span></span>
+                <div class="flex flex-wrap items-center gap-3">
+                    <x-network.avatar :user="auth()->user()" :size="64" />
+                    <label class="o-btn o-btn-sm o-btn-outline cursor-pointer">
+                        {{ $profile->photo_path ? 'Anderes Bild wählen' : 'Bild hochladen' }}
+                        <input type="file" wire:model="photo" accept="image/jpeg,image/png,image/webp,image/gif" class="sr-only" aria-describedby="profile-photo-hint profile-photo-error">
+                    </label>
+                    @if ($profile->photo_path)
+                        <button type="button" wire:click="removePhoto" wire:loading.attr="disabled" class="o-btn o-btn-sm border-none bg-transparent text-night underline">Entfernen</button>
+                    @endif
+                </div>
+                <p wire:loading wire:target="photo" class="m-0 text-sm text-muted">Bild wird hochgeladen …</p>
+                <p id="profile-photo-hint" class="m-0 text-sm text-muted">Quadratisch zugeschnitten. Standort- und Kameradaten entfernen wir. Menschen, die Bilder von Fremden erst freigeben, sehen statt des Bildes deine Initialen. Bitte nur Bilder, die zu den Community-Regeln passen.</p>
+                <p id="profile-photo-error" class="o-error m-0">@error('photo'){{ $message }}@enderror</p>
+            </div>
+
             <fieldset class="m-0 flex flex-col gap-2 border-none p-0">
-                <legend class="mb-2 text-[15px] font-bold">Farbe deines Profilbilds</legend>
+                <legend class="mb-2 text-[15px] font-bold">Farbe deiner Initialen</legend>
                 <div class="flex flex-wrap gap-4">
                     @foreach (\App\Enums\Network\AvatarColor::cases() as $color)
                         <label wire:key="profile-edit-2-{{ $color->value }}" class="flex min-h-11 items-center gap-2">

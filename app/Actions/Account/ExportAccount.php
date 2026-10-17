@@ -41,6 +41,11 @@ class ExportAccount
             }
         }
 
+        $photo = $user->profile?->photo_path;
+        if ($photo !== null && $disk->exists($photo)) {
+            $zip->addFromString('bilder/profilbild.webp', (string) $disk->get($photo));
+        }
+
         $zip->addFromString('oasis-daten.json', json_encode(
             $this->data($user, $posts, $images),
             JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR,

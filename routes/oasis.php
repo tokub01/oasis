@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Network\ProfilePhotoController;
 use App\Http\Controllers\Oasis\ConfirmationController;
 use App\Http\Controllers\Oasis\PageController;
 use App\Http\Controllers\Oasis\SecurityTxtController;
@@ -44,6 +45,9 @@ Route::name('oasis.')->group(function () {
     Route::livewire('/profil/{handle}', ProfileShow::class)
         ->where('handle', '[A-Za-z0-9_]{1,30}')
         ->name('profil');
+    // Profile photo, after the same visibility checks as the profile (docs/oasis-network.md, "Profilbild").
+    Route::get('/profil/{handle}/bild/{file}', ProfilePhotoController::class)
+        ->where(['handle' => '[A-Za-z0-9_]{1,30}', 'file' => '[A-Za-z0-9]{32}\.webp'])->name('profilbild');
 
     /*
      * Legal pages: one URL per document.

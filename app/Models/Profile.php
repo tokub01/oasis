@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $bio
  * @property string|null $location
  * @property AvatarColor $avatar_color
+ * @property string|null $photo_path optional profile photo on the private media disk (ManageProfilePhoto)
  * @property User $user
  */
 class Profile extends Model
@@ -44,6 +45,12 @@ class Profile extends Model
     }
 
     /** Whether a viewer (null = guest) may open this profile. */
+    /** URL of the profile photo (ProfilePhotoController checks visibility), or null for the initials avatar. */
+    public function photoUrl(): ?string
+    {
+        return $this->photo_path === null ? null : route('oasis.profilbild', [$this->user->username, basename($this->photo_path)]);
+    }
+
     public function isVisibleTo(?User $viewer): bool
     {
         return ! ($viewer?->isBlockedWith($this->user) ?? false)

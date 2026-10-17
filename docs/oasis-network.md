@@ -200,3 +200,18 @@ consent; friendship is mutual and needs a yes.
   `images_audience` (default).
 
 Tests: `tests/Feature/Network/FriendshipTest.php`.
+
+## Profilbild
+
+- Optional (`profiles.photo_path`), uploaded on "Profil bearbeiten" (`ProfileEdit::updatedPhoto`, max. 8 MB):
+  `ManageProfilePhoto` stores a 512×512 centre-cropped WebP via `App\Support\Media\WebpImage` (the same
+  re-encoding as Tropfen images: no EXIF, no location) under `network/profiles/{user}/` on the private media disk;
+  replacing or removing deletes the old file, `DeleteAccount` deletes the folder, the data export contains it.
+- Served by `ProfilePhotoController` (`/profil/{handle}/bild/{file}`, route `oasis.profilbild`) after the profile's
+  own checks (profile audience, blocks); the file name is part of the URL.
+- `x-network.avatar` shows the photo only where the profile is visible and the viewer's "Wessen Bilder siehst du
+  sofort?" allows images of this person; everywhere else the initials stay. Photos are not checked automatically
+  (the language model reads text only); they can be reported with the profile.
+- Chats have no images or files on purpose.
+
+Tests: `tests/Feature/Network/ProfilePhotoTest.php`.

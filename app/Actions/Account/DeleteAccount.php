@@ -49,5 +49,6 @@ class DeleteAccount
         foreach ($postIds as $postId) {
             $disk->deleteDirectory('network/posts/'.$postId);
         }
+        $disk->deleteDirectory('network/profiles/'.$user->id);
     }
 }

@@ -103,3 +103,40 @@ conversation/report dialog, wipes its session and disconnects realtime. Repeated
 is ignored; returning creates a new session. Identity setup/unlock captures the session generation before awaiting
 cryptographic work: a lock or navigation invalidates that generation, so late private keys are wiped instead of
 reopening the abandoned session. Late announcements cannot start timers after teardown.
+
+## Live E2E over Reverb
+
+This opt-in test runs the actual `ChatApi`, `ChatSession`, keyring, message crypto, `Realtime`, Laravel Echo and
+Pusher modules against the running local app. It is separate from the offline JS tests and needs no new packages.
+Start Sail (including `reverb` and the database), then run from the WSL repository:
+
+```sh
+./vendor/bin/sail node --test tests/e2e/chat-reverb.e2e.mjs
+```
+
+The fixture helper requires `APP_ENV=local` and existing migrations; the test refuses a remote app URL. It creates
+three unique, verified `chat-e2e-…@demo.oasis.tld` trial accounts, leaving the demo accounts unchanged. Mira and Jonas
+set up and unlock identities using production Argon2id costs, create a direct conversation and exchange signed key
+grants. The third account is also chat-ready but is refused private-channel authorization with HTTP 403.
+
+Both clients subscribe through real `/broadcasting/auth` requests. Jonas must receive `.MessageSent` over Reverb
+and verify/decrypt it **without any history request or polling**. A tampered signature must fail. The test inspects
+the persisted ciphertext envelope and signed expiry, checks that API writes contain neither message plaintext nor
+chat passphrase, and verifies that the nonmember receives no event during the observation window.
+
+The Node adaptation supplies only a same-origin in-memory cookie jar and the XHR HTTP adapter for Pusher's channel
+authorization. Pusher's installed Node WebSocket transport, Echo and the app's Realtime code stay real. Inside Sail,
+`http://localhost` reaches the app; `reverb:8080` reaches the same Reverb service exposed as `localhost:8080` on the
+host. Override `CHAT_E2E_REVERB_HOST` / `CHAT_E2E_REVERB_PORT` if the local Docker service uses a different address;
+`CHAT_E2E_URL` may select a different loopback HTTP port.
+
+`MessageSent` implements `ShouldBroadcastNow`; `ChatBroadcast::afterCommit` dispatches it synchronously after the DB
+commit. No queue worker is needed or started, even when `QUEUE_CONNECTION=database`. The test asserts that contract
+rather than silently passing through a history fallback.
+
+Finally, all WebSocket clients disconnect, in-memory keys are wiped, and the fixture helper deletes only this run's
+three accounts through `DeleteAccount`. It verifies that users, identities, conversations, memberships, messages,
+grants and authenticated sessions are gone, including when an assertion or network request fails. Interrupting the
+process forcibly can prevent `finally` cleanup; normal test failures still clean up. Output contains results, never
+cookies, CSRF values, passwords, private keys or environment secrets. This exercises the client/transport protocol,
+not browser DOM rendering or navigation.

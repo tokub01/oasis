@@ -37,3 +37,10 @@ it('tells the chat UI whether the account may write', function () {
     $this->actingAs(User::factory()->create(['trial_ends_at' => now()->subDay()]))->get('/app/nachrichten')
         ->assertSee('data-can-participate="0"', false);
 });
+
+it('provides the authenticated session CSRF token to the chat API and realtime client', function () {
+    $token = str_repeat('a', 40);
+
+    $this->actingAs(User::factory()->create())->withSession(['_token' => $token])->get('/app/nachrichten')
+        ->assertOk()->assertSee('<meta name="csrf-token" content="'.$token.'">', false);
+});

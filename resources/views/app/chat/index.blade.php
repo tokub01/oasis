@@ -21,7 +21,9 @@
     <div data-oasis-chat
          data-user-id="{{ auth()->id() }}"
          data-api="{{ url('/app/chat/api') }}"
-         data-can-participate="{{ auth()->user()->can('participate') ? '1' : '0' }}">
+         data-can-participate="{{ auth()->user()->can('participate') ? '1' : '0' }}"
+         {{-- Word lists for the safety checks in the browser (resources/js/chat/client/safety.js); chats never reach the server as text. --}}
+         data-safety="{{ json_encode(['lists' => require resource_path('moderation/wortliste.php'), 'tone' => require resource_path('moderation/umgangston.php')]) }}">
         <x-network.columns label="Über Nachrichten">
             <div class="flex flex-col gap-6">
                 <noscript>

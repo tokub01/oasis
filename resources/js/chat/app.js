@@ -97,6 +97,8 @@ export function start(root) {
         }),
         /** False for read-only accounts (trial ended, no membership): reading only, no new chats or sending. */
         canParticipate: root.dataset.canParticipate === '1',
+        /** Word lists for the in-browser safety checks (client/safety.js): {lists, tone}. */
+        safety: JSON.parse(root.dataset.safety || '{"lists":{},"tone":{}}'),
         /** Identity from GET /identity: null until the chat is set up. */
         storedIdentity: null,
 

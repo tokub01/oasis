@@ -66,6 +66,26 @@ If a member has no valid keys, distribution stops with a notice naming them.
 moderation with sender and times, and posts `{envelope, plaintext, reason}` to
 `POST /app/chat/api/conversations/{id}/reports` (server side: see oasis-chat.md).
 
+## Schutz im Chat
+
+`client/safety.js` runs only in the browser, on decrypted text; nothing is sent unless the member reports:
+
+- incoming messages (`scanIncoming`): requests for passwords, codes, card or bank data or the address (`phishing`),
+  sexual offers or requests incl. coded ones (`solicitation`), and words from the server word list (insult, hate,
+  threat, sexual, extremism). The newest flagged message from someone else shows a banner in the conversation:
+  "Blockieren und Chat löschen" (`POST /app/chat/api/blocks`, then `POST …/conversations/{id}/leave`; a group owner
+  cannot leave, the block alone stops the messages), "Nachricht melden" (consent-based report dialog) or
+  "Ist in Ordnung" (dismissed in memory). Within a sender's first three messages the text calls it a typical warning
+  sign.
+- outgoing drafts (`scanOutgoing`): card numbers (Luhn), IBANs (mod 97), "mein Passwort ist …" and street/postcode
+  addresses ask for a second press on "Senden"; slang addresses get the same tone hint as Tropfen (`toneHint`, same
+  rule as `App\Support\Moderation\ToneHint`).
+- The word lists come from `resources/moderation/wortliste.php` and `umgangston.php` (`data-safety` on the chat page).
+- Automatic reporting of chat content is deliberately not built: it would break end-to-end encryption and the
+  secrecy of communications (§ 3 TDDDG).
+
+Tests: `tests/js/chat/safety.test.mjs`, `tests/Feature/Chat/ChatSafetyTest.php`.
+
 ## Tests
 
 - `tests/js/chat/client.test.mjs` – client layer with real libsodium and an in-memory API fake.

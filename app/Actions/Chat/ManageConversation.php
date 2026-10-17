@@ -94,6 +94,23 @@ class ManageConversation
         }, 3);
     }
 
+    /**
+     * A member leaves a chat themselves ("Chat löschen" after harassment): it disappears from their list and they get
+     * no new keys. The owner of a group cannot leave it (the group would have no owner); a direct chat ends for both.
+     */
+    public function leave(Conversation $conversation, User $member): void
+    {
+        DB::transaction(function () use ($conversation, $member) {
+            ConversationKeys::lockUsers([$member->id]);
+            $conversation = Conversation::query()->lockForUpdate()->findOrFail($conversation->id);
+            $membership = $conversation->requireMember($member);
+            abort_if($conversation->type === 'group' && $membership->role === 'owner', 422,
+                'Als Besitzer:in kannst du die Gruppe nicht verlassen. Entferne stattdessen einzelne Mitglieder.');
+            $membership->update(['left_at' => now()]);
+            ConversationKeys::invalidate($conversation);
+        }, 3);
+    }
+
     /** Every membership change starts a new version, including rejoining a previous group. */
     public function membership(Conversation $conversation, User $owner, int $userId, bool $add): Conversation
     {

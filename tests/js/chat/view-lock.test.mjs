@@ -24,6 +24,11 @@ function element() {
         append(...nodes) { children.push(...nodes); },
         replaceChildren(...nodes) { children.splice(0, children.length, ...nodes); },
         setAttribute() {},
+        // Nested parts (e.g. the safety banner's buttons) are fake elements too.
+        querySelector(selector) {
+            this.parts ??= {};
+            return (this.parts[selector] ??= element());
+        },
     };
 }
 
@@ -54,6 +59,9 @@ test('close() removes rendered messages, notices and the unsent draft from the p
     view.notices.append({ textContent: 'Hinweis' });
     screen.message.value = 'ungesendeter Entwurf';
     view.title.textContent = 'Chat mit Mira';
+    view.safety.hidden = false;
+    view.flagged = { signature: 's', plaintext: 'gemeldeter Klartext' };
+    view.showHint('Hinweis zum Entwurf');
 
     view.close();
 
@@ -61,6 +69,9 @@ test('close() removes rendered messages, notices and the unsent draft from the p
     assert.equal(view.notices.children.length, 0);
     assert.equal(screen.message.value, '');
     assert.equal(view.title.textContent, '');
+    assert.equal(view.safety.hidden, true);
+    assert.equal(view.flagged, null);
+    assert.equal(view.hint.hidden, true);
 });
 
 test('results of requests started before close() are ignored', () => {

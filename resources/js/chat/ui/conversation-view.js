@@ -15,6 +15,7 @@
 import { ApiError } from '../client/api.js';
 import { distributeKey, loadDirectory, openGrants } from '../client/keyring.js';
 import { MessageState, Timeline, measureDraft, openMessage, sealMessage } from '../client/messages.js';
+import { scanIncoming, scanOutgoing } from '../client/safety.js';
 import { MAX_MESSAGE_LENGTH } from '../index.js';
 import { conversationTitle } from './conversation-list.js';
 import { $, formatDateTime, fromTemplate, lifetimeLabel, setText, showError } from './dom.js';
@@ -36,6 +37,25 @@ export class ConversationView {
         this.composer = $(this.screen, '[data-composer]');
         this.counter = $(this.composer, '[data-counter]');
         this.error = $(this.composer, '[data-form-error]');
+        this.hint = $(this.composer, '[data-composer-hint]');
+        this.safety = $(this.screen, '[data-safety]');
+        /** Signatures of flagged messages the member dismissed with "Ist in Ordnung" (in memory only). */
+        this.dismissed = new Set();
+        /** Draft the member confirmed after the sensitive-data warning; sending it again goes through. */
+        this.confirmedDraft = null;
+        this.flagged = null;
+        $(this.safety, '[data-safety-dismiss]').addEventListener('click', () => {
+            if (this.flagged) {
+                this.dismissed.add(this.flagged.signature);
+            }
+            this.safety.hidden = true;
+        });
+        $(this.safety, '[data-safety-report]').addEventListener('click', () => {
+            if (this.flagged) {
+                this.ctx.report.open(this.conversation.id, this.flagged, this.senderName(this.flagged.senderId));
+            }
+        });
+        $(this.safety, '[data-safety-block]').addEventListener('click', () => this.blockAndLeave());
 
         this.conversation = null;
         this.users = new Map();
@@ -50,7 +70,10 @@ export class ConversationView {
             event.preventDefault();
             this.send();
         });
-        this.composer.elements.message.addEventListener('input', () => this.updateCounter());
+        this.composer.elements.message.addEventListener('input', () => {
+            this.updateCounter();
+            this.updateHint();
+        });
         // Enter sends, Shift+Enter makes a new line (common chat behaviour).
         this.composer.elements.message.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
@@ -105,6 +128,12 @@ export class ConversationView {
         this.messages.replaceChildren();
         this.notices.replaceChildren();
         this.composer.elements.message.value = '';
+        // The safety banner and hints refer to this chat's plaintext: forget them with it.
+        this.safety.hidden = true;
+        this.flagged = null;
+        this.dismissed.clear();
+        this.confirmedDraft = null;
+        this.showHint('');
         setText(this.title, '');
         setText(this.lifetime, '');
     }
@@ -254,11 +283,20 @@ export class ConversationView {
             return;
         }
         showError(this.error, '');
+        // Passwords, card numbers, IBANs or an address: warn once; pressing "Senden" again sends this exact text.
+        const { sensitive } = scanOutgoing(text, this.ctx.safety.tone);
+        if (sensitive.length > 0 && this.confirmedDraft !== text) {
+            this.confirmedDraft = text;
+            this.showHint(`Du bist dabei, ${sensitive.join(' und ')} zu verschicken. Oasis fragt dich nie im Chat danach – sei vorsichtig, besonders bei Menschen, die du noch nicht kennst. Zum Senden tippe noch einmal auf „Senden“.`);
+            return;
+        }
         try {
             const envelope = await sealMessage(this.ctx.session, this.conversation, this.ctx.clock, text);
             await this.ctx.api.sendMessage(this.conversation.id, envelope);
             textarea.value = '';
+            this.confirmedDraft = null;
             this.updateCounter();
+            this.updateHint();
             await this.receive(envelope);
             this.ctx.announce('Gesendet.');
         } catch (error) {
@@ -266,6 +304,73 @@ export class ConversationView {
             if (error instanceof ApiError && error.status === 409) {
                 await this.refresh(this.conversation.id).catch((failure) => this.handleFailure(failure));
             }
+        }
+    }
+
+    /** Tone hint while typing (same rule as Tropfen); a pending sensitive-data warning ends when the text changes. */
+    updateHint() {
+        const text = this.composer.elements.message.value;
+        if (this.confirmedDraft !== null && this.confirmedDraft !== text.trim()) {
+            this.confirmedDraft = null;
+        }
+        const { tone } = scanOutgoing(text, this.ctx.safety.tone);
+        this.showHint(tone ? `Kurzer Hinweis: „${tone}“ wirkt schnell herablassend. Bitte achte auf einen freundlichen Ton.` : '');
+    }
+
+    showHint(message) {
+        setText(this.hint, message);
+        this.hint.hidden = message === '';
+    }
+
+    /**
+     * Show the safety banner for the newest flagged message from someone else (not dismissed). In the first messages
+     * of a person, such requests are a typical warning sign, so the text says so.
+     */
+    checkSafety() {
+        const myId = this.ctx.session.userId;
+        const incoming = this.timeline.items.filter((item) => item.senderId !== myId && item.state === MessageState.READABLE);
+        let found = null;
+        for (const item of [...incoming].reverse()) {
+            const result = this.dismissed.has(item.signature) ? null : scanIncoming(item.plaintext, this.ctx.safety.lists);
+            if (result) {
+                found = { item, result };
+                break;
+            }
+        }
+        this.flagged = found?.item ?? null;
+        this.safety.hidden = found === null;
+        if (found === null) {
+            return;
+        }
+        const name = this.senderName(found.item.senderId);
+        const early = incoming.filter((item) => item.senderId === found.item.senderId).length <= 3;
+        const advice = {
+            phishing: `${name} fragt nach Passwort, Bank- oder Kartendaten oder deiner Adresse. Gib so etwas nie im Chat heraus – Oasis fragt dich nie danach.`,
+            solicitation: `Die Nachricht von ${name} wirkt wie ein sexuelles Angebot oder eine sexuelle Anfrage. Das verstößt gegen unsere Regeln.`,
+            harassment: `Die Nachricht von ${name} wirkt beleidigend oder bedrohlich. Du musst dir das nicht gefallen lassen.`,
+        }[found.result.kind];
+        setText($(this.safety, '[data-safety-title]'), `${found.result.title} ${name} blockieren und Chat löschen?`);
+        setText($(this.safety, '[data-safety-text]'), early ? `${advice} Gerade in den ersten Nachrichten ist das ein typisches Warnzeichen.` : advice);
+    }
+
+    /** Block the sender of the flagged message, leave the chat and go back to the list. */
+    async blockAndLeave() {
+        if (!this.flagged || !window.confirm(`${this.senderName(this.flagged.senderId)} blockieren und diesen Chat löschen?`)) {
+            return;
+        }
+        const conversationId = this.conversation.id;
+        try {
+            await this.ctx.api.block(this.flagged.senderId);
+            await this.ctx.api.leave(conversationId).catch((error) => {
+                // The owner of a group cannot leave it; the block alone already stops the messages.
+                if (!(error instanceof ApiError) || error.status !== 422) {
+                    throw error;
+                }
+            });
+            this.ctx.announce('Blockiert. Der Chat ist gelöscht.');
+            window.location.hash = '';
+        } catch (error) {
+            showError(this.error, describeError(error));
         }
     }
 
@@ -303,6 +408,7 @@ export class ConversationView {
             return element;
         }));
         this.empty.hidden = this.timeline.items.length > 0;
+        this.checkSafety();
     }
 
     senderName(userId) {

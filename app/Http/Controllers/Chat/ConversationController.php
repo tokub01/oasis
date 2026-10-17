@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Chat;
 
 use App\Actions\Chat\ManageConversation;
+use App\Actions\Safety\ManageBlock;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
+use App\Models\User;
 use App\Support\Chat\UnreadChats;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -37,6 +39,23 @@ class ConversationController extends Controller
         $conversation->requireMember($request->user())->forceFill(['last_read_at' => now()])->save();
 
         return response()->json(['count' => UnreadChats::count($request->user())]);
+    }
+
+    /** Leave the chat (it disappears from the list); see ManageConversation::leave. */
+    public function leave(Request $request, Conversation $conversation, ManageConversation $manage): JsonResponse
+    {
+        $manage->leave($conversation, $request->user());
+
+        return response()->json(['left' => true]);
+    }
+
+    /** Block a person right from the chat (safety banner); always allowed, also for read-only accounts. */
+    public function block(Request $request, ManageBlock $blocks): JsonResponse
+    {
+        $input = $request->validate(['user_id' => ['required', 'integer', 'exists:users,id']]);
+        $blocks->block($request->user(), User::whereKey((int) $input['user_id'])->firstOrFail());
+
+        return response()->json(['blocked' => true]);
     }
 
     /** Create a pending-key chat with distinct, explicitly selected account IDs. */

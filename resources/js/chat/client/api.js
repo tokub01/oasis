@@ -121,6 +121,16 @@ export class ChatApi {
         return this.request('GET', `/conversations/${id}/messages${beforeId ? `?before_id=${beforeId}` : ''}`);
     }
 
+    /** Leave a chat ("Chat löschen" in the safety banner); it disappears from the list. */
+    leave(id) {
+        return this.request('POST', `/conversations/${id}/leave`);
+    }
+
+    /** Block a person (safety banner); messages between you stop. */
+    block(userId) {
+        return this.request('POST', '/blocks', { user_id: Number(userId) });
+    }
+
     /** The chat is open: everything so far counts as seen (unread badge, e-mail/push notices). Metadata only. */
     markRead(id) {
         return this.request('POST', `/conversations/${id}/read`);

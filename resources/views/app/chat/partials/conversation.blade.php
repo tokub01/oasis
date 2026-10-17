@@ -15,6 +15,18 @@
 
     <ul data-notices class="m-0 flex list-none flex-col gap-2 p-0"></ul>
 
+    {{-- Safety banner (client/safety.js, checked only on this device): block and leave, report, or dismiss. --}}
+    <div data-safety role="alert" hidden class="flex flex-col gap-3 rounded-[20px] border-2 border-sun bg-dune p-4">
+        <p data-safety-title class="m-0 font-extrabold text-night"></p>
+        <p data-safety-text class="m-0 text-ink-2"></p>
+        <div class="flex flex-wrap gap-2">
+            <button type="button" data-safety-block class="o-btn o-btn-sm o-btn-dark">Blockieren und Chat löschen</button>
+            <button type="button" data-safety-report class="o-btn o-btn-sm o-btn-outline">Nachricht melden</button>
+            <button type="button" data-safety-dismiss class="o-btn o-btn-sm border-none bg-transparent text-night underline">Ist in Ordnung</button>
+        </div>
+        <p class="m-0 text-xs text-muted">Diese Prüfung läuft nur auf deinem Gerät. Oasis liest deine Chats nicht; gemeldet wird nur, was du meldest. <a href="/community-regeln#chat" class="o-link">Regeln im Chat</a></p>
+    </div>
+
     <button type="button" data-older hidden class="o-btn o-btn-sm o-btn-outline self-center">Ältere Nachrichten laden</button>
     <ol data-messages aria-label="Nachrichten" class="m-0 flex list-none flex-col gap-3 p-0"></ol>
     <p data-empty hidden class="m-0 text-center text-ink-2">Noch keine Nachrichten. Schreib die erste.</p>
@@ -27,6 +39,7 @@
             <span id="chat-message-counter" data-counter class="text-sm text-muted"></span>
             <button type="submit" class="o-btn o-btn-md o-btn-dark">Senden</button>
         </div>
+        <p data-composer-hint role="status" hidden class="m-0 rounded-xl bg-dune px-3 py-2 text-sm"></p>
         <p data-form-error role="alert" hidden class="m-0 text-sun-text"></p>
     </form>
 

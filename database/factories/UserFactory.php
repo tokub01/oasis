@@ -30,6 +30,8 @@ class UserFactory extends Factory
             'birth_date' => '1990-01-01',
             'terms_accepted_at' => now(),
             'trial_ends_at' => now()->addDays(config('oasis.trial_days')),
+            // Test accounts skip the introduction; tests/Feature/Network/OnboardingTest covers it.
+            'onboarded_at' => now(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),

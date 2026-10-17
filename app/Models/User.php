@@ -26,6 +26,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string $display_name
  * @property string|null $username
  * @property Carbon|null $birth_date
+ * @property Carbon|null $onboarded_at set when the introduction (app.welcome) was finished or skipped
  * @property Carbon|null $terms_accepted_at
  * @property Carbon|null $trial_ends_at
  * @property Carbon|null $trial_reminder_sent_at
@@ -84,6 +85,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'birth_date' => 'date:Y-m-d',
             'terms_accepted_at' => 'datetime',
             'trial_ends_at' => 'datetime',
+            'onboarded_at' => 'datetime',
             'trial_reminder_sent_at' => 'datetime',
             'founding_member_at' => 'datetime',
             'founding_price_guarantee' => 'boolean',

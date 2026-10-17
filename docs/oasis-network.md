@@ -172,3 +172,13 @@ The author may change the text of a Tropfen for `Post::EDIT_MINUTES` (60) after 
 Cards show "bearbeitet" with a link to `#versionen` on the Tropfen page, where every earlier version can be opened by
 everyone who may read the Tropfen. Versions are part of the data export and are deleted with the Tropfen. Tests:
 `tests/Feature/Network/PostEditTest.php`.
+
+## Einstieg
+
+New members are led once from the start page (`Source::mount`) to `/app/willkommen` (`app.welcome`,
+`App\Livewire\Onboarding\Welcome`): about you (profile text, location, colour), who sees you (profile audience and
+default visibility, limited for members under 18), oases (hand-picked via `oasis.onboarding.featured_oases`, otherwise
+the six largest public ones; joining = following) and people (search, invitations). Every step has "Schritt
+überspringen"; "Später" ends the tour. Finishing or skipping sets `users.onboarded_at`; existing accounts were set
+by the migration, factories set it too. The settings link to the tour again. Tests:
+`tests/Feature/Network/OnboardingTest.php`.

@@ -15,7 +15,7 @@
 
 <div class="flex flex-col gap-6">
     <x-network.page-header eyebrow="Konto" title="Einstellungen">
-        Profil, Passwort, Anmeldung und deine Daten an einem Ort.
+        Profil, Passwort, Anmeldung und deine Daten an einem Ort. Neu hier? <a href="{{ route('app.welcome') }}" wire:navigate class="text-night underline underline-offset-4">Einstieg noch einmal ansehen</a>.
     </x-network.page-header>
 
     @if ($status !== '')

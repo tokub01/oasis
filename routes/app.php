@@ -3,6 +3,7 @@
 use App\Http\Controllers\Account\ExportAccountController;
 use App\Livewire\Account\Settings;
 use App\Livewire\Network\Source;
+use App\Livewire\Onboarding\Welcome;
 use App\Livewire\Privacy\Center;
 use App\Livewire\Privacy\Checkup;
 use App\Livewire\Privacy\Devices;
@@ -18,6 +19,8 @@ Route::livewire('/app/einstellungen', Settings::class)->middleware('auth')->name
 // Privatsphäre-Center and the guided check (stage 13); the settings are enforced through PrivacySetting::allows().
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::livewire('/app/privatsphaere', Center::class)->name('app.privacy');
+    // Einstieg für neue Mitglieder (skippable; the start page leads here once, docs/oasis-network.md).
+    Route::livewire('/app/willkommen', Welcome::class)->name('app.welcome');
     Route::livewire('/app/privatsphaere/check', Checkup::class)->name('app.privacy.check');
     Route::livewire('/app/privatsphaere/woerter', HiddenWords::class)->name('app.privacy.words');
     Route::livewire('/app/privatsphaere/geraete', Devices::class)->name('app.privacy.devices');

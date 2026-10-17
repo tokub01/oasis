@@ -131,6 +131,14 @@ return [
     'server_location' => 'Auf Servern von IONOS in Deutschland; hochgeladene Bilder liegen verschlüsselt bei Amazon Web Services in Frankfurt am Main',
 
     /*
+     * Einstieg für neue Mitglieder (App\Livewire\Onboarding\Welcome).
+     */
+    'onboarding' => [
+        // Slugs of public oases suggested to new members, in this order (hand-picked); empty = the six largest.
+        'featured_oases' => [],
+    ],
+
+    /*
      * Bot protection without captcha or tracking (docs/oasis-bot-protection.md).
      */
     'bot_protection' => [

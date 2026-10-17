@@ -47,6 +47,7 @@ Route::name('oasis.')->group(function () {
      */
     Route::view('/impressum', 'oasis.legal.impressum')->name('impressum');
     Route::view('/datenschutz', 'oasis.legal.datenschutz')->name('datenschutz');
+    Route::view('/barrierefreiheit', 'oasis.legal.barrierefreiheit')->name('barrierefreiheit');
     Route::view('/agb', 'oasis.legal.agb')->name('agb');
     Route::view('/widerrufsbelehrung', 'oasis.legal.widerrufsbelehrung')->name('widerrufsbelehrung');
     Route::view('/community-regeln', 'oasis.legal.regeln')->name('regeln');

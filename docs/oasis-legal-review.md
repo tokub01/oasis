@@ -68,6 +68,11 @@ Diese Punkte sind keine Formulierungsfragen. Ohne sie wären einzelne Aussagen d
    Beweis von § 184b Abs. 5 StGB gedeckt ist (Zugriff nur Admins, nur zur Übergabe an die Polizei, jeder Zugriff
    protokolliert).
 
+8. **Erklärung zur Barrierefreiheit** (`/barrierefreiheit`, § 14 BFSG): die zuständige Marktüberwachungsbehörde mit
+   Anschrift in `config/oasis.php` (`accessibility.authority`) eintragen; prüfen, ob Oasis als Kleinstunternehmen
+   ausgenommen ist und die Erklärung freiwillig bleibt; Status „weitgehend barrierefrei“ nach einer unabhängigen
+   Prüfung bestätigen oder anpassen.
+
 ## Fragen an die Anwältin oder den Anwalt
 
 - Reicht Art. 6 Abs. 1 lit. f DSGVO als Rechtsgrundlage für die automatische Textprüfung durch ein Sprachmodell? Ist

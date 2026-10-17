@@ -129,6 +129,18 @@ return [
     'server_location' => 'Auf Servern von IONOS in Deutschland; hochgeladene Bilder liegen verschlüsselt bei Amazon Web Services in Frankfurt am Main',
 
     /*
+     * Erklärung zur Barrierefreiheit (§ 14 BFSG, Anlage 3). Draft values: confirm before launch (docs/oasis-legal-review.md).
+     */
+    'accessibility' => [
+        // Result of the latest assessment, as the statement shows it.
+        'status' => 'weitgehend barrierefrei',
+        'assessed_on' => '17. Oktober 2026',
+        'as_of' => 'Oktober 2026',
+        // Market surveillance authority under the BFSG incl. address, verified by the operator; null = still open.
+        'authority' => null,
+    ],
+
+    /*
      * Facts for the privacy policy (Datenschutzerklärung). A null value renders "[noch festzulegen]" so an open
      * point is visible instead of an invented claim. Check every value against the real setup before launch.
      */

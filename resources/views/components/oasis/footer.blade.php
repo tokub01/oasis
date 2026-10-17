@@ -33,6 +33,7 @@
             ['Datenschutz', route('oasis.datenschutz')],
             ['AGB', route('oasis.agb')],
             ['Widerrufs­belehrung', route('oasis.widerrufsbelehrung')],
+            ['Barriere­freiheit', route('oasis.barrierefreiheit')],
         ],
     ];
 @endphp

@@ -13,7 +13,7 @@
                 {{-- Below 1024px compact wrapping chips: short enough not to push the text down, and the current
                      document stays visible (a scrolling row would hide it off-screen). --}}
                 <nav aria-label="Rechtliche Dokumente" class="flex w-full flex-wrap gap-1 rounded-[24px] border border-paper-line bg-paper p-2 lg:w-auto lg:flex-[1_1_240px] lg:flex-col lg:flex-nowrap lg:p-3">
-                    @foreach (['impressum' => 'Impressum', 'datenschutz' => 'Datenschutz', 'agb' => 'AGB', 'widerrufsbelehrung' => 'Widerrufsbelehrung', 'regeln' => 'Community-Regeln', 'melden' => 'Inhalte melden'] as $key => $label)
+                    @foreach (['impressum' => 'Impressum', 'datenschutz' => 'Datenschutz', 'agb' => 'AGB', 'widerrufsbelehrung' => 'Widerrufsbelehrung', 'regeln' => 'Community-Regeln', 'melden' => 'Inhalte melden', 'barrierefreiheit' => 'Barrierefreiheit'] as $key => $label)
                         <a href="{{ route('oasis.'.$key) }}" @if($legalKey === $key) aria-current="page" @endif
                         class="flex min-h-11 items-center rounded-[14px] px-3 text-[15px] font-bold whitespace-nowrap lg:min-h-12 lg:px-4 lg:text-[17px] {{ $legalKey === $key ? 'bg-night text-on-night' : 'text-night' }}">{{ $label }}</a>
                 @endforeach

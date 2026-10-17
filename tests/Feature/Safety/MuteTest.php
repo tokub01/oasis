@@ -80,3 +80,19 @@ it('unmutes an account and restores posts in feeds', function (): void {
         ->and($feed->source($alice)->pluck('id'))->toContain($bobPost->id)
         ->and($feed->discover($alice)->pluck('id'))->toContain($bobPost->id);
 });
+
+it('replaces the quote of a muted person in a carried Tropfen, only for the muter', function (): void {
+    $alice = Fixtures::member(['username' => 'alice']);
+    $bob = Fixtures::member(['username' => 'bob']);
+    $carol = Fixtures::member(['username' => 'carol']);
+    $original = Fixtures::post($bob, ['body' => 'Bobs Originaltext']);
+    $carry = Fixtures::post($carol, ['body' => 'Carol trägt weiter', 'carried_post_id' => $original->id]);
+
+    app(ManageMute::class)->mute($alice, $bob);
+
+    $this->actingAs($alice)->get(route('network.posts.show', $carry))->assertOk()
+        ->assertSee('Carol trägt weiter')->assertSee('Tropfen einer stummgeschalteten Person.')
+        ->assertDontSee('Bobs Originaltext');
+    $this->actingAs($carol)->get(route('network.posts.show', $carry))->assertOk()
+        ->assertSee('Bobs Originaltext')->assertDontSee('Tropfen einer stummgeschalteten Person.');
+});

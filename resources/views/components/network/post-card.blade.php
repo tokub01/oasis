@@ -6,6 +6,8 @@
                `reacted` for the viewer)
       link     bool  link the time to the Tropfen page (default true; false on the Tropfen page itself)
 
+    A carried Tropfen of a person the viewer muted is replaced by a neutral line: muting hides that person
+    everywhere, also when someone else carries their words further.
     Shows "leise Zahlen" (reactions/replies) only to the author. Actions call the surrounding Livewire component through InteractsWithPosts; buttons a viewer may not use are not rendered at all (guests get a sign-up hint instead).
 --}}
 @props(['post', 'link' => true])
@@ -14,6 +16,7 @@
     $viewer = auth()->user();
     $canInteract = $viewer?->can('interact', $post) ?? false;
     $carried = $post->carried;
+    $carriedMuted = $carried && $viewer && in_array($carried->user_id, $viewer->mutedUserIds(), true);
     $postUrl = route('network.posts.show', $post);
     $bookmarked = $viewer && ($post->bookmarked ?? $viewer->hasBookmarked($post));
 @endphp
@@ -76,7 +79,9 @@
     @endif
 
     @if ($post->carried_post_id !== null)
-        @if ($carried && $carried->isVisibleTo($viewer))
+        @if ($carriedMuted)
+            <p class="m-0 rounded-2xl border border-dashed border-dune-line p-4 text-sm text-muted">Tropfen einer stummgeschalteten Person.</p>
+        @elseif ($carried && $carried->isVisibleTo($viewer))
             {{-- No outer link: the text may contain @/# links, and links must not be nested. --}}
             <div class="flex flex-col gap-1 rounded-2xl border border-dune-line p-4 text-ink">
                 <a wire:navigate href="{{ route('network.posts.show', $carried) }}" class="text-sm font-bold text-night no-underline">{{ $carried->author->display_name }} <span class="font-medium text-muted">{{ '@'.$carried->author->username }}</span></a>

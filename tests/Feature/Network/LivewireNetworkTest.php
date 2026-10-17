@@ -193,3 +193,20 @@ test('upload actions reauthorize after the account loses participation', functio
         $component->call($method, ...$arguments)->assertForbidden();
     }
 })->with([['updatedImages', []], ['removeImage', [0]]]);
+
+test('public oasis posts stay readable outside the oasis without mounting an unauthorized reply composer', function () {
+    $host = N::member();
+    $viewer = N::member();
+    $oasis = N::oasis($host);
+    $post = N::post($host, ['oasis_id' => $oasis->id]);
+    app(ManageFollows::class)->follow($viewer, $host);
+    app(ManageFollows::class)->follow($host, $viewer);
+
+    $this->actingAs($viewer)->get(route('app.home'))->assertOk()->assertSee($post->body);
+    $this->get(route('oasis.profil', $host->username))->assertOk()->assertSee($post->body);
+    $this->get(route('network.posts.show', $post))->assertOk()->assertDontSeeLivewire(Compose::class);
+    Livewire::actingAs($viewer)->test(Compose::class, ['replyToId' => $post->id])->assertForbidden();
+
+    app(ManageFollows::class)->follow($viewer, $oasis);
+    $this->get(route('network.posts.show', $post))->assertOk()->assertSeeLivewire(Compose::class);
+});

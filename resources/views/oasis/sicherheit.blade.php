@@ -124,6 +124,16 @@
         </div>
     </section>
 
+    <section aria-labelledby="luecke-titel" class="border-t border-paper-line bg-paper py-[clamp(64px,7vw,104px)]">
+        <div class="o-container">
+            <div class="flex max-w-[52em] flex-col gap-5">
+                <h2 id="luecke-titel" class="o-h2-s text-night">Sicherheitslücke gefunden?</h2>
+                <p class="text-[17px] leading-[1.65] text-ink">Danke, dass du hilfst, Oasis sicher zu machen. Schreib uns an <a href="mailto:{{ config('oasis.mail.security') }}?subject=Sicherheitsl%C3%BCcke" class="text-night underline underline-offset-4">{{ config('oasis.mail.security') }}</a> mit einer Beschreibung, wie sich die Lücke nachvollziehen lässt. Wir bestätigen den Eingang innerhalb von {{ config('oasis.support_reply_days') }} Werktagen, halten dich auf dem Laufenden und nennen dich gern, wenn die Lücke geschlossen ist.</p>
+                <p class="text-[17px] leading-[1.65] text-ink">Bitte greif dabei nicht auf Daten anderer Menschen zu, verändere oder lösche nichts, beeinträchtige den Betrieb nicht (keine Last- oder Spamtests) und gib die Lücke erst bekannt, wenn wir sie schließen konnten. Wer sich daran hält, muss von uns keine rechtlichen Schritte befürchten. Die maschinenlesbare Fassung steht unter <a href="{{ route('oasis.security-txt') }}" class="text-night underline underline-offset-4">/.well-known/security.txt</a>.</p>
+            </div>
+        </div>
+    </section>
+
     <section aria-labelledby="rechte-titel" class="bg-dune py-[clamp(64px,7vw,104px)]">
         <div class="o-container">
             <div class="flex max-w-[52em] flex-col gap-5">

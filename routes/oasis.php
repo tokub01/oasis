@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Oasis\ConfirmationController;
 use App\Http\Controllers\Oasis\PageController;
+use App\Http\Controllers\Oasis\SecurityTxtController;
 use App\Http\Controllers\Oasis\WaitlistController;
 use App\Livewire\Membership\Checkout;
 use App\Livewire\Network\ProfileShow;
@@ -30,6 +31,7 @@ Route::name('oasis.')->group(function () {
     Route::view('/preise', 'oasis.preise')->name('preise');
     Route::view('/manifest', 'oasis.manifest')->name('manifest');
     Route::view('/sicherheit', 'oasis.sicherheit')->name('sicherheit');
+    Route::get('/.well-known/security.txt', SecurityTxtController::class)->name('security-txt');
     Route::view('/hilfe', 'oasis.hilfe')->name('hilfe');
 
     /*

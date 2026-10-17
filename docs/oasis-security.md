@@ -14,6 +14,8 @@ What is enforced in code, and what must be done outside the code before launch.
 | Payments | Mollie hosted checkout, API-verified payment webhooks, keys only in `.env` | docs/oasis-membership.md |
 | Privacy | retention via `model:prune`, export and self-service deletion, secret ballots, statistics as sums only | docs/oasis-admin.md |
 | Secrets | `.env` only (gitignored); `.env.example` has empty placeholders | – |
+| Disclosure | `/.well-known/security.txt` (RFC 9116, generated, `Expires` always 180 days ahead, contact `oasis.mail.security`) and the section "Sicherheitslücke gefunden?" on `/sicherheit` (safe harbour for good-faith research) | `App\Http\Controllers\Oasis\SecurityTxtController` |
+| Dependencies | `composer audit` and `npm audit --audit-level=moderate` on every push, together with Pint, PHPStan, the build and all PHP and JS tests | `.github/workflows/ci.yml` |
 
 ## Before launch (outside the code)
 
@@ -31,4 +33,5 @@ What is enforced in code, and what must be done outside the code before launch.
 - [ ] Legal: lawyer review of Impressum, Datenschutz, AGB, Widerruf; DPIA for the chat and moderation; fill the
       open retention periods in `config/oasis.php` (`[noch festzulegen]`).
 - [ ] Subresource Integrity is not used: all scripts are same-origin and nonce-bound; revisit if assets move to a CDN.
-- [ ] 21 composer advisories in docs/oasis-stage0-backend-report.md – update after approval.
+- [x] Composer and npm advisories: none open (17 October 2026); checked on every push by CI.
+- [ ] Rotate the Mistral API key (it appeared in a chat) and set `OASIS_MAIL_SECURITY` to a dedicated inbox.

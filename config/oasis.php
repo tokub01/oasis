@@ -61,6 +61,8 @@ return [
         'operator' => env('OASIS_MAIL_OPERATOR', 'info@velwebsolutions.de'),
         // Receives content reports (DSA Art. 16).
         'moderation' => env('OASIS_MAIL_MODERATION', 'info@velwebsolutions.de'),
+        // Reports of security vulnerabilities (/.well-known/security.txt, Sicherheit page).
+        'security' => env('OASIS_MAIL_SECURITY', 'info@velwebsolutions.de'),
     ],
 
     /*

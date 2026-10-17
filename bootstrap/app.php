@@ -22,6 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->validateCsrfTokens(except: [
             'mollie/webhook',
+            // One-click unsubscribe (RFC 8058): mail programs cannot send a CSRF token; the URLs are signed instead.
+            'startliste/abmelden/*/ein-klick',
+            'hinweise/zusammenfassung/*/ein-klick',
         ]);
         // Signed-in visitors of guest-only pages (/anmelden, /testen) go straight into the app.
         $middleware->redirectUsersTo(fn () => route('app.home'));

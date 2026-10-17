@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Oasis;
 use App\Http\Controllers\Controller;
 use App\Models\WaitlistEntry;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 /**
@@ -54,5 +55,17 @@ class WaitlistController extends Controller
         WaitlistEntry::where('token', $token)->delete();
 
         return view('oasis.bestaetigung.abgemeldet');
+    }
+
+    /**
+     * The POST mail programs send for the List-Unsubscribe header (RFC 8058); no CSRF token, the URL is signed.
+     *
+     * @param  string  $token  Opaque entry token authenticated by the signed route middleware.
+     */
+    public function oneClick(string $token): Response
+    {
+        WaitlistEntry::where('token', $token)->delete();
+
+        return response('Du bist von der Oasis-Startliste abgemeldet.', 200, ['Content-Type' => 'text/plain; charset=utf-8']);
     }
 }

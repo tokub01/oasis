@@ -227,8 +227,9 @@ it('sends only one opted-in daily email with currently visible unread hints', fu
     Mail::assertSent(DailyDigest::class, fn ($mail) => $mail->hasTo($recipient->email) && $mail->count === 1);
     Mail::assertSentCount(1);
     expect($recipient->unreadNotifications()->count())->toBe(1);
-    $rendered = (new DailyDigest(1))->render();
-    expect($rendered)->toContain('einen neuen ungelesenen Hinweis', route('notifications.index'), route('notifications.settings'));
+    $rendered = (new DailyDigest(1, $recipient))->render();
+    expect($rendered)->toContain('einen neuen ungelesenen Hinweis', route('notifications.index'), route('notifications.settings'),
+        e(route('notifications.digest.unsubscribe', ['user' => $recipient])));
     $this->travel(1)->days();
     $this->artisan('oasis:notification-digest')->assertSuccessful();
     Mail::assertSentCount(1);

@@ -67,6 +67,23 @@ exception mails class, file:line and request path – never the message, input o
 data – at most once per hour per place. Details stay in `storage/logs`; keep log retention at
 `oasis.privacy.server_log_days` (e.g. `LOG_CHANNEL=daily` with `LOG_DAILY_DAYS=7`).
 
+## Mail deliverability
+
+Without these, Gmail, Yahoo and others put Oasis mails into spam or reject them (requirements since 2024):
+
+| DNS record (domain of `MAIL_FROM_ADDRESS`) | Content |
+|---|---|
+| SPF – TXT on the domain | `v=spf1 include:<provider's SPF host> -all` – the provider (IONOS or Amazon SES) names its include |
+| DKIM – TXT/CNAME the provider gives | switch on DKIM signing in the provider's dashboard and publish its key records |
+| DMARC – TXT on `_dmarc.<domain>` | start with `v=DMARC1; p=none; rua=mailto:<operator inbox>`; after two weeks of clean reports `p=quarantine`, later `p=reject` |
+
+- `MAIL_FROM_ADDRESS` on the same domain as SPF/DKIM (e.g. `hallo@<domain>`), `MAIL_FROM_NAME="Oasis"`.
+- Mails people subscribed to carry `List-Unsubscribe` and `List-Unsubscribe-Post: List-Unsubscribe=One-Click`
+  (`App\Support\Mail\OneClickUnsubscribe`): the daily summary (`notifications.digest.one-click`) and the waitlist
+  (`oasis.waitlist.one-click`). The URLs are signed and accept a POST without login or CSRF token; the links in the
+  mail open a confirmation page first, so mail scanners change nothing.
+- Check with a test mail to a Gmail address ("Original anzeigen": SPF, DKIM, DMARC = PASS) or mail-tester.com.
+
 ## Local development
 
 Sail runs no cron: `vendor/bin/sail artisan schedule:work` and `vendor/bin/sail artisan queue:work`. For the restore

@@ -37,7 +37,7 @@ class SendNotificationDigest extends Command
                     ->where('created_at', '<=', $cutoff)->get();
                 $count = count($presentation->forMany($hints, $user));
                 if ($count > 0) {
-                    Mail::to($user->email)->send(new DailyDigest($count));
+                    Mail::to($user->email)->send(new DailyDigest($count, $user));
                 }
                 // Empty windows are checkpointed too; reading hints is never a side effect of email.
                 $preference->update(['last_digest_at' => $cutoff]);

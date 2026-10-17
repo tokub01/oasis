@@ -85,4 +85,7 @@ Route::name('oasis.')->group(function () {
         ->middleware(['signed', 'throttle:20,1,oasis-waitlist-unsubscribe'])->name('waitlist.unsubscribe');
     Route::post('/startliste/abmelden/{token}', [WaitlistController::class, 'destroy'])
         ->middleware(['signed', 'throttle:6,1,oasis-waitlist-destroy'])->name('waitlist.destroy');
+    // One-click unsubscribe from the List-Unsubscribe header (RFC 8058): POST without CSRF token, signed instead.
+    Route::post('/startliste/abmelden/{token}/ein-klick', [WaitlistController::class, 'oneClick'])
+        ->middleware(['signed', 'throttle:6,1,oasis-waitlist-one-click'])->name('waitlist.one-click');
 });

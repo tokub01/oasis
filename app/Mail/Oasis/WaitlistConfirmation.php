@@ -3,9 +3,11 @@
 namespace App\Mail\Oasis;
 
 use App\Models\WaitlistEntry;
+use App\Support\Mail\OneClickUnsubscribe;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\Mailables\Headers;
 use Illuminate\Support\Facades\URL;
 
 /**
@@ -25,6 +27,12 @@ class WaitlistConfirmation extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(subject: 'Bitte bestätige deine E-Mail-Adresse für Oasis');
+    }
+
+    /** One-click unsubscribe for mail programs (RFC 8058). */
+    public function headers(): Headers
+    {
+        return OneClickUnsubscribe::headers(URL::signedRoute('oasis.waitlist.one-click', ['token' => $this->entry->token]));
     }
 
     /**

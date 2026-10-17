@@ -79,7 +79,7 @@ class PublishPost
                 'visibility' => $visibility,
                 'kind' => $kind,
             ]);
-            $post->forceFill(['held_at' => $verdict->shouldHold() && ! $author->isSuperAdmin() ? now() : null])->save();
+            $post->forceFill(['held_at' => $verdict->shouldHold() ? now() : null])->save();
             if ($post->held_at !== null) {
                 // The background check (PostPublished → CheckContent) confirms it, opens the case and sends the notice.
                 ContentCheck::create(['checkable_type' => $post->getMorphClass(), 'checkable_id' => $post->id, 'status' => 'pending',

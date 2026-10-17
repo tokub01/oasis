@@ -15,7 +15,8 @@ use Illuminate\Support\Str;
  * - any other outcome: one strike for this case; the provisional lock ends (the violation is recorded, the member may
  *   write again), unless the outcome is "Konto gesperrt", which keeps the account locked until staff release it;
  * - at `strikes_for_ban` strikes the account is banned permanently.
- * The operator account (User::isSuperAdmin) is never affected.
+ * The operator account (User::isSuperAdmin) gets its strikes like everyone, but is never locked or banned: it is the
+ * only account that appoints admins and must not lock itself out.
  */
 class ApplyAccountConsequences
 {
@@ -25,7 +26,7 @@ class ApplyAccountConsequences
     {
         $case = $decision->case;
         $user = $case->subjectUser;
-        if ($user === null || $user->isSuperAdmin()) {
+        if ($user === null) {
             return;
         }
         $fromCase = AccountSuspension::active()->where('user_id', $user->id)->where('moderation_case_id', $case->id)
@@ -43,6 +44,9 @@ class ApplyAccountConsequences
         }
 
         AccountStrike::updateOrCreate(['moderation_case_id' => $case->id], ['user_id' => $user->id, 'overturned_at' => null]);
+        if ($user->isSuperAdmin()) {
+            return;
+        }
         if ($user->activeStrikeCount() >= $this->limit()) {
             $this->suspend->ban($user, $case, $this->limit());
 

@@ -171,7 +171,8 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Operator account (`oasis.moderation.super_admins` with the admin role): exempt from automated holds and locks.
+     * Operator account (`oasis.moderation.super_admins` with the admin role): never locked or banned (its Tropfen are
+     * still held and reported); the only account that appoints admins.
      */
     public function isSuperAdmin(): bool
     {

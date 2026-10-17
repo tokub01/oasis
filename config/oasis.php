@@ -111,7 +111,8 @@ return [
         'hold_abuse_threshold' => 0.8,
         // Confirmed violations (human decisions) after which an account is banned permanently.
         'strikes_for_ban' => 3,
-        // Operator accounts (admin role plus one of these e-mail addresses): never held or locked automatically.
+        // Operator accounts (admin role plus one of these e-mail addresses): Tropfen are held and reported like
+        // everyone's, strikes are counted, but the account is never locked or banned (it appoints the admins).
         // All other admins and moderators are treated like members. Comma-separated.
         'super_admins' => array_filter(array_map('trim', explode(',', (string) env('OASIS_SUPER_ADMINS', 'info@velwebsolutions.de')))),
     ],

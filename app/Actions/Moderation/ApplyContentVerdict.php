@@ -45,7 +45,7 @@ class ApplyContentVerdict
                 return null;
             }
 
-            if ($post instanceof Post && $verdict->shouldHold() && ! $post->author->isSuperAdmin()) {
+            if ($post instanceof Post && $verdict->shouldHold()) {
                 if ($post->held_at === null) {
                     $post->forceFill(['held_at' => now()])->save();
                 }

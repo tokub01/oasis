@@ -84,8 +84,10 @@ pruning waits until the case is gone. A null records_years setting disables prun
   deciding. Settings (incl. account deletion), data export, membership/cancellation, complaints, logout and public
   pages stay reachable. `User::canParticipate` is false while locked, so no Livewire action can post.
 - Mails: `AccountSuspendedNotice` (Art. 17 DSA statement) and `AccountReleasedNotice`.
-- Only the operator account (`User::isSuperAdmin`: admin role plus an address in `oasis.moderation.super_admins`,
-  env `OASIS_SUPER_ADMINS`) is never held or locked; moderators and other admins are. Only the operator account makes
+- The operator account (`User::isSuperAdmin`: admin role plus an address in `oasis.moderation.super_admins`, env
+  `OASIS_SUPER_ADMINS`): its Tropfen are checked, held and reported like everyone's and strikes are counted, but it is
+  never locked or banned, because it is the only account that appoints admins. Moderators and other admins are locked
+  like members. Only the operator account makes
   someone an admin or changes an admin's role (`ChangeRole`).
 
 Tests: `tests/Feature/Moderation/SuspensionTest.php`.

@@ -92,8 +92,9 @@ Diese Punkte sind keine Formulierungsfragen. Ohne sie wären einzelne Aussagen d
   menschliche Prüfung in der Regel binnen 48 Stunden, Stellungnahme, Widerspruch)? Genügt das Verfahren Art. 23 DSA
   (vorherige Warnung, Einzelfallprüfung) und muss es in den AGB stehen (Art. 14 DSA)? Was gilt für laufende
   Bezahlmitgliedschaften während einer Sperre und nach einer dauerhaften Sperre (Erstattung anteiliger Beiträge)?
-- Das Betreiberkonto ist von automatischen Sperren und vom Zurückhalten ausgenommen. Ist diese Ausnahme mit der
-  sorgfältigen, objektiven und verhältnismäßigen Anwendung der Regeln (Art. 14 Abs. 4 DSA) vereinbar?
+- Inhalte des Betreiberkontos werden wie alle anderen geprüft, zurückgehalten und gemeldet; Verstöße werden gezählt.
+  Nur die Kontosperre entfällt, weil es das einzige Konto ist, das Admins ernennt. Reicht diese Begründung für
+  Art. 14 Abs. 4 DSA?
 
 ## Was sich im Code geändert hat (Art. 17 DSGVO)
 

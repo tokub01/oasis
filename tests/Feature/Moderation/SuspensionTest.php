@@ -123,15 +123,20 @@ it('keeps the account locked after a decision "Konto gesperrt" until staff relea
     expect($author->activeSuspension()->type)->toBe(AccountSuspension::SUSPENSION)->and(AccountStrike::count())->toBe(1);
 });
 
-it('locks moderators and admins too, but never the operator account', function () {
+it('locks moderators and admins too, and holds but never locks the operator account', function () {
     $moderator = lockStaff();
     insultBy($moderator);
     expect($moderator->fresh()->isSuspended())->toBeTrue();
     $this->actingAs($moderator)->get(route('moderation.index'))->assertRedirect(route('app.suspended'));
 
+    // The operator account: held and reported like everyone, strikes counted, but never locked or banned.
     $operator = lockStaff(Role::Admin, ['email' => 'info@velwebsolutions.de']);
-    insultBy($operator, 'Betreiber schreibt derb');
-    expect($operator->fresh()->isSuspended())->toBeFalse()->and(Post::latest('id')->first()->held_at)->toBeNull();
+    foreach ([1, 2, 3] as $round) {
+        $case = insultBy($operator, 'Betreiber schreibt derb '.$round);
+        expect(Post::latest('id')->first()->held_at)->not->toBeNull();
+        decide($case, $round === 3 ? 'account_suspended' : 'content_removed');
+    }
+    expect($operator->fresh()->isSuspended())->toBeFalse()->and($operator->activeStrikeCount())->toBe(3);
 });
 
 it('lets only the operator account make someone an admin', function () {

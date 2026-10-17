@@ -12,7 +12,8 @@ use Illuminate\Support\Str;
 
 /**
  * Locks an account (docs/oasis-moderation.md, "Sperren"). Only the operator account (User::isSuperAdmin) is never
- * locked; moderators and other admins are treated like members. One active
+ * locked – its Tropfen are held and reported like everyone's –; moderators and other admins are treated like members.
+ * One active
  * lock per account: a second trigger while locked adds nothing. Every new lock is explained to the member by mail
  * (Art. 17 DSA statement of reasons) and on /app/gesperrt, where they may answer.
  */
@@ -52,8 +53,11 @@ class SuspendAccount
     }
 
     /** From a moderation decision "Konto gesperrt": locked until staff release the account. */
-    public function byDecision(User $user, ModerationCase $case, string $accusation): AccountSuspension
+    public function byDecision(User $user, ModerationCase $case, string $accusation): ?AccountSuspension
     {
+        if ($user->isSuperAdmin()) {
+            return null;
+        }
         $active = $user->activeSuspension();
         if ($active !== null) {
             $active->update(['type' => AccountSuspension::SUSPENSION, 'moderation_case_id' => $active->moderation_case_id ?? $case->id]);
@@ -65,8 +69,11 @@ class SuspendAccount
     }
 
     /** After the configured number of confirmed violations: ends any other lock and bans the account. */
-    public function ban(User $user, ModerationCase $case, int $strikes): AccountSuspension
+    public function ban(User $user, ModerationCase $case, int $strikes): ?AccountSuspension
     {
+        if ($user->isSuperAdmin()) {
+            return null;
+        }
         AccountSuspension::active()->where('user_id', $user->id)->where('type', '!=', AccountSuspension::BAN)
             ->update(['ended_at' => now(), 'result' => 'confirmed']);
         $existing = AccountSuspension::active()->where('user_id', $user->id)->where('type', AccountSuspension::BAN)->first();

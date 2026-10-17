@@ -6,6 +6,7 @@
                  decisions.decider, complaints.reviewer, events.actor
       $staff     Collection<User>  staff members for the assignment select
       $outcomes  list<Outcome>, $grounds list<Ground>  for the decision form
+      $escalations  list<Escalation>, $quarantined bool  escalation (docs/oasis-moderation.md, "Eskalation")
     Privacy: the reporter's name and email are never shown to staff. Only the reported URL/content and the reason are.
 --}}
 @php
@@ -81,6 +82,80 @@
                 </dl>
                 <p class="m-0 text-sm text-muted">Wer gemeldet hat, ist im Moderationsbereich bewusst nicht sichtbar.</p>
             </section>
+
+            @if ($case->escalation === null)
+                <section aria-labelledby="eskalation-titel" class="{{ $card }}">
+                    <h2 id="eskalation-titel" class="{{ $h2 }}">Eskalieren</h2>
+                    <p class="m-0 text-[15px] text-ink-2">Nur in diesen zwei Fällen. Oasis sichert dann die Beweise und führt dich durch die nächsten Schritte. Eine Behörde informiert Oasis nie selbst.</p>
+                    @foreach ($escalations as $escalation)
+                        <div wire:key="escalation-{{ $escalation->value }}" class="flex flex-col gap-2 border-t border-paper-line pt-4">
+                            <p class="m-0 text-[15px]"><b>{{ $escalation->label() }}:</b> {{ $escalation->description() }}</p>
+                            <button type="button" wire:click="escalate('{{ $escalation->value }}')" wire:confirm="Fall als „{{ $escalation->label() }}“ eskalieren? Das lässt sich nicht rückgängig machen."
+                                    wire:loading.attr="disabled" class="o-btn o-btn-sm o-btn-outline self-start">Als „{{ $escalation->label() }}“ eskalieren</button>
+                        </div>
+                    @endforeach
+                </section>
+            @else
+                <section aria-labelledby="eskalation-titel" class="flex flex-col gap-4 rounded-[24px] border-2 border-night bg-paper p-[clamp(20px,3vw,28px)]">
+                    <div class="flex flex-wrap items-baseline justify-between gap-2">
+                        <h2 id="eskalation-titel" class="{{ $h2 }}">Eskaliert: {{ $case->escalation->label() }}</h2>
+                        <span class="text-sm text-ink-2">{{ $berlin($case->escalated_at) }} · {{ $case->escalatedBy?->display_name ?? 'automatisch erkannt' }}</span>
+                    </div>
+                    <ol class="m-0 flex list-decimal flex-col gap-2 pl-5">
+                        @foreach ($case->escalation->checklist() as $i => $step)
+                            <li wire:key="step-{{ $i }}">{{ $step }}</li>
+                        @endforeach
+                    </ol>
+                    <p class="m-0 text-sm text-ink-2">Kontaktweg der Behörde: {{ config('oasis.moderation.authority_contact') ?? '[noch festzulegen – vom Betreiber geprüften offiziellen Kontaktweg in config/oasis.php eintragen]' }}</p>
+
+                    <div class="flex flex-col gap-2 border-t border-paper-line pt-4">
+                        <h3 class="m-0 text-[17px] font-bold text-night">Meldung an eine Behörde</h3>
+                        @if ($case->authority_reported_at)
+                            <p class="m-0">Vermerkt am {{ $berlin($case->authority_reported_at) }}: {{ $case->authority_reference }}</p>
+                        @else
+                            <form wire:submit="recordReport" class="flex flex-col gap-2">
+                                <label for="behoerde-referenz" class="text-[15px]">Behörde und Aktenzeichen, nachdem du gemeldet hast</label>
+                                <input id="behoerde-referenz" type="text" wire:model="reference" maxlength="160" class="o-input"
+                                       @error('reference') aria-describedby="behoerde-referenz-fehler" aria-invalid="true" @enderror>
+                                @error('reference') <p id="behoerde-referenz-fehler" class="o-error m-0">{{ $message }}</p> @enderror
+                                <button type="submit" wire:loading.attr="disabled" class="o-btn o-btn-sm o-btn-dark self-start">Meldung vermerken</button>
+                            </form>
+                        @endif
+                    </div>
+
+                    <div class="flex flex-col gap-3 border-t border-paper-line pt-4">
+                        <h3 class="m-0 text-[17px] font-bold text-night">Gesicherte Beweise ({{ $case->evidence->count() }})</h3>
+                        @forelse ($case->evidence as $evidence)
+                            <div wire:key="evidence-{{ $evidence->id }}" class="flex flex-col gap-1 rounded-2xl bg-sand p-3 text-sm">
+                                <span class="font-bold">{{ $evidence->kind === 'image' ? 'Bild' : 'Text' }} · gesichert {{ $berlin($evidence->created_at) }} · gelöscht ab {{ $berlin($evidence->purge_after) }}</span>
+                                @if ($evidence->sha256)
+                                    <span class="font-mono break-all text-ink-2">SHA-256 {{ $evidence->sha256 }} · {{ number_format((int) $evidence->bytes, 0, ',', '.') }} Bytes</span>
+                                @endif
+                                @if ($evidence->kind === 'text' && $evidence->content)
+                                    <details>
+                                        <summary class="cursor-pointer font-bold text-night">Text anzeigen</summary>
+                                        <p class="mt-2 mb-0 whitespace-pre-wrap">{{ $evidence->content }}</p>
+                                    </details>
+                                @endif
+                            </div>
+                        @empty
+                            <p class="m-0 text-sm text-ink-2">Keine Beweise (mehr) gespeichert.</p>
+                        @endforelse
+                        @can('administrate')
+                            <div class="flex flex-wrap gap-2">
+                                @if ($case->evidence->isNotEmpty())
+                                    <a href="{{ route('moderation.cases.evidence', $case) }}" class="o-btn o-btn-sm o-btn-dark">Beweise für die Polizei herunterladen</a>
+                                    <button type="button" wire:click="extendEvidence" wire:loading.attr="disabled" class="o-btn o-btn-sm o-btn-outline">Aufbewahrung um {{ config('oasis.moderation.evidence_days') }} Tage verlängern</button>
+                                    <button type="button" wire:click="deleteEvidence" wire:confirm="Alle Beweise dieses Falls endgültig löschen?" wire:loading.attr="disabled" class="o-btn o-btn-sm o-btn-outline">Beweise löschen</button>
+                                @endif
+                                @if ($quarantined)
+                                    <button type="button" wire:click="liftQuarantine" wire:confirm="Quarantäne aufheben? Die Bilder werden dann wieder ausgeliefert, sobald der Tropfen freigegeben ist." wire:loading.attr="disabled" class="o-btn o-btn-sm o-btn-outline">Quarantäne aufheben</button>
+                                @endif
+                            </div>
+                        @endcan
+                    </div>
+                </section>
+            @endif
 
             @can('decide', $case)
                 <section aria-labelledby="entscheidung-titel" class="{{ $card }}">

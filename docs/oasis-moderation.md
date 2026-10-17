@@ -69,6 +69,30 @@ FK references become null without deleting case history. Decided/closed cases pr
 from their last state change and after the current decision’s notice window; open/review/complaint cases never prune. ContentReport
 pruning waits until the case is gone. A null records_years setting disables pruning as on the other public forms.
 
+## Eskalation (threat to life, child abuse)
+
+Two situations leave the normal queue (`App\Enums\Moderation\Escalation`). **Oasis never contacts an authority
+itself**; it secures the evidence and guides staff, who report by hand and record it.
+
+| Type | Trigger | Effect |
+|---|---|---|
+| `threat_to_life` – Gefahr für Leib und Leben (Art. 18 DSA) | staff, "Eskalieren" on the case | urgent, on top of the queue, evidence secured, checklist (110 in acute danger, otherwise the competent authority) |
+| `child_abuse` – Missbrauchsdarstellung (§§ 184b, 184c StGB) | staff, or automatically when the text check scores `sexual_minors` ≥ `report_threshold` | as above, plus quarantine: the Tropfen is held and `posts.quarantined_at` set – `PostImageController` serves its images to nobody, staff included; the card shows "Bilder gesperrt" |
+
+- `EscalateCase` (once per case, locked) sets `escalation`, `escalated_at`, `escalated_by` (null = automatic), priority
+  urgent, calls `SecureEvidence`, quarantines, writes the event and mails `EscalationAlert` to `oasis.mail.moderation`
+  (type and link only, no content, no names).
+- `SecureEvidence` stores `moderation_evidence` rows: a text snapshot with the account as it is now (id, username,
+  name, e-mail, registration) and a **copy** of each image below `evidence/case-<id>/` with SHA-256 and size. Evidence
+  is independent of the content, so deleting the Tropfen or the account keeps it (Art. 17 Abs. 3 lit. e DSGVO).
+- `oasis.moderation.evidence_days` (90): `ModerationEvidence::prunable` deletes rows and files afterwards.
+- Case page: checklist, the authority contact from `oasis.moderation.authority_contact` (null = still to be decided,
+  shown as such), "Meldung vermerken" (authority and reference, staff), evidence as metadata with text behind a
+  disclosure; admins only: ZIP download for the police (`moderation.cases.evidence`, files plus `beweise.json`),
+  extend by 90 days, delete evidence, lift quarantine. Every step is a case event (`Escalated`, `AuthorityReported`,
+  `EvidenceDownloaded`, `EvidenceExtended`, `EvidenceDeleted`, `QuarantineLifted`).
+- Tests: `tests/Feature/Moderation/EscalationTest.php`.
+
 ## Operator and transparency API
 
 `./vendor/bin/sail artisan oasis:role EMAIL member|moderator|admin` bootstraps the first admin; staff still need 2FA.

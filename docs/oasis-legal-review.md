@@ -62,6 +62,12 @@ Diese Punkte sind keine Formulierungsfragen. Ohne sie wären einzelne Aussagen d
    bilden die Gliederung.
 6. **Mistral-Schlüssel rotieren.** Der aktuelle Schlüssel stand in einem Chat-Verlauf.
 
+7. **Eskalation (Art. 18 DSA, Missbrauchsdarstellungen):** In `config/oasis.php` den offiziellen Kontaktweg der
+   zuständigen Behörde eintragen (`moderation.authority_contact`); die Seite zeigt sonst „[noch festzulegen]“. Prüfen,
+   ob 90 Tage Beweis-Aufbewahrung (`moderation.evidence_days`) passen und ob das Kopieren verdächtiger Bilder als
+   Beweis von § 184b Abs. 5 StGB gedeckt ist (Zugriff nur Admins, nur zur Übergabe an die Polizei, jeder Zugriff
+   protokolliert).
+
 ## Fragen an die Anwältin oder den Anwalt
 
 - Reicht Art. 6 Abs. 1 lit. f DSGVO als Rechtsgrundlage für die automatische Textprüfung durch ein Sprachmodell? Ist

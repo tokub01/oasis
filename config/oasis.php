@@ -91,6 +91,11 @@ return [
      * Mistral (EU); only the text is sent. Scores are 0..1. A human always decides; held = hidden until reviewed.
      */
     'moderation' => [
+        // Days evidence of an escalated case is kept before it is deleted automatically (extendable per case).
+        'evidence_days' => 90,
+        // Shown in the checklist of escalated cases. Oasis never contacts an authority itself. null = still to be
+        // decided: enter the official contact route of the authority, verified by the operator.
+        'authority_contact' => null,
         'enabled' => (bool) env('OASIS_AI_MODERATION', true),
         'provider' => env('OASIS_MODERATION_PROVIDER', 'mistral'),
         'model' => env('OASIS_MODERATION_MODEL', 'mistral-small-latest'),

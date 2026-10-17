@@ -31,6 +31,7 @@ use Illuminate\Support\Collection;
  * @property Carbon|null $removed_from_oasis_at
  * @property bool $has_more_replies
  * @property Carbon|null $held_at set while the automated check holds it for human review (stage 10)
+ * @property Carbon|null $quarantined_at escalated as child abuse: images are served to nobody (EscalateCase)
  * @property Carbon $created_at
  * @property User $author
  * @property Oasis|null $oasis
@@ -56,6 +57,7 @@ class Post extends Model
             'kind' => PostKind::class,
             'removed_from_oasis_at' => 'datetime',
             'held_at' => 'datetime',
+            'quarantined_at' => 'datetime',
         ];
     }
 

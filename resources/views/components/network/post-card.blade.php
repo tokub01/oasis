@@ -136,7 +136,9 @@
 
     <p class="m-0 text-[17px] leading-[1.55] whitespace-pre-line break-words"><x-network.rich-text :text="$post->body" :author="$post->author" /></p>
 
-    @if ($post->images->isNotEmpty())
+    @if ($post->quarantined_at && $post->images->isNotEmpty())
+        <p class="m-0 rounded-2xl border-2 border-dashed border-dune-line px-4 py-3 text-sm text-ink-2">Bilder gesperrt.</p>
+    @elseif ($post->images->isNotEmpty())
         <div @class(['grid gap-2', 'grid-cols-2' => $post->images->count() > 1])>
             @foreach ($post->images as $image)
                 <img wire:key="post-card-1-{{ $post->id }}-{{ $image->id }}" src="{{ route('network.images.show', [$post, $image->id]) }}" alt="{{ $image->alt }}"

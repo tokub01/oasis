@@ -84,6 +84,7 @@ class Queue extends Component
             ->when(Priority::tryFrom($this->priority), fn (Builder $q, Priority $p) => $q->where('priority', $p))
             ->when($this->mine, fn (Builder $q) => $q->where('assigned_to', auth()->id()))
             ->when(trim($this->search) !== '', fn (Builder $q) => $q->where('subject_url', 'like', '%'.trim($this->search).'%'))
+            ->orderByRaw('escalation is not null desc')
             ->orderByRaw('priority = ? desc', [Priority::Urgent->value])
             ->oldest();
     }

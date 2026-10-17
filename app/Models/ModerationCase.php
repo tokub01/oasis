@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Moderation\CaseStatus;
+use App\Enums\Moderation\Escalation;
 use App\Enums\Moderation\Priority;
 use App\Models\Concerns\PrunedAfterRecordRetention;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Polymorphic moderation work item, its assignment and retained workflow history.
@@ -19,6 +21,11 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  *
  * @property CaseStatus $status
  * @property Priority $priority
+ * @property Escalation|null $escalation threat to life (Art. 18 DSA) or child abuse, see EscalateCase
+ * @property Carbon|null $escalated_at
+ * @property int|null $escalated_by null when the automated check escalated
+ * @property Carbon|null $authority_reported_at entered by staff after a report made by hand
+ * @property string|null $authority_reference
  * @property Model|null $source
  * @property User|null $subjectUser
  * @property User|null $assignee
@@ -55,6 +62,9 @@ class ModerationCase extends Model
         return [
             'status' => CaseStatus::class,
             'priority' => Priority::class,
+            'escalation' => Escalation::class,
+            'escalated_at' => 'datetime',
+            'authority_reported_at' => 'datetime',
         ];
     }
 
@@ -126,5 +136,21 @@ class ModerationCase extends Model
     public function events(): HasMany
     {
         return $this->hasMany(ModerationEvent::class, 'case_id')->orderBy('id');
+    }
+
+    /**
+     * Evidence secured when the case was escalated.
+     *
+     * @return HasMany<ModerationEvidence, $this>
+     */
+    public function evidence(): HasMany
+    {
+        return $this->hasMany(ModerationEvidence::class, 'case_id')->orderBy('id');
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function escalatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'escalated_by');
     }
 }

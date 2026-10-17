@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Moderation\EvidenceDownloadController;
 use App\Livewire\Moderation\CaseDetail;
 use App\Livewire\Moderation\ComplaintForm;
 use App\Livewire\Moderation\ComplaintReview;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('moderation')->name('moderation.')->middleware(['auth', 'verified', 'staff'])->group(function () {
     Route::livewire('/', Overview::class)->name('index');
     Route::livewire('/cases/{case}', CaseDetail::class)->name('cases.show');
+    // Escalated cases: evidence ZIP for admins, only to hand it to the police (docs/oasis-moderation.md).
+    Route::get('/cases/{case}/beweise', EvidenceDownloadController::class)->name('cases.evidence');
     Route::livewire('/complaints/{complaint}', ComplaintReview::class)->name('complaints.show');
     Route::livewire('/roles', Roles::class)->name('roles.index');
 });

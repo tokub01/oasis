@@ -73,7 +73,7 @@ class Settings extends Component
         abort_unless(in_array($days, self::PAUSE_DAYS, true), 422);
         $until = now()->addDays($days);
         NotificationPreference::updateOrCreate(['user_id' => auth()->id()], ['paused_until' => $until]);
-        $this->status = 'Pause bis '.$until->setTimezone(NotificationPreference::TIMEZONE)->locale('de')->isoFormat('dddd, D. MMMM, HH:mm').' Uhr.';
+        $this->status = 'Pause bis '.$until->setTimezone(NotificationPreference::TIMEZONE)->settings(['locale' => 'de'])->isoFormat('dddd, D. MMMM, HH:mm').' Uhr.';
     }
 
     public function resume(): void

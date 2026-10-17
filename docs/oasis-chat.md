@@ -183,6 +183,22 @@ accounts. `searchable` controls the Oasis people search; it does not override th
 Bidirectional blocks continue to win above a permissive audience. See `tests/Feature/Chat/ChatPrivacyTest.php` and
 the opt-in real Reverb test in `tests/e2e/chat-reverb.e2e.mjs` (instructions in `oasis-chat-client.md`).
 
+## Nachrichtenanfragen
+
+- `conversation_members.accepted_at`: null while a chat is a request for that member. Chats start accepted for the
+  owner and for members who follow the owner or are friends with them (`ManageConversation::acceptingFrom`, also when
+  added to a group); everyone else gets a request.
+- Requests never count at "Chats", never trigger e-mail or push (`UnreadChats`, `NotifyChatRecipients` skip them);
+  `GET /app/chat/api/unread` reports them separately as `requests`. Read state is never shown to anyone.
+- Accept: `POST …/conversations/{id}/accept`, or simply reply (`SendMessage`). Decline: leave the chat
+  (`…/leave`), optionally block. In a direct chat the sender may send at most `SendMessage::REQUEST_MESSAGE_LIMIT` (3)
+  messages until the other person accepts (429 afterwards).
+- The chat list shows requests in their own section; the conversation shows a request banner. The list also offers
+  "Wer darf dir schreiben?" (`chat_invites_audience`, incl. "Freund:innen und Menschen, denen du folgst") and
+  "Freundschaftsanfragen erhalten" via `GET/PATCH /app/chat/api/settings` (`UpdatePrivacySetting`).
+
+Tests: `tests/Feature/Chat/MessageRequestsTest.php`.
+
 ## Schreiben aus Oasen und Profilen
 
 `App\Support\Chat\ChatReach` decides where a "Schreiben" button appears: the other person has set up the chat, nobody

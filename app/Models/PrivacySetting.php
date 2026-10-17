@@ -47,7 +47,7 @@ class PrivacySetting extends Model
         'mentions_audience' => [Audience::Members, Audience::Following, Audience::Nobody],
         'replies_audience' => [Audience::Members, Audience::Following, Audience::Nobody],
         'carry_audience' => [Audience::Members, Audience::Following, Audience::Nobody],
-        'chat_invites_audience' => [Audience::Members, Audience::Following, Audience::Nobody],
+        'chat_invites_audience' => [Audience::Members, Audience::Contacts, Audience::Following, Audience::Nobody],
         'images_audience' => [Audience::Members, Audience::Contacts, Audience::Following, Audience::Nobody],
         'oasis_list_audience' => [Audience::Members, Audience::Contacts, Audience::Nobody],
     ];
@@ -62,7 +62,7 @@ class PrivacySetting extends Model
         'follower_count_audience' => ['members', 'following', 'nobody'],
         'location_audience' => ['members', 'following', 'nobody'],
         'oases_audience' => ['members', 'following', 'nobody'],
-        'chat_invites_audience' => ['following', 'nobody'],
+        'chat_invites_audience' => ['contacts', 'following', 'nobody'],
         'images_audience' => ['contacts', 'following', 'nobody'],
         'oasis_list_audience' => ['contacts', 'nobody'],
         'default_post_visibility' => ['members'],

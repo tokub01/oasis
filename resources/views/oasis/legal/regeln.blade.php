@@ -58,6 +58,7 @@
                 <li>Kein Anbieten oder Suchen sexueller oder bezahlter Dienste. Das ist ein Grund für eine dauerhafte Sperre.</li>
                 <li>Frag niemanden nach Passwörtern, Codes, Kartennummern, Bankdaten oder der Wohnadresse – und gib deine eigenen nicht heraus. Oasis fragt dich nie im Chat danach.</li>
                 <li>Ein „Nein“ oder keine Antwort heißt: nicht weiter anschreiben.</li>
+                <li>Wer dir fremd ist, landet zuerst als Anfrage – ohne Benachrichtigung, bis du sie annimmst. Bis dahin sind höchstens drei Nachrichten möglich.</li>
                 <li>Keine Drohungen, kein Mobbing, keine Hetze – auch nicht „nur privat“.</li>
                 <li>Wer belästigt wird, kann die Person mit einem Tipp blockieren, den Chat löschen und die Nachricht melden.</li>
                 <li>Melden ist ausdrücklich erwünscht, auch im Zweifel. Die gemeldete Person erfährt nicht, wer gemeldet hat. Wer absichtlich falsch meldet, um jemandem zu schaden, verstößt selbst gegen die Regeln.</li>

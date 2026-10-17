@@ -15,6 +15,17 @@
 
     <ul data-notices class="m-0 flex list-none flex-col gap-2 p-0"></ul>
 
+    {{-- Message request: accept, decline (leave) or block; replying accepts it too. --}}
+    <div data-request hidden class="flex flex-col gap-3 rounded-[20px] border border-dune-line bg-dune p-4">
+        <p data-request-title class="m-0 font-extrabold text-night"></p>
+        <p class="m-0 text-ink-2">Du folgst dieser Person nicht und ihr seid nicht befreundet. Solange du die Anfrage nicht annimmst, bekommst du dazu keine Benachrichtigung, und sie sieht nicht, ob du ihre Nachricht gelesen hast. Antworten nimmt die Anfrage an.</p>
+        <div class="flex flex-wrap gap-2">
+            <button type="button" data-request-accept class="o-btn o-btn-sm o-btn-dark">Annehmen</button>
+            <button type="button" data-request-decline class="o-btn o-btn-sm o-btn-outline">Ablehnen und löschen</button>
+            <button type="button" data-request-block class="o-btn o-btn-sm o-btn-outline">Blockieren</button>
+        </div>
+    </div>
+
     {{-- Safety banner (client/safety.js, checked only on this device): block and leave, report, or dismiss. --}}
     <div data-safety role="alert" hidden class="flex flex-col gap-3 rounded-[20px] border-2 border-sun bg-dune p-4">
         <p data-safety-title class="m-0 font-extrabold text-night"></p>

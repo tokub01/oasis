@@ -69,9 +69,11 @@ class ManageConversation
             $conversation = Conversation::create(['type' => $input['type'], 'title' => $input['title'] ?? null,
                 'created_by' => $owner->id, 'lifetime_days' => $input['lifetime_days'],
                 'key_version' => 1, 'rotation_required' => true]);
+            $accepting = $this->acceptingFrom($owner, $ids);
             foreach ($ids as $id) {
                 ConversationMember::create(['conversation_id' => $conversation->id, 'user_id' => $id,
-                    'role' => $id === $owner->id ? 'owner' : 'member', 'joined_at' => now()]);
+                    'role' => $id === $owner->id ? 'owner' : 'member', 'joined_at' => now(),
+                    'accepted_at' => $id === $owner->id || in_array($id, $accepting, true) ? now() : null]);
             }
 
             return $conversation;
@@ -92,6 +94,30 @@ class ManageConversation
 
             return $conversation;
         }, 3);
+    }
+
+    /**
+     * Who takes a chat from $from directly; everyone else gets it as a message request: people who follow $from or
+     * are friends with them (docs/oasis-chat.md, "Nachrichtenanfragen").
+     *
+     * @param  list<int>  $ids
+     * @return list<int>
+     */
+    private function acceptingFrom(User $from, array $ids): array
+    {
+        $followers = DB::table('follows')->where('followable_type', $from->getMorphClass())->where('followable_id', $from->id)
+            ->whereIn('follower_id', $ids)->pluck('follower_id')->map(fn ($id) => (int) $id)->all();
+
+        return array_values(array_unique([...$followers, ...array_intersect($ids, $from->friendIds())]));
+    }
+
+    /** Accept a message request (also happens by replying, see SendMessage). */
+    public function accept(Conversation $conversation, User $member): void
+    {
+        $membership = $conversation->requireMember($member);
+        if ($membership->accepted_at === null) {
+            $membership->update(['accepted_at' => now()]);
+        }
     }
 
     /**
@@ -136,7 +162,8 @@ class ManageConversation
                 ConversationKeyGrant::query()->where('conversation_id', $conversation->id)
                     ->where('recipient_id', $userId)->delete();
                 ConversationMember::updateOrCreate(['conversation_id' => $conversation->id, 'user_id' => $userId],
-                    ['role' => 'member', 'joined_at' => now(), 'left_at' => null]);
+                    ['role' => 'member', 'joined_at' => now(), 'left_at' => null,
+                        'accepted_at' => $this->acceptingFrom($owner, [$userId]) !== [] ? now() : null]);
             } else {
                 abort_unless($member && $member->left_at === null, 404);
                 $member->update(['left_at' => now()]);

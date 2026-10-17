@@ -56,6 +56,10 @@ export class ConversationView {
             }
         });
         $(this.safety, '[data-safety-block]').addEventListener('click', () => this.blockAndLeave());
+        this.requestBanner = $(this.screen, '[data-request]');
+        $(this.requestBanner, '[data-request-accept]').addEventListener('click', () => this.acceptRequest());
+        $(this.requestBanner, '[data-request-decline]').addEventListener('click', () => this.declineRequest(false));
+        $(this.requestBanner, '[data-request-block]').addEventListener('click', () => this.declineRequest(true));
 
         this.conversation = null;
         this.users = new Map();
@@ -130,6 +134,7 @@ export class ConversationView {
         this.composer.elements.message.value = '';
         // The safety banner and hints refer to this chat's plaintext: forget them with it.
         this.safety.hidden = true;
+        this.requestBanner.hidden = true;
         this.flagged = null;
         this.dismissed.clear();
         this.confirmedDraft = null;
@@ -171,6 +176,7 @@ export class ConversationView {
         this.conversation = conversation;
         this.renderHeader();
         this.renderNotices();
+        this.renderRequest();
         // New keys may make earlier "no key" messages readable.
         await this.redecrypt();
     }
@@ -241,6 +247,45 @@ export class ConversationView {
                     this.markRead(this.conversation.id);
                 }
             }
+        }
+    }
+
+    /** Message request banner: shown while this member has not accepted the chat (see list "Anfragen"). */
+    renderRequest() {
+        this.requestBanner.hidden = !this.conversation.request;
+        if (this.conversation.request) {
+            const others = this.conversation.members.filter((member) => member.user_id !== this.ctx.session.userId);
+            const name = others.length === 1 ? (others[0].display_name || `@${others[0].username}`) : 'Jemand';
+            setText($(this.requestBanner, '[data-request-title]'), `Nachrichtenanfrage von ${name}`);
+        }
+    }
+
+    async acceptRequest() {
+        try {
+            await this.ctx.api.accept(this.conversation.id);
+            this.conversation = { ...this.conversation, request: false };
+            this.renderRequest();
+            this.ctx.announce('Angenommen. Das ist jetzt ein normaler Chat.');
+        } catch (error) {
+            showError(this.error, describeError(error));
+        }
+    }
+
+    /** Decline: leave the chat; with block: also block the person who started it. */
+    async declineRequest(block) {
+        const starter = this.conversation.created_by;
+        if (block && !window.confirm('Diese Person blockieren und die Anfrage löschen?')) {
+            return;
+        }
+        try {
+            if (block) {
+                await this.ctx.api.block(starter);
+            }
+            await this.ctx.api.leave(this.conversation.id);
+            this.ctx.announce(block ? 'Blockiert und gelöscht.' : 'Anfrage gelöscht. Die Person erfährt davon nichts.');
+            window.location.hash = '';
+        } catch (error) {
+            showError(this.error, describeError(error));
         }
     }
 

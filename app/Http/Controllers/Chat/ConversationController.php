@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Chat;
 
 use App\Actions\Chat\ManageConversation;
+use App\Actions\Privacy\UpdatePrivacySetting;
 use App\Actions\Safety\ManageBlock;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
+use App\Models\ConversationMember;
 use App\Models\User;
 use App\Support\Chat\UnreadChats;
+use App\Support\Privacy\PrivacyOptions;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -20,7 +23,9 @@ class ConversationController extends Controller
         $page = Conversation::query()->whereHas('activeMembers',
             fn ($query) => $query->where('user_id', $request->user()->id))->orderByDesc('id')->paginate(30);
         $unread = UnreadChats::conversationIds($request->user());
-        $page->through(fn ($conversation) => $conversation->apiData() + ['unread' => in_array($conversation->id, $unread, true)]);
+        $pending = ConversationMember::where('user_id', $request->user()->id)->whereNull('accepted_at')->pluck('conversation_id')->all();
+        $page->through(fn ($conversation) => $conversation->apiData() + ['unread' => in_array($conversation->id, $unread, true),
+            'request' => in_array($conversation->id, $pending)]);
 
         return response()->json($page);
     }
@@ -30,7 +35,8 @@ class ConversationController extends Controller
     {
         $ids = UnreadChats::conversationIds($request->user());
 
-        return response()->json(['count' => count($ids), 'conversation_ids' => array_map('strval', $ids)]);
+        return response()->json(['count' => count($ids), 'conversation_ids' => array_map('strval', $ids),
+            'requests' => UnreadChats::requestCount($request->user())]);
     }
 
     /** The member has the chat open: everything until now counts as seen, and a later message may notify again. */
@@ -39,6 +45,36 @@ class ConversationController extends Controller
         $conversation->requireMember($request->user())->forceFill(['last_read_at' => now()])->save();
 
         return response()->json(['count' => UnreadChats::count($request->user())]);
+    }
+
+    /** Accept a message request. */
+    public function accept(Request $request, Conversation $conversation, ManageConversation $manage): JsonResponse
+    {
+        $manage->accept($conversation, $request->user());
+
+        return response()->json(['accepted' => true]);
+    }
+
+    /** Who may write to the member and whether friend requests reach them – changeable right in the chat. */
+    public function settings(Request $request): JsonResponse
+    {
+        return response()->json($this->chatSettings($request->user()));
+    }
+
+    public function updateSettings(Request $request, UpdatePrivacySetting $update): JsonResponse
+    {
+        $input = $request->validate(['key' => ['required', 'in:chat_invites_audience,friend_requests'], 'value' => ['required']]);
+        $update->handle($request->user(), $input['key'], $input['key'] === 'friend_requests' ? filter_var($input['value'], FILTER_VALIDATE_BOOLEAN) : $input['value']);
+
+        return response()->json($this->chatSettings($request->user()->fresh()));
+    }
+
+    /** @return array<string, mixed> */
+    private function chatSettings(User $member): array
+    {
+        return ['chat_invites_audience' => $member->privacy()->chat_invites_audience->value,
+            'friend_requests' => $member->privacy()->friend_requests,
+            'choices' => PrivacyOptions::choices('chat_invites_audience', $member)];
     }
 
     /** Leave the chat (it disappears from the list); see ManageConversation::leave. */
@@ -74,9 +110,9 @@ class ConversationController extends Controller
     /** Authorize before returning metadata or the server clock for signed expiry calculation. */
     public function show(Request $request, Conversation $conversation): JsonResponse
     {
-        $conversation->requireMember($request->user());
+        $membership = $conversation->requireMember($request->user());
 
-        return response()->json(['data' => $conversation->apiData()]);
+        return response()->json(['data' => $conversation->apiData() + ['request' => $membership->isRequest()]]);
     }
 
     /** Owner settings affect future envelopes, never signed existing messages. */

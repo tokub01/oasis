@@ -30,7 +30,7 @@ class NotifyChatRecipients implements ShouldQueue
     public function handle(): void
     {
         $members = ConversationMember::with('user')->where('conversation_id', $this->conversationId)
-            ->whereNull('left_at')->where('user_id', '!=', $this->senderId)->get();
+            ->whereNull('left_at')->whereNotNull('accepted_at')->where('user_id', '!=', $this->senderId)->get();
         foreach ($members as $member) {
             $user = $member->user;
             $privacy = $user->privacy();

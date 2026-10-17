@@ -10,7 +10,8 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 /**
  * Which chats have messages a member has not seen (docs/oasis-chat.md, "Benachrichtigungen"). Metadata only: a chat
  * is unread when it holds an unexpired message from someone else, not blocked, newer than the member's last visit
- * (`last_read_at`, or the join for a chat never opened). The server never needs the content for this.
+ * (`last_read_at`, or the join for a chat never opened). Message requests (not accepted yet) never count. The server
+ * never needs the content for this.
  */
 final class UnreadChats
 {
@@ -25,6 +26,12 @@ final class UnreadChats
         return self::memberships($user)->count();
     }
 
+    /** Open message requests: shown as a quiet "Anfragen" entry, never as a count, mail or push. */
+    public static function requestCount(User $user): int
+    {
+        return ConversationMember::query()->where('user_id', $user->id)->whereNull('left_at')->whereNull('accepted_at')->count();
+    }
+
     /** Whether this membership has something unread right now (used before an e-mail or push goes out). */
     public static function isUnread(ConversationMember $member): bool
     {
@@ -34,7 +41,7 @@ final class UnreadChats
     /** @return Builder<ConversationMember> */
     private static function memberships(User $user): Builder
     {
-        return ConversationMember::query()->where('user_id', $user->id)->whereNull('left_at')
+        return ConversationMember::query()->where('user_id', $user->id)->whereNull('left_at')->whereNotNull('accepted_at')
             ->tap(fn (Builder $query) => self::withUnreadMessages($query, $user));
     }
 

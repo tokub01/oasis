@@ -17,6 +17,9 @@ use Illuminate\Validation\ValidationException;
 /** Validates a member's signed opaque envelope and stores/relays it with its original expiry. */
 class SendMessage
 {
+    /** Messages a sender may send in a direct chat that the other person has not accepted yet. */
+    public const REQUEST_MESSAGE_LIMIT = 3;
+
     /**
      * Lock identity before conversation; a pending rotation or stale version cannot send ciphertext.
      *
@@ -27,7 +30,16 @@ class SendMessage
         return DB::transaction(function () use ($conversation, $sender, $envelope) {
             ConversationKeys::lockUsers([$sender->id]);
             $conversation = Conversation::query()->lockForUpdate()->findOrFail($conversation->id);
-            $conversation->requireMember($sender);
+            $membership = $conversation->requireMember($sender);
+            // Replying to a message request accepts it.
+            if ($membership->accepted_at === null) {
+                $membership->update(['accepted_at' => now()]);
+            }
+            // While the other person has not accepted a direct chat, only a few messages may go out (no spamming).
+            if ($conversation->type === 'direct' && $conversation->activeMembers()->where('user_id', '!=', $sender->id)->whereNull('accepted_at')->exists()
+                && Message::where('conversation_id', $conversation->id)->where('sender_id', $sender->id)->count() >= self::REQUEST_MESSAGE_LIMIT) {
+                abort(429, 'Deine Nachrichten sind noch eine Anfrage. Du kannst weiter schreiben, sobald sie angenommen ist.');
+            }
             abort_if($conversation->activeMembers()->whereIn('user_id', $sender->blockedUserIds(true))->exists(),
                 403, 'Mit blockierten Personen können keine Nachrichten ausgetauscht werden.');
             abort_unless(! $conversation->rotation_required && $conversation->key_version === (int) $envelope['key_version'],

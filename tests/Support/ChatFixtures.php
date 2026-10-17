@@ -69,7 +69,7 @@ class ChatFixtures
             'key_version' => 1, 'rotation_required' => false]);
         foreach ([$owner, ...$members] as $user) {
             ConversationMember::create(['conversation_id' => $conversation->id, 'user_id' => $user->id,
-                'role' => $user->id === $owner->id ? 'owner' : 'member', 'joined_at' => now()->subMinute()]);
+                'role' => $user->id === $owner->id ? 'owner' : 'member', 'joined_at' => now()->subMinute(), 'accepted_at' => now()->subMinute()]);
             $grant = self::grant($conversation, $owner, $ownerIdentity, $user);
             ConversationKeyGrant::create(['conversation_id' => $conversation->id, 'key_version' => 1,
                 'recipient_id' => $user->id, 'granter_id' => $owner->id, 'grant' => $grant]);

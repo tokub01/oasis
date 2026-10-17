@@ -121,6 +121,20 @@ export class ChatApi {
         return this.request('GET', `/conversations/${id}/messages${beforeId ? `?before_id=${beforeId}` : ''}`);
     }
 
+    /** Accept a message request. */
+    accept(id) {
+        return this.request('POST', `/conversations/${id}/accept`);
+    }
+
+    /** Who may write to the member and whether friend requests reach them. */
+    settings() {
+        return this.request('GET', '/settings');
+    }
+
+    updateSettings(key, value) {
+        return this.request('PATCH', '/settings', { key, value });
+    }
+
     /** Leave a chat ("Chat löschen" in the safety banner); it disappears from the list. */
     leave(id) {
         return this.request('POST', `/conversations/${id}/leave`);

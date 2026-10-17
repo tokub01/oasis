@@ -18,6 +18,8 @@ Route::prefix('app/chat/api')->name('chat.api.')
         Route::get('users', [PublicKeysController::class, 'users'])->name('users.index');
         Route::get('conversations', [ConversationController::class, 'index'])->name('conversations.index');
         Route::get('unread', [ConversationController::class, 'unread'])->name('unread');
+        Route::get('settings', [ConversationController::class, 'settings'])->name('settings.show');
+        Route::patch('settings', [ConversationController::class, 'updateSettings'])->middleware('throttle:20,1')->name('settings.update');
         Route::post('blocks', [ConversationController::class, 'block'])->middleware('throttle:20,1')->name('blocks.store');
         Route::post('conversations', [ConversationController::class, 'store'])->middleware('participate')->name('conversations.store');
         Route::get('conversations/{conversation}', [ConversationController::class, 'show'])->name('conversations.show');
@@ -31,6 +33,7 @@ Route::prefix('app/chat/api')->name('chat.api.')
         Route::post('conversations/{conversation}/rotate', [KeyGrantController::class, 'rotate'])->name('rotation.store');
         Route::get('conversations/{conversation}/messages', [MessageController::class, 'index'])->name('messages.index');
         Route::post('conversations/{conversation}/read', [ConversationController::class, 'read'])->middleware('throttle:60,1')->name('read');
+        Route::post('conversations/{conversation}/accept', [ConversationController::class, 'accept'])->middleware('throttle:20,1')->name('accept');
         Route::post('conversations/{conversation}/leave', [ConversationController::class, 'leave'])->middleware('throttle:20,1')->name('leave');
         Route::post('conversations/{conversation}/messages', [MessageController::class, 'store'])
             ->middleware(['participate', 'throttle:chat-messages'])->name('messages.store');

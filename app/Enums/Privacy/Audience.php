@@ -14,6 +14,8 @@ enum Audience: string
     case Members = 'members';
     /** Only people the member follows – a circle the member chooses alone. */
     case Following = 'following';
+    /** Friends (accepted friend requests) and people the member follows. */
+    case Contacts = 'contacts';
     /** Nobody besides the member. */
     case Nobody = 'nobody';
 
@@ -24,6 +26,7 @@ enum Audience: string
             self::Everyone => 'Alle – auch ohne Konto',
             self::Members => 'Alle Mitglieder',
             self::Following => 'Menschen, denen du folgst',
+            self::Contacts => 'Freund:innen und Menschen, denen du folgst',
             self::Nobody => 'Niemand',
         };
     }

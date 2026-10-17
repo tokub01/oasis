@@ -190,7 +190,7 @@ it('hides stale hints after content removal, actor deletion and safety changes',
     expect($presentation->forUser($follow, $recipient))->toBeNull();
 });
 
-it('stores six independent preferences and keeps email opt-in off by default', function () {
+it('stores one independent preference per hint kind and keeps email opt-in off by default', function () {
     $user = Fixtures::member();
     $this->actingAs($user)->get(route('notifications.settings'))->assertOk()->assertSeeLivewire(Settings::class)->assertSee('Hinweise einstellen');
     expect(NotificationPreference::count())->toBe(0);
@@ -200,7 +200,7 @@ it('stores six independent preferences and keeps email opt-in off by default', f
     expect($preference->enabled(NoticeKind::Follow))->toBeTrue();
     expect($preference->enabled(NoticeKind::Mention))->toBeFalse();
     expect($preference->digest_enabled)->toBeTrue();
-    expect($preference->kinds)->toHaveCount(6);
+    expect($preference->kinds)->toHaveCount(count(NoticeKind::cases()));
     Livewire::test(Settings::class)->set('kinds.follow', 'invalid')->call('save')->assertHasErrors('kinds.follow');
     Livewire::test(Settings::class)->set('digest', false)->set('kinds.unknown', true)->call('save')->assertHasNoErrors();
     expect($preference->fresh()->digest_enabled)->toBeFalse()->and($preference->fresh()->kinds)->not->toHaveKey('unknown');

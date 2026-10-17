@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Network\PostImageController;
 use App\Livewire\Network\Discover;
+use App\Livewire\Network\Friends;
 use App\Livewire\Network\InvitationLanding;
 use App\Livewire\Network\Invitations;
 use App\Livewire\Network\OasisClose;
@@ -25,6 +26,7 @@ Route::name('network.')->group(function () {
 
     Route::middleware(['auth', 'verified'])->group(function () {
         Route::livewire('/app/entdecken', Discover::class)->name('discover');
+        Route::livewire('/app/freunde', Friends::class)->name('friends');
         Route::livewire('/tropfen/{post}/weitertragen', PostCarry::class)->whereNumber('post')->name('posts.carry');
         Route::livewire('/tropfen/{post}/bearbeiten', PostEdit::class)->whereNumber('post')->name('posts.edit');
         Route::livewire('/app/oasen', OasisIndex::class)->name('oases.index');

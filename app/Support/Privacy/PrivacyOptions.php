@@ -16,8 +16,8 @@ final class PrivacyOptions
 {
     /** Sections in display order: key => [title, settings]. */
     public const SECTIONS = [
-        'sichtbarkeit' => ['Wer dich sieht', ['profile_audience', 'default_post_visibility', 'follower_count_audience', 'location_audience', 'oases_audience']],
-        'interaktionen' => ['Wer mit dir in Kontakt kommt', ['mentions_audience', 'replies_audience', 'carry_audience', 'chat_invites_audience', 'images_audience']],
+        'sichtbarkeit' => ['Wer dich sieht', ['profile_audience', 'default_post_visibility', 'follower_count_audience', 'location_audience', 'oases_audience', 'oasis_list_audience']],
+        'interaktionen' => ['Wer mit dir in Kontakt kommt', ['mentions_audience', 'replies_audience', 'carry_audience', 'chat_invites_audience', 'friend_requests', 'images_audience']],
         'auffindbarkeit' => ['Wie man dich findet', ['searchable', 'search_engines']],
         'sicherheit' => ['Wie wir dein Konto schützen', ['login_alerts']],
         'benachrichtigungen' => ['Wie wir dir neue Chat-Nachrichten melden', ['chat_email', 'chat_push']],
@@ -37,7 +37,7 @@ final class PrivacyOptions
     }
 
     /** Settings shown as a yes/no switch; all others are a choice of audiences. */
-    public const SWITCHES = ['searchable', 'search_engines', 'login_alerts', 'chat_email', 'chat_push'];
+    public const SWITCHES = ['searchable', 'search_engines', 'login_alerts', 'chat_email', 'chat_push', 'friend_requests'];
 
     /** @var array<string, array{title: string, help: string}> */
     private const TEXTS = [
@@ -50,6 +50,8 @@ final class PrivacyOptions
         'replies_audience' => ['title' => 'Wer darf auf deine Tropfen antworten?', 'help' => 'Reagieren und Merken bleibt für alle möglich, die den Tropfen lesen dürfen.'],
         'carry_audience' => ['title' => 'Wer darf deine Tropfen weitertragen?', 'help' => 'Weitertragen zeigt deinen Tropfen mit den Worten einer anderen Person.'],
         'chat_invites_audience' => ['title' => 'Wer darf dir schreiben?', 'help' => 'Wer einen verschlüsselten Chat mit dir beginnen oder dich in einen Gruppenchat holen darf. Bestehende Chats bleiben.'],
+        'oasis_list_audience' => ['title' => 'Wer sieht dich in Mitgliederlisten von Oasen?', 'help' => 'Zu deinem eigenen Schutz ist voreingestellt, dass dich in den Mitgliederlisten deiner Oasen nur Freund:innen und Menschen sehen, denen du folgst. Alle anderen sehen dich dort nicht und können dich darüber weder anschreiben noch dein Profil öffnen. Du kannst das jederzeit umstellen.'],
+        'friend_requests' => ['title' => 'Freundschaftsanfragen erhalten', 'help' => 'Ausgeschaltet kann dir niemand eine Freundschaftsanfrage schicken. Bestehende Freundschaften bleiben. Freundschaft und Folgen sind getrennt: Wer dir folgt, ist nicht automatisch befreundet.'],
         'images_audience' => ['title' => 'Wessen Bilder siehst du sofort?', 'help' => 'Alle anderen Bilder bleiben abgedeckt und werden nicht einmal geladen, bis du auf „Bild anzeigen“ tippst. So siehst du keine Bilder von Fremden, die du nicht sehen willst. Deine eigenen Bilder siehst du immer.'],
         'searchable' => ['title' => 'In der Oasis-Suche auffindbar', 'help' => 'Mitglieder finden dich über deinen Namen oder Benutzernamen. Ausgeschaltet erscheinst du nicht in der Personensuche; über deine Tropfen und Links bleibt dein Profil erreichbar.'],
         'search_engines' => ['title' => 'Öffentliches Profil in Suchmaschinen', 'help' => 'Gilt nur, solange dein Profil für alle sichtbar ist: Dann dürfen Suchmaschinen es und deine öffentlichen Tropfen anzeigen.'],

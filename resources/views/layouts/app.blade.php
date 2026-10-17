@@ -6,7 +6,7 @@
     Variables:
       title   string       page title (suffix " · Oasis" is added)
       active  string|null  key of the current navigation item: quelle|entdecken|oasen|nachrichten|profil, or of an
-                           account page: hinweise|gemerkt|einstellungen|mitgliedschaft|zahlen|einladen|privatsphaere|sicherheit|abstimmungen|moderation
+                           account page: hinweise|freunde|gemerkt|einstellungen|mitgliedschaft|zahlen|einladen|privatsphaere|sicherheit|abstimmungen|moderation
       wide    bool         wider main column for pages with a side column (Quelle), default false
     Internal links use wire:navigate (Livewire SPA navigation): only the page body is swapped, see docs/oasis-livewire.md.
     Stack 'scripts': page-specific Vite entries in <head> (e.g. the chat page).
@@ -29,6 +29,7 @@
     // Account pages: below the main sections on desktop, in the "Mehr" menu on phones.
     $more = [
         'hinweise' => ['Hinweise', route('notifications.index')],
+        'freunde' => ['Freund:innen', route('network.friends')],
         'gemerkt' => ['Gemerkt', route('safety.bookmarks')],
         'einstellungen' => ['Einstellungen', route('app.settings')],
         'mitgliedschaft' => ['Mitgliedschaft', route('app.membership')],

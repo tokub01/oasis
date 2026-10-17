@@ -4,6 +4,8 @@
 
 use App\Livewire\Network\OasisShow;
 use App\Models\Block;
+use App\Models\Follow;
+use App\Models\Friendship;
 use App\Models\Oasis;
 use App\Models\User;
 use Livewire\Livewire;
@@ -28,7 +30,9 @@ it('lists the other members of an oasis with a write button for those who accept
     [$mira] = F::user();
     $noChat = N::member();
     [$closed] = F::user();
-    $closed->privacySetting()->create(['chat_invites_audience' => 'nobody']);
+    $closed->privacySetting()->create(['chat_invites_audience' => 'nobody', 'oasis_list_audience' => 'members']);
+    $mira->privacySetting()->create(['oasis_list_audience' => 'members']);
+    $noChat->privacySetting()->create(['oasis_list_audience' => 'members']);
     $oasis = oasisWith($me, $mira, $noChat, $closed);
 
     Livewire::actingAs($me)->test(OasisShow::class, ['oasis' => $oasis])
@@ -36,6 +40,24 @@ it('lists the other members of an oasis with a write button for those who accept
         ->assertSee('#neu/'.$mira->username, false)
         ->assertDontSee('#neu/'.$noChat->username, false)->assertDontSee('#neu/'.$closed->username, false)
         ->set('memberQuery', mb_substr($mira->display_name, 0, 4))->assertSee($mira->display_name)->assertDontSee($noChat->display_name);
+});
+
+it('filters members by their contact filter, by default showing them only to friends and people they follow', function () {
+    [$me] = F::user();
+    $stranger = N::member();
+    $followsMe = N::member();
+    $friend = N::member();
+    $hidden = N::member();
+    $hidden->privacySetting()->create(['oasis_list_audience' => 'nobody']);
+    Follow::create(['follower_id' => $followsMe->id, 'followable_type' => $me->getMorphClass(), 'followable_id' => $me->id]);
+    Friendship::create(['requester_id' => $me->id, 'addressee_id' => $friend->id, 'accepted_at' => now()]);
+    $oasis = oasisWith($me, $stranger, $followsMe, $friend, $hidden);
+
+    Livewire::actingAs($me)->test(OasisShow::class, ['oasis' => $oasis])
+        ->assertSee($followsMe->display_name)->assertSee($friend->display_name)
+        ->assertDontSee($stranger->display_name)->assertDontSee($hidden->display_name)
+        ->assertSee('2 weitere Mitglieder zeigen sich')
+        ->assertSee('Zu deinem eigenen Schutz ist aktuell eingestellt');
 });
 
 it('hides the member list from non-members and blocked people from the list', function () {

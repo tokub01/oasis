@@ -74,7 +74,7 @@ class ExportAccount
             'privatsphaere' => $user->privacy()->only([
                 'profile_audience', 'default_post_visibility', 'follower_count_audience', 'location_audience',
                 'oases_audience', 'mentions_audience', 'replies_audience', 'carry_audience', 'chat_invites_audience',
-                'images_audience', 'searchable', 'search_engines', 'login_alerts', 'chat_email', 'chat_push',
+                'images_audience', 'friend_requests', 'oasis_list_audience', 'searchable', 'search_engines', 'login_alerts', 'chat_email', 'chat_push',
             ]) + ['verborgene_woerter' => $user->privacy()->hiddenWords()],
             'tropfen' => $posts->map(fn (Post $post) => [
                 'id' => $post->id,
@@ -97,6 +97,7 @@ class ExportAccount
             'oasen' => $oases->map(fn ($oasis) => ['name' => $oasis->name, 'rolle' => $oasis->pivot->getAttribute('role')])->values()->all(),
             'gemerkt' => $user->bookmarks()->pluck('post_id')->values()->all(),
             'eingeschraenkt' => User::whereIn('id', $user->restrictedUserIds())->pluck('username')->values()->all(),
+            'freundschaften' => User::whereIn('id', $user->friendIds())->pluck('username')->values()->all(),
             'bekannte_geraete' => $user->knownDevices()->orderBy('label')->get()
                 ->map(fn ($device) => ['geraet' => $device->label, 'zuletzt' => $device->last_seen_at->toIso8601String()])->values()->all(),
             'push_geraete' => $user->pushSubscriptions()->orderBy('id')->get()

@@ -65,5 +65,5 @@ it('offers the setting in the privacy center and keeps members under 18 from sho
     Livewire::actingAs(N::member())->test(Center::class)->assertSee('Wessen Bilder siehst du sofort?');
 
     $minor = N::member(['birth_date' => now()->subYears(15)->toDateString()]);
-    expect(array_keys(PrivacyOptions::choices('images_audience', $minor)))->toBe(['following', 'nobody']);
+    expect(array_keys(PrivacyOptions::choices('images_audience', $minor)))->toBe(['contacts', 'following', 'nobody']);
 });

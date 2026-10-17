@@ -4,6 +4,7 @@ namespace App\Actions\Safety;
 
 use App\Models\Block;
 use App\Models\Follow;
+use App\Models\Friendship;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -41,6 +42,8 @@ class ManageBlock
                             ->where('followable_id', $blocker->id);
                     });
                 })->delete();
+            // A block ends every friend request and friendship between the two.
+            Friendship::between($blocker, $target)->delete();
 
             $block = Block::firstOrCreate([
                 'user_id' => $blocker->id,

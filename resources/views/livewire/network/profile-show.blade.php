@@ -39,6 +39,17 @@
                                         <button type="submit" wire:loading.attr="disabled" class="o-btn o-btn-md o-btn-primary">Folgen</button>
                                     </form>
                                 @endif
+                                {{-- Friendship, independent of following (docs/oasis-network.md, "Freundschaften"). --}}
+                                @if ($friendship?->accepted_at)
+                                    <button type="button" wire:click="removeFriend" wire:confirm="Freundschaft beenden?" wire:loading.attr="disabled" class="o-btn o-btn-md o-btn-outline">Befreundet · beenden</button>
+                                @elseif ($friendship && $friendship->addressee_id === auth()->id())
+                                    <button type="button" wire:click="acceptFriend" wire:loading.attr="disabled" class="o-btn o-btn-md o-btn-dark">Freundschaft annehmen</button>
+                                    <button type="button" wire:click="removeFriend" wire:loading.attr="disabled" class="o-btn o-btn-md o-btn-outline">Ablehnen</button>
+                                @elseif ($friendship)
+                                    <button type="button" wire:click="removeFriend" wire:loading.attr="disabled" class="o-btn o-btn-md o-btn-outline">Anfrage zurückziehen</button>
+                                @elseif ($acceptsFriendRequests)
+                                    <button type="button" wire:click="requestFriend" wire:loading.attr="disabled" class="o-btn o-btn-md o-btn-outline">Freundschaft anfragen</button>
+                                @endif
                                 @if ($canWrite)
                                     <a href="{{ \App\Support\Chat\ChatReach::startUrl($member) }}" class="o-btn o-btn-md o-btn-outline">Schreiben</a>
                                 @endif

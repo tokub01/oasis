@@ -2,7 +2,7 @@
 
 namespace App\Enums\Notifications;
 
-/** The six independently configurable network hints, used by settings and delivery. */
+/** The independently configurable network hints, used by settings and delivery. */
 enum NoticeKind: string
 {
     case Follow = 'follow';
@@ -11,6 +11,8 @@ enum NoticeKind: string
     case Mention = 'mention';
     case Invitation = 'invitation';
     case Host = 'host';
+    case FriendRequest = 'friend_request';
+    case FriendAccepted = 'friend_accepted';
 
     /** German setting label, also usable as a fallback for a deleted resource. */
     public function label(): string
@@ -22,6 +24,8 @@ enum NoticeKind: string
             self::Mention => 'Erwähnung in einem Tropfen',
             self::Invitation => 'Deine Einladung wurde angenommen',
             self::Host => 'Du wirst Gastgeber:in einer Oase',
+            self::FriendRequest => 'Freundschaftsanfrage',
+            self::FriendAccepted => 'Freundschaftsanfrage angenommen',
         };
     }
 }

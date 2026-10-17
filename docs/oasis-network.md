@@ -182,3 +182,21 @@ the six largest public ones; joining = following) and people (search, invitation
 überspringen"; "Später" ends the tour. Finishing or skipping sets `users.onboarded_at`; existing accounts were set
 by the migration, factories set it too. The settings link to the tour again. Tests:
 `tests/Feature/Network/OnboardingTest.php`.
+
+## Freundschaften
+
+Friendship is independent of follows (a deliberate product decision): following stays one-sided and needs no
+consent; friendship is mutual and needs a yes.
+
+- `friendships` (`App\Models\Friendship`): a request (`accepted_at` null) or a friendship; at most one row per pair
+  (`ManageFriendship`). Asking back accepts a pending request; declining, withdrawing and ending delete the row
+  silently. Hints `friend_request` (links to `/app/freunde`) and `friend_accepted`.
+- Requests only reach people with the privacy switch `friend_requests` on (default on, can be switched off in the
+  Privatsphäre-Center or from `/app/freunde`); members under 18 only from people they follow. Blocking ends every
+  request and friendship between the two (`ManageBlock`).
+- `/app/freunde` (`App\Livewire\Network\Friends`, "Mehr" → Freund:innen): incoming, friends, sent. Profiles show
+  "Freundschaft anfragen" / "annehmen" / "zurückziehen" / "Befreundet · beenden".
+- The audience `contacts` ("Freund:innen und Menschen, denen du folgst") is used by `oasis_list_audience` (default) and
+  `images_audience` (default).
+
+Tests: `tests/Feature/Network/FriendshipTest.php`.

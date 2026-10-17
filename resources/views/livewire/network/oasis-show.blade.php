@@ -108,7 +108,16 @@
                             <li class="text-sm text-muted">{{ trim($memberQuery) === '' ? 'Außer dir ist hier noch niemand.' : 'Niemand mit diesem Namen.' }}</li>
                         @endforelse
                     </ul>
+                    @if ($hiddenMembers > 0)
+                        <p class="m-0 text-sm text-ink-2">{{ $hiddenMembers === 1 ? 'Ein weiteres Mitglied zeigt sich' : $hiddenMembers.' weitere Mitglieder zeigen sich' }} hier nur Freund:innen und Menschen, denen sie folgen.</p>
+                    @endif
                     <p class="m-0 text-xs text-muted">„Schreiben“ erscheint, wenn die Person den Chat eingerichtet hat und Nachrichten von dir annimmt.</p>
+                    {{-- The viewer's own contact filter, with the reason and how to change it. --}}
+                    @if ($ownListAudience === \App\Enums\Privacy\Audience::Contacts)
+                        <p class="m-0 rounded-xl bg-dune px-3 py-2 text-xs text-ink-2">Zu deinem eigenen Schutz ist aktuell eingestellt, dass dich in dieser Liste nur Freund:innen und Menschen sehen, denen du folgst. <a href="{{ route('app.privacy') }}#titel-sichtbarkeit" wire:navigate class="o-link">Umstellen</a></p>
+                    @elseif ($ownListAudience === \App\Enums\Privacy\Audience::Nobody)
+                        <p class="m-0 rounded-xl bg-dune px-3 py-2 text-xs text-ink-2">Du bist in Mitgliederlisten für niemanden sichtbar. <a href="{{ route('app.privacy') }}#titel-sichtbarkeit" wire:navigate class="o-link">Umstellen</a></p>
+                    @endif
                 </x-network.side-card>
             @endif
 

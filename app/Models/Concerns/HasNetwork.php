@@ -147,6 +147,7 @@ trait HasNetwork
 
         return match ($this->privacy()->images_audience) {
             Audience::Following => in_array($author->id, $this->followedUserIds(), true),
+            Audience::Contacts => in_array($author->id, $this->followedUserIds(), true) || $this->isFriendWith($author),
             Audience::Nobody => false,
             default => true,
         };

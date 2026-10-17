@@ -3,6 +3,7 @@
 namespace App\Livewire\Network;
 
 use App\Actions\Network\ManageFollows;
+use App\Actions\Network\ManageFriendship;
 use App\Actions\Safety\ManageMute;
 use App\Models\User;
 use App\Queries\Network\PostFeed;
@@ -64,6 +65,32 @@ class ProfileShow extends NetworkPage
         $this->postStatus = 'Du folgst '.$target->display_name.' nicht mehr.';
     }
 
+    /** Ask for a friendship (or accept the other person's request); see ManageFriendship. */
+    public function requestFriend(ManageFriendship $friendships): void
+    {
+        $target = $this->target();
+        abort_unless($target !== null, 404);
+        $friendship = $friendships->request($this->actor(), $target);
+        $this->postStatus = $friendship->accepted_at !== null ? 'Ihr seid jetzt befreundet.' : 'Freundschaftsanfrage gesendet.';
+    }
+
+    public function acceptFriend(ManageFriendship $friendships): void
+    {
+        $target = $this->target();
+        abort_unless($target !== null, 404);
+        $friendships->accept($this->actor(), $target);
+        $this->postStatus = 'Ihr seid jetzt befreundet.';
+    }
+
+    /** Withdraw, decline or end – silently. */
+    public function removeFriend(ManageFriendship $friendships): void
+    {
+        $target = $this->target();
+        abort_unless($target !== null, 404);
+        $friendships->remove($this->actor(), $target);
+        $this->postStatus = 'Erledigt.';
+    }
+
     /** Undo only the current account's mute for this visible profile. */
     public function unmute(): void
     {
@@ -94,6 +121,8 @@ class ProfileShow extends NetworkPage
             'oases' => $member->privacy()->allows('oases_audience', auth()->user())
                 ? $member->oases()->orderBy('name')->get()->filter->isVisibleTo(auth()->user()) : null,
             'following' => auth()->user()?->follows($member) ?? false,
+            'friendship' => auth()->user()?->friendshipWith($member),
+            'acceptsFriendRequests' => auth()->check() && app(ManageFriendship::class)->acceptsRequestFrom($member, auth()->user()),
             'canWrite' => ChatReach::writableIds(auth()->user(), collect([$member])) !== []], $member->display_name.' (@'.$member->username.')', 'profil', true, noindex: ! $member->privacy()->indexable());
     }
 }

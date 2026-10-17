@@ -27,6 +27,8 @@ use InvalidArgumentException;
  * @property Audience $carry_audience who may carry the member's Tropfen further
  * @property Audience $chat_invites_audience who may start a chat with the member or add them to one
  * @property Audience $images_audience whose images the member sees at once; all others stay covered until tapped
+ * @property bool $friend_requests whether others may send the member friend requests
+ * @property Audience $oasis_list_audience who sees the member in oasis member lists (contact filter)
  * @property bool $searchable found by name and username in the Oasis search
  * @property bool $search_engines public profile and Tropfen may be indexed by search engines
  * @property bool $login_alerts mail when someone signs in from a browser or system not seen before
@@ -46,7 +48,8 @@ class PrivacySetting extends Model
         'replies_audience' => [Audience::Members, Audience::Following, Audience::Nobody],
         'carry_audience' => [Audience::Members, Audience::Following, Audience::Nobody],
         'chat_invites_audience' => [Audience::Members, Audience::Following, Audience::Nobody],
-        'images_audience' => [Audience::Members, Audience::Following, Audience::Nobody],
+        'images_audience' => [Audience::Members, Audience::Contacts, Audience::Following, Audience::Nobody],
+        'oasis_list_audience' => [Audience::Members, Audience::Contacts, Audience::Nobody],
     ];
 
     /**
@@ -60,7 +63,8 @@ class PrivacySetting extends Model
         'location_audience' => ['members', 'following', 'nobody'],
         'oases_audience' => ['members', 'following', 'nobody'],
         'chat_invites_audience' => ['following', 'nobody'],
-        'images_audience' => ['following', 'nobody'],
+        'images_audience' => ['contacts', 'following', 'nobody'],
+        'oasis_list_audience' => ['contacts', 'nobody'],
         'default_post_visibility' => ['members'],
         'search_engines' => [false],
     ];
@@ -68,7 +72,8 @@ class PrivacySetting extends Model
     /** The strictest common value per limited setting, used when a stored value is outside MINOR_CHOICES. */
     public const MINOR_DEFAULTS = [
         'profile_audience' => 'members', 'follower_count_audience' => 'members', 'location_audience' => 'members', 'oases_audience' => 'members',
-        'chat_invites_audience' => 'following', 'images_audience' => 'following', 'default_post_visibility' => 'members', 'search_engines' => false,
+        'chat_invites_audience' => 'following', 'images_audience' => 'contacts', 'oasis_list_audience' => 'contacts', 'default_post_visibility' => 'members',
+        'search_engines' => false,
     ];
 
     /** @var array<int, bool> Follow results only for explicitly checked viewer IDs. */
@@ -77,7 +82,7 @@ class PrivacySetting extends Model
     /** The account is never mass-assigned: rows are created through $user->privacySetting() (UpdatePrivacySetting). */
     protected $fillable = [
         'profile_audience', 'default_post_visibility', 'follower_count_audience', 'location_audience', 'oases_audience',
-        'mentions_audience', 'replies_audience', 'carry_audience', 'chat_invites_audience', 'images_audience', 'searchable',
+        'mentions_audience', 'replies_audience', 'carry_audience', 'chat_invites_audience', 'images_audience', 'friend_requests', 'oasis_list_audience', 'searchable',
         'search_engines', 'login_alerts', 'chat_email', 'chat_push', 'hidden_words',
     ];
 
@@ -86,7 +91,8 @@ class PrivacySetting extends Model
         'profile_audience' => 'members', 'default_post_visibility' => 'members', 'follower_count_audience' => 'members',
         'location_audience' => 'members', 'oases_audience' => 'members',
         'mentions_audience' => 'members', 'replies_audience' => 'members', 'carry_audience' => 'members',
-        'chat_invites_audience' => 'members', 'images_audience' => 'following', 'searchable' => true, 'search_engines' => false, 'login_alerts' => true,
+        'chat_invites_audience' => 'members', 'images_audience' => 'contacts', 'friend_requests' => true,
+        'oasis_list_audience' => 'contacts', 'searchable' => true, 'search_engines' => false, 'login_alerts' => true,
         'chat_email' => false, 'chat_push' => false,
     ];
 
@@ -98,7 +104,8 @@ class PrivacySetting extends Model
             'follower_count_audience' => Audience::class, 'location_audience' => Audience::class,
             'oases_audience' => Audience::class, 'mentions_audience' => Audience::class,
             'replies_audience' => Audience::class, 'carry_audience' => Audience::class,
-            'chat_invites_audience' => Audience::class, 'images_audience' => Audience::class, 'searchable' => 'boolean', 'search_engines' => 'boolean',
+            'chat_invites_audience' => Audience::class, 'images_audience' => Audience::class, 'friend_requests' => 'boolean',
+            'oasis_list_audience' => Audience::class, 'searchable' => 'boolean', 'search_engines' => 'boolean',
             'login_alerts' => 'boolean', 'chat_email' => 'boolean', 'chat_push' => 'boolean', 'hidden_words' => 'array', 'user_id' => 'integer',
         ];
     }
@@ -131,6 +138,7 @@ class PrivacySetting extends Model
             Audience::Everyone => true,
             Audience::Members => $viewer?->hasVerifiedEmail() === true,
             Audience::Following => $viewer?->hasVerifiedEmail() === true && $this->ownerFollows($viewer),
+            Audience::Contacts => $viewer?->hasVerifiedEmail() === true && ($this->ownerFollows($viewer) || $this->ownerIsFriendOf($viewer)),
             Audience::Nobody => false,
         };
     }
@@ -219,6 +227,14 @@ class PrivacySetting extends Model
                 ->map(fn ($id) => (int) $id)->values()->all();
             $owner->setRelation('privacySetting', $owner->privacy()->withKnownFollows($checkedIds, array_values($followedIds)));
         }
+    }
+
+    /** The owner and $viewer are friends (accepted friend request, either direction). */
+    private function ownerIsFriendOf(User $viewer): bool
+    {
+        return Friendship::whereNotNull('accepted_at')->where(fn ($pair) => $pair
+            ->where(fn ($a) => $a->where('requester_id', $this->user_id)->where('addressee_id', $viewer->id))
+            ->orWhere(fn ($b) => $b->where('requester_id', $viewer->id)->where('addressee_id', $this->user_id)))->exists();
     }
 
     /** The owner follows $viewer (the "Menschen, denen du folgst" circle). */

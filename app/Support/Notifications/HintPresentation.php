@@ -70,6 +70,9 @@ class HintPresentation
         if ($post !== null) {
             $url = route('network.posts.show', $post);
         }
+        if ($kind === NoticeKind::FriendRequest) {
+            $url = route('network.friends');
+        }
         if ($kind === NoticeKind::Host) {
             if ($oasis === null || ! $oasis->isVisibleTo($viewer)) {
                 return null;

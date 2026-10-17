@@ -24,6 +24,22 @@ Public signed URLs include `recipient=reporter|subject`, never an email. The `si
 when the form opens; the selector is then a `#[Locked]` property, and `App\Support\Moderation\ComplaintAccess`
 resolves the stored email server-side on every action. The email never enters the page snapshot.
 
+## Melden für Mitglieder
+
+Reporting must be easy and must not scare people who are bullied:
+
+- Signed-in members report Tropfen, profiles and oases on `/app/melden?url=…` (`App\Livewire\Safety\QuickReport`):
+  a category (`App\Enums\Moderation\ReportCategory`, plain words), an optional comment, name and e-mail from the
+  account. It is stored through `RecordContentReport` like the formal notice and opens a case. Only links to Oasis
+  itself are accepted; at most 20 reports per hour. Guests keep the formal DSA form on `/inhalte-melden`.
+- The chat report dialog uses the same categories; the comment is optional. After sending it thanks the member,
+  offers to block the sender and shows help contacts (`x-oasis.support-contacts`: Nummer gegen Kummer, JUUUPORT,
+  HateAid, TelefonSeelsorge, 110).
+- Promise in the UI: the reported person does not learn who reported. `DecisionNotice` to the affected account
+  contains no reporter data – staff must not name the reporter in "facts" or "explanation" either.
+
+Tests: `tests/Feature/Moderation/QuickReportTest.php`.
+
 ## Form data
 
 `App\Livewire\Moderation\Forms\DecisionForm` holds the statement of reasons (DSA Art. 17): `outcome`, `ground`,

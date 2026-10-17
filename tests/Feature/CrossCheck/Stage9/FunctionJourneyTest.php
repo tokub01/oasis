@@ -171,9 +171,9 @@ it('FINDING F5: profiles and oases can be reported from the app, not only Tropfe
     $this->actingAs(N::member());
 
     $this->get(route('oasis.profil', $other->username))
-        ->assertSee(route('oasis.melden', ['url' => route('oasis.profil', $other->username)]), false);
+        ->assertSee(route('app.report', ['url' => route('oasis.profil', $other->username)]), false);
     $this->get(route('network.oases.show', $oasis))
-        ->assertSee(route('oasis.melden', ['url' => route('network.oases.show', $oasis)]), false);
+        ->assertSee(route('app.report', ['url' => route('network.oases.show', $oasis)]), false);
 });
 
 it('journey: the reporter of a Tropfen does not have to type name and e-mail again', function () {

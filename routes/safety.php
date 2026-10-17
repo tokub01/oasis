@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Safety\Bookmarks;
+use App\Livewire\Safety\QuickReport;
 use App\Livewire\Safety\SafetyOverview;
 use Illuminate\Support\Facades\Route;
 
@@ -8,4 +9,6 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::livewire('/app/sicherheit', SafetyOverview::class)->name('safety.index');
     Route::livewire('/app/gemerkt', Bookmarks::class)->name('safety.bookmarks');
+    // Reporting in a few taps for members (guests use the formal form oasis.melden).
+    Route::livewire('/app/melden', QuickReport::class)->name('app.report');
 });

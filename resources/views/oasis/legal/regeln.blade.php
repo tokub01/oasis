@@ -60,6 +60,7 @@
                 <li>Ein „Nein“ oder keine Antwort heißt: nicht weiter anschreiben.</li>
                 <li>Keine Drohungen, kein Mobbing, keine Hetze – auch nicht „nur privat“.</li>
                 <li>Wer belästigt wird, kann die Person mit einem Tipp blockieren, den Chat löschen und die Nachricht melden.</li>
+                <li>Melden ist ausdrücklich erwünscht, auch im Zweifel. Die gemeldete Person erfährt nicht, wer gemeldet hat. Wer absichtlich falsch meldet, um jemandem zu schaden, verstößt selbst gegen die Regeln.</li>
             </ul>
         </section>
 

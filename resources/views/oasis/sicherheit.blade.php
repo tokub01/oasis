@@ -113,6 +113,17 @@
         </div>
     </section>
 
+    <section id="hilfe-mobbing" aria-labelledby="mobbing-titel" class="py-[clamp(64px,7vw,104px)]">
+        <div class="o-container o-auto-grid items-start gap-x-[72px] gap-y-8 [--min:340px]">
+            <h2 id="mobbing-titel" class="o-h2-s text-night">Hilfe bei Mobbing und Belästigung</h2>
+            <div class="flex max-w-[40em] flex-col gap-4 text-[17px] leading-[1.65] text-ink">
+                <p>Melden ist ausdrücklich erwünscht – auch wenn du dir nicht sicher bist. Bei jedem Tropfen, jedem Profil, jeder Oase und jeder Chat-Nachricht findest du „Melden“. Ein paar Tipps genügen, Fachbegriffe brauchst du nicht.</p>
+                <p>Die gemeldete Person erfährt nicht, wer gemeldet hat. Du kannst sie außerdem blockieren oder stumm schalten. Im Chat warnt dich dein Gerät, wenn eine Nachricht belästigend wirkt oder nach Passwort oder Bankdaten fragt.</p>
+                <x-oasis.support-contacts />
+            </div>
+        </div>
+    </section>
+
     <section aria-labelledby="konto-titel" class="py-[clamp(64px,7vw,104px)]">
         <div class="o-container o-auto-grid items-start gap-x-[72px] gap-y-8 [--min:340px]">
             <h2 id="konto-titel" class="o-h2-s text-night">Dein Konto ist geschützt</h2>

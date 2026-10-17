@@ -124,7 +124,7 @@ it('lets authors delete their Tropfen with images; others get 403 and see a repo
     $other = N::member();
 
     $this->actingAs($other)->get(route('network.posts.show', $post))
-        ->assertSee(route('oasis.melden', ['url' => route('network.posts.show', $post)]), false);
+        ->assertSee(route('app.report', ['url' => route('network.posts.show', $post)]), false);
     NetworkActions::post('deletePost', $post->id)->assertForbidden();
 
     NetworkActions::post('deletePost', $post->id, $author)->assertHasNoErrors();

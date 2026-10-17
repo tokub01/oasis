@@ -40,7 +40,7 @@
                             </form>
                         @endif
                         @unless ($isHost)
-                            <a wire:navigate href="{{ route('oasis.melden', ['url' => route('network.oases.show', $oasis)]) }}" class="o-link self-center text-[15px]">Melden</a>
+                            <a wire:navigate href="{{ route(auth()->check() ? 'app.report' : 'oasis.melden', ['url' => route('network.oases.show', $oasis)]) }}" class="o-link self-center text-[15px]">Melden</a>
                         @endunless
                     </div>
                     @error('follow') <p role="alert" class="m-0 font-bold text-sun-text">{{ $message }}</p> @enderror

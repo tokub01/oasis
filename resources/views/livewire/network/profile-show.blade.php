@@ -67,7 +67,7 @@
                                 <form wire:submit="blockUser({{ $member->id }})">
                                     <button type="submit" wire:loading.attr="disabled" class="o-btn o-btn-md o-btn-outline text-muted">Blockieren</button>
                                 </form>
-                                <a wire:navigate href="{{ route('oasis.melden', ['url' => route('oasis.profil', $member->username)]) }}" class="o-link self-center text-[15px]">Melden</a>
+                                <a wire:navigate href="{{ route(auth()->check() ? 'app.report' : 'oasis.melden', ['url' => route('oasis.profil', $member->username)]) }}" class="o-link self-center text-[15px]">Melden</a>
                             </div>
                         @endif
                     @endauth

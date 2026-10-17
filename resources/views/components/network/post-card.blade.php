@@ -117,9 +117,9 @@
                                 </form>
                             </div>
                         </details>
-                        <a wire:navigate href="{{ route('oasis.melden', ['url' => $postUrl]) }}" class="{{ $menuItem }}">Melden</a>
+                        <a wire:navigate href="{{ route(auth()->check() ? 'app.report' : 'oasis.melden', ['url' => $postUrl]) }}" class="{{ $menuItem }}">Melden</a>
                     @else
-                        <a wire:navigate href="{{ route('oasis.melden', ['url' => $postUrl]) }}" class="{{ $menuItem }}">Melden</a>
+                        <a wire:navigate href="{{ route(auth()->check() ? 'app.report' : 'oasis.melden', ['url' => $postUrl]) }}" class="{{ $menuItem }}">Melden</a>
                     @endcan
                 </div>
             </details>

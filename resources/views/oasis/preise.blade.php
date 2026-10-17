@@ -23,16 +23,20 @@
                 <h1 id="p-titel" class="o-h1 max-w-[16em] text-night">Dieselbe Oase für alle. Du wählst, wie viel du beiträgst.</h1>
                 <p class="max-w-[36em] text-[clamp(18px,1.5vw,20px)] leading-[1.6] text-ink-2">Jede Mitgliedschaft enthält alle Funktionen. Starte mit {{ $trialDays }} Tagen kostenlos und ohne Zahlungsdaten, entscheiden kannst du danach.</p>
                 {{-- Only useful with JS; hidden until the pricing module enables it. --}}
-                <div role="group" aria-label="Abrechnungszeitraum" data-period-toggle hidden class="mt-3 inline-flex flex-wrap justify-center gap-1 rounded-full bg-dune p-1.5">
-                    <button type="button" aria-pressed="true" data-period="month" class="min-h-11 rounded-full px-[22px] text-base font-bold text-night aria-pressed:bg-night aria-pressed:text-on-night">Monatlich</button>
-                    <button type="button" aria-pressed="false" data-period="year" class="min-h-11 rounded-full px-[22px] text-base font-bold text-night aria-pressed:bg-night aria-pressed:text-on-night">Jährlich · {{ $freeMonths }} Monate geschenkt</button>
+                <div data-period-toggle hidden class="mt-3 flex flex-col items-center gap-2">
+                    <div role="group" aria-label="Abrechnungszeitraum" class="inline-flex flex-nowrap gap-1 rounded-full bg-dune p-1.5">
+                        <button type="button" aria-pressed="true" data-period="month" class="min-h-11 rounded-full px-[22px] text-base font-bold whitespace-nowrap text-night aria-pressed:bg-night aria-pressed:text-on-night">Monatlich</button>
+                        <button type="button" aria-pressed="false" data-period="year" class="min-h-11 rounded-full px-[22px] text-base font-bold whitespace-nowrap text-night aria-pressed:bg-night aria-pressed:text-on-night">Jährlich<span class="sr-only sm:not-sr-only"> · {{ $freeMonths }} Monate geschenkt</span></button>
+                    </div>
+                    {{-- On phones the bonus moves below the toggle so both buttons stay on one line. --}}
+                    <span aria-hidden="true" class="rounded-full border border-spring px-3 py-1 text-sm font-bold text-spring-text sm:hidden">Jährlich: {{ $freeMonths }} Monate geschenkt</span>
                 </div>
             </div>
         </section>
 
         <section aria-label="Preisstufen" class="pb-[clamp(56px,6vw,88px)]">
             <div class="o-container flex flex-col gap-6">
-                <div class="o-auto-grid items-stretch gap-6 [--min:320px]">
+                <div class="mx-auto grid w-full max-w-xl items-stretch gap-6 lg:max-w-none lg:grid-cols-3">
                     <x-oasis.price-card tier="solidar" subtitle="Für alle, denen {{ \App\Support\OasisFormat::euro($tiers['oase']['monthly']) }} gerade zu viel sind">
                         Fester Betrag, ohne Nachweis. Welche Stufe du gewählt hast, sieht niemand außer dir.
                     </x-oasis.price-card>

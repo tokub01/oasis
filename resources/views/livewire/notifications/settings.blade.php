@@ -1,8 +1,8 @@
 {{-- Hint settings, component App\Livewire\Notifications\Settings. Variables: $kindCases (NoticeKind[]). --}}
 <div>
 <x-network.columns label="Deine Wahl">
-    <h1 class="o-h2 m-0 text-night">Hinweise einstellen</h1>
-    <p role="status" class="m-0 text-spring-text">{{ $status }}</p>
+    <x-network.page-header eyebrow="Hinweise" title="Hinweise einstellen">Du entscheidest, was in deiner Hinweis-Liste landet und ob du eine E-Mail bekommst.</x-network.page-header>
+    <p role="status" class="m-0 font-bold text-spring-text empty:sr-only">{{ $status }}</p>
     @if ($errors->any()) <p role="alert" class="o-error">{{ $errors->first() }}</p> @endif
     <form wire:submit="save" class="flex flex-col gap-6 rounded-[24px] bg-paper p-6">
         <fieldset class="flex flex-col gap-2 border-0 p-0">

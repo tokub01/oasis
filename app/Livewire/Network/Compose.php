@@ -34,6 +34,10 @@ class Compose extends Component
     #[Locked]
     public bool $showImages = true;
 
+    /** Rendered inside a Tropfen card (quick reply): no own card box, compact layout. */
+    #[Locked]
+    public bool $inline = false;
+
     public string $body = '';
 
     public string $visibility = 'public';
@@ -57,9 +61,10 @@ class Compose extends Component
     public string $status = '';
 
     /** Bind server-provided context identifiers without serializing context models in the HTML snapshot. */
-    public function mount(?int $oasisId = null, ?int $replyToId = null, ?int $carriedId = null, bool $showImages = true): void
+    public function mount(?int $oasisId = null, ?int $replyToId = null, ?int $carriedId = null, bool $showImages = true, bool $inline = false): void
     {
         $this->showImages = $showImages;
+        $this->inline = $inline;
         $this->oasisId = $oasisId;
         $this->replyToId = $replyToId;
         $this->carriedId = $carriedId;

@@ -1,12 +1,12 @@
 {{-- Privatsphäre-Center, component App\Livewire\Privacy\Center. Variables: $sections (PrivacyOptions::SECTIONS), $steps. --}}
 <div>
 <x-network.columns label="Mehr Kontrolle">
-    <header class="flex flex-col gap-3">
-        <p class="o-eyebrow m-0">Privatsphäre</p>
-        <h1 class="o-h2 m-0 text-night">Deine Privatsphäre</h1>
-        <p class="m-0 text-ink-2">Du entscheidest, wer dich sieht und wer mit dir in Kontakt kommt. Jede Änderung gilt sofort.</p>
-        <p role="status" aria-live="polite" class="m-0 min-h-6 text-spring-text">{{ $status }}</p>
-    </header>
+    <div class="flex flex-col gap-3">
+        <x-network.page-header eyebrow="Privatsphäre" title="Deine Privatsphäre">
+            Du entscheidest, wer dich sieht und wer mit dir in Kontakt kommt. Jede Änderung gilt sofort.
+        </x-network.page-header>
+        <p role="status" aria-live="polite" class="m-0 font-bold text-spring-text empty:sr-only">{{ $status }}</p>
+    </div>
 
     <a href="{{ route('app.privacy.check') }}" wire:navigate
        class="flex items-center justify-between gap-4 rounded-[24px] bg-night px-6 py-5 text-on-night no-underline">

@@ -122,13 +122,13 @@
                 <p class="o-eyebrow">In drei Schritten</p>
                 <h2 id="weg-titel" class="o-h2 text-night">Erst erleben, dann entscheiden.</h2>
             </div>
-            <ol class="o-auto-grid gap-6 [--min:300px]">
+            <ol class="grid gap-6 md:grid-cols-3">
                 @foreach ([
                     ['Reinlesen', 'Öffentliche Tropfen und Profile kannst du ohne Konto lesen. So siehst du, wer schon da ist.'],
                     [$trialDays.' Tage mitmachen', 'Voller Zugang, ohne Zahlungsdaten. Der Test endet von selbst, und wir erinnern dich vorher.'],
                     ['Mitglied werden', 'Ab '.\App\Support\OasisFormat::euro($tiers['solidar']['monthly']).' im Monat. Alle bekommen dasselbe, du wählst nur, wie viel du beiträgst.'],
                 ] as $i => [$heading, $text])
-                    <li class="flex flex-col gap-3 rounded-[24px] border border-dune-line px-7 py-8">
+                    <li class="flex flex-col gap-3 rounded-[24px] border border-dune-line px-7 py-8 md:px-5 lg:px-7">
                         <span aria-hidden="true" class="o-display text-[56px] leading-none text-sun-text">{{ $i + 1 }}</span>
                         <h3 class="text-[22px] leading-[1.3] font-extrabold text-night">{{ $heading }}</h3>
                         <p class="text-base leading-[1.6] text-ink-2">{{ $text }}</p>
@@ -165,11 +165,11 @@
                         <span class="text-[19px] font-extrabold text-night">WG Kastanienallee</span>
                         <span class="text-[15px] text-muted">4 von 5 sind dabei</span>
                     </div>
-                    <div aria-hidden="true" class="flex">
+                    <div aria-hidden="true" class="flex shrink-0">
                         @foreach ([['LB', 'bg-sun text-sun-ink'], ['JW', 'bg-spring text-sun-ink'], ['MS', 'bg-night text-on-night'], ['AK', 'bg-dune-line text-night']] as $i => [$initials, $colors])
-                            <span @class(['flex size-10 items-center justify-center rounded-full border-[3px] border-paper text-[13px] font-extrabold', $colors, '-ml-3' => $i > 0])>{{ $initials }}</span>
+                            <span @class(['flex size-10 items-center justify-center rounded-full border-[3px] border-paper text-[13px] font-extrabold', $colors, '-ml-3 sm:-ml-2' => $i > 0])>{{ $initials }}</span>
                         @endforeach
-                        <span class="-ml-3 flex size-10 items-center justify-center rounded-full border-2 border-dashed border-muted bg-paper text-lg font-bold text-muted">+</span>
+                        <span class="-ml-3 flex size-10 items-center sm:-ml-2 justify-center rounded-full border-2 border-dashed border-muted bg-paper text-lg font-bold text-muted">+</span>
                     </div>
                 </div>
                 <div aria-hidden="true" class="flex gap-1.5">

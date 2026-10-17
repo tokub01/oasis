@@ -23,7 +23,7 @@
             </div>
             <button type="submit" class="o-btn o-btn-dark">Anmelden</button>
             <div aria-hidden="true" class="my-1.5 h-px bg-paper-line"></div>
-            <p class="m-0 text-center text-base text-ink-2">Noch kein Konto? <a href="{{ route('register') }}" class="font-extrabold text-sun-text underline underline-offset-4">{{ config('oasis.trial_days') }} Tage kostenlos testen</a></p>
+            <p class="m-0 text-center text-base text-ink-2">Noch kein Konto? <a href="{{ route('register') }}" class="inline-flex min-h-11 items-center font-extrabold whitespace-nowrap text-sun-text underline underline-offset-4">{{ config('oasis.trial_days') }} Tage kostenlos testen</a></p>
         </form>
     </x-oasis.auth-card>
 @endsection

@@ -11,11 +11,11 @@
 --}}
 <div @class(['flex flex-col gap-6', 'o-container py-8' => ! auth()->check()])>
 @guest <p class="rounded-2xl bg-dune p-4"><b>Du liest als Gast.</b> Zum Folgen, Antworten und Schreiben brauchst du ein Konto.</p> @endguest
-<p role="status" aria-live="polite">{{ $postStatus }}</p>
+<p role="status" aria-live="polite" class="m-0 rounded-2xl bg-dune px-[18px] py-3.5 text-night empty:sr-only">{{ $postStatus }}</p>
 <p wire:loading class="text-muted">Wird geladen …</p>
     <x-network.columns label="Über die Oase">
         <header class="overflow-hidden rounded-[24px] bg-paper">
-            <div aria-hidden="true" class="relative h-32 overflow-hidden bg-{{ $oasis->color }}">
+            <div aria-hidden="true" class="relative h-32 overflow-hidden bg-{{ $oasis->color }} {{ $oasis->color === 'dune' ? 'ring-1 ring-inset ring-dune-line' : '' }}">
                 <span class="absolute -right-10 -bottom-16 size-48 rounded-full bg-paper/25"></span>
                 <span class="absolute right-28 -top-10 size-24 rounded-full bg-paper/20"></span>
             </div>
@@ -48,9 +48,17 @@
             </div>
         </header>
 
+        {{-- Below xl the side column follows the whole feed; the house rules belong before it. --}}
+        <details class="rounded-[20px] border border-dune-line bg-paper xl:hidden" wire:ignore.self>
+            <summary class="flex min-h-11 cursor-pointer items-center px-5 py-2 font-bold text-night">Hausregeln dieser Oase</summary>
+            <div class="flex flex-col gap-3 px-5 pb-5">
+                @include('livewire.network.partials.house-rules')
+            </div>
+        </details>
+
         @auth
             @can('post', $oasis)
-                <x-network.compose label="Dein Tropfen in {{ $oasis->name }}" :oasis="$oasis" />
+                <x-network.compose :oasis="$oasis" />
             @endcan
         @endauth
 
@@ -61,8 +69,7 @@
 
         <x-slot:aside>
             <x-network.side-card title="Hausregeln" tone="dune">
-                <p class="m-0 text-[15px] whitespace-pre-line">{{ $oasis->house_rules }}</p>
-                <p class="m-0 text-sm text-muted">Zusätzlich gelten die <a wire:navigate href="{{ route('oasis.regeln') }}" class="text-night underline underline-offset-4">Community-Regeln</a> von Oasis.</p>
+                @include('livewire.network.partials.house-rules')
             </x-network.side-card>
 
             <x-network.side-card title="Gastgeber:innen">

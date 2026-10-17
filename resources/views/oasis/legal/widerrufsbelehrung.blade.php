@@ -28,7 +28,7 @@
             <p class="m-0">Sie haben das Recht, binnen vierzehn Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen.</p>
             <p class="m-0">Die Widerrufsfrist beträgt vierzehn Tage ab dem Tag des Vertragsabschlusses.</p>
             <p class="m-0">Um Ihr Widerrufsrecht auszuüben, müssen Sie uns ({{ $address }}, Telefon: {{ $operator['phone'] }}, E-Mail: {{ $contact }}) mittels einer eindeutigen Erklärung (z. B. ein mit der Post versandter Brief oder eine E-Mail) über Ihren Entschluss, diesen Vertrag zu widerrufen, informieren. Sie können dafür das beigefügte Muster-Widerrufsformular verwenden, das jedoch nicht vorgeschrieben ist.</p>
-            <p class="m-0">Sie können Ihr Widerrufsrecht auch online unter <a href="{{ route('oasis.widerrufen') }}" class="font-bold text-night underline underline-offset-4">{{ route('oasis.widerrufen') }}</a> ausüben. Wenn Sie diese Online-Funktion nutzen, übermitteln wir Ihnen auf einem dauerhaften Datenträger (z. B. durch eine E-Mail) unverzüglich eine Eingangsbestätigung mit Informationen zum Inhalt der Widerrufserklärung sowie dem Datum und der Uhrzeit ihres Eingangs.</p>
+            <p class="m-0">Sie können Ihr Widerrufsrecht auch online unter <a href="{{ route('oasis.widerrufen') }}" class="o-link-inline">{{ route('oasis.widerrufen') }}</a> ausüben. Wenn Sie diese Online-Funktion nutzen, übermitteln wir Ihnen auf einem dauerhaften Datenträger (z. B. durch eine E-Mail) unverzüglich eine Eingangsbestätigung mit Informationen zum Inhalt der Widerrufserklärung sowie dem Datum und der Uhrzeit ihres Eingangs.</p>
             <p class="m-0">Zur Wahrung der Widerrufsfrist reicht es aus, dass Sie die Mitteilung über die Ausübung des Widerrufsrechts vor Ablauf der Widerrufsfrist absenden.</p>
         </section>
 
@@ -40,7 +40,7 @@
 
         <a href="{{ route('oasis.widerrufen') }}" class="o-btn o-btn-md o-btn-outline self-start text-base font-extrabold">Vertrag widerrufen</a>
 
-        <section class="flex flex-col gap-[10px] rounded-[20px] border border-paper-line p-6">
+        <section class="flex flex-col gap-[10px] rounded-[20px] border border-paper-line p-4 sm:p-6">
             <h2 class="{{ $h2 }}">Muster-Widerrufsformular</h2>
             <p class="m-0">(Wenn Sie den Vertrag widerrufen wollen, dann füllen Sie bitte dieses Formular aus und senden Sie es zurück.)</p>
             <p class="m-0">– An {{ $address }}, E-Mail: {{ $contact }}:</p>

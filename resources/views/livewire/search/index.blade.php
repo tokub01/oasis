@@ -10,7 +10,7 @@
       $posts      CursorPaginator<Post>|null  PostFeed::matching
 --}}
 <div class="flex flex-col gap-6">
-<p role="status" aria-live="polite">{{ $postStatus }}</p>
+<p role="status" aria-live="polite" class="m-0 rounded-2xl bg-dune px-[18px] py-3.5 text-night empty:sr-only">{{ $postStatus }}</p>
 <p wire:loading class="text-muted">Wird geladen …</p>
     <x-network.columns label="Menschen und Oasen">
         <div class="flex flex-col gap-4">
@@ -31,7 +31,7 @@
         @if ($searching)
             <section aria-labelledby="search-posts" class="flex flex-col gap-4">
                 <h2 id="search-posts" class="m-0 text-[21px] font-extrabold text-night">Tropfen</h2>
-                <x-network.feed :posts="$posts" empty="Keine Tropfen mit „{{ $term }}“." />
+                <x-network.feed :posts="$posts" empty="Keine Tropfen mit „{{ $term }}“." end="Das sind alle Treffer." />
             </section>
         @else
             <div class="flex flex-col gap-2 rounded-[20px] border-2 border-dashed border-dune-line p-6 text-ink-2">
@@ -58,7 +58,7 @@
             <x-network.side-card title="Oasen">
                 @forelse ($oases as $oasis)
                     <a wire:key="index-2-{{ $oasis->id }}" wire:navigate href="{{ route('network.oases.show', $oasis) }}" class="flex items-center gap-3 rounded-2xl px-1 py-1 text-ink no-underline hover:bg-sand">
-                        <span aria-hidden="true" class="size-9 flex-none rounded-full bg-{{ $oasis->color }}"></span>
+                        <span aria-hidden="true" class="size-9 flex-none rounded-full bg-{{ $oasis->color }} {{ $oasis->color === 'dune' ? 'ring-1 ring-inset ring-dune-line' : '' }}"></span>
                         <span class="flex min-w-0 flex-col leading-tight">
                             <span class="truncate font-bold text-night">{{ $oasis->name }}</span>
                             <span class="text-sm text-muted">{{ $oasis->members_count }} {{ $oasis->members_count === 1 ? 'Mitglied' : 'Mitglieder' }}</span>

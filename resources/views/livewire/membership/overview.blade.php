@@ -6,11 +6,11 @@
     $h2 = 'm-0 text-[21px] font-extrabold text-night';
 @endphp
 
-<div class="flex flex-col gap-6">
-    <div class="flex flex-col gap-1">
-        <h1 class="o-h2 m-0 text-night">Mitgliedschaft</h1>
-        <p class="m-0 text-base text-muted">Verwalte deinen Beitrag, deine Rechnungen und deinen Status bei Oasis.</p>
-    </div>
+<div>
+<x-network.columns label="Rund um die Mitgliedschaft">
+    <x-network.page-header eyebrow="Konto" title="Mitgliedschaft">
+        Verwalte deinen Beitrag, deine Rechnungen und deinen Status bei Oasis.
+    </x-network.page-header>
 
     @if ($status !== '')
         <p role="status" aria-live="polite" class="m-0 rounded-2xl bg-dune px-[18px] py-3.5 text-night">{{ $status }}</p>
@@ -81,7 +81,7 @@
                     @endif
 
                     @if ($isEligibleForWithdrawal && ! $subscription->onGracePeriod())
-                        <a wire:navigate href="{{ route('app.membership.withdraw.confirm') }}" class="text-xs text-muted underline">
+                        <a wire:navigate href="{{ route('app.membership.withdraw.confirm') }}" class="inline-flex min-h-11 items-center text-sm text-muted underline underline-offset-4">
                             Mitgliedschaft widerrufen (14 Tage)
                         </a>
                     @endif
@@ -162,7 +162,7 @@
     {{-- Voucher redemption card --}}
     <section aria-labelledby="gutschein-titel" class="{{ $card }}">
         <h2 id="gutschein-titel" class="{{ $h2 }}">Gutscheincode einlösen</h2>
-        <p class="m-0 text-sm text-muted">
+        <p class="m-0 text-[15px] text-ink-2">
             Hast du einen Gutschein für eine Oasis-Mitgliedschaft erhalten? Löse ihn hier ein, um deine Mitgliedschaft sofort zu aktivieren.
         </p>
 
@@ -187,9 +187,12 @@
     @if ($purchasedGifts->isNotEmpty())
         <section aria-labelledby="geschenke-titel" class="{{ $card }}">
             <h2 id="geschenke-titel" class="{{ $h2 }}">Deine gekauften Gutscheine</h2>
-            <ul>
+            <ul class="m-0 flex list-none flex-col divide-y divide-paper-line p-0">
                 @foreach ($purchasedGifts as $gift)
-                    <li wire:key="purchased-gift-{{ $gift->id }}"><code>{{ $gift->code }}</code> · {{ $tiers[$gift->tier]['name'] ?? $gift->tier }} · {{ $gift->isRedeemed() ? 'Bereits eingelöst' : 'Zum Weitergeben' }}</li>
+                    <li wire:key="purchased-gift-{{ $gift->id }}" class="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                        <code class="font-mono text-base font-bold break-all text-night">{{ $gift->code }}</code>
+                        <span class="text-[15px] text-ink-2">{{ $tiers[$gift->tier]['name'] ?? $gift->tier }} · {{ $gift->isRedeemed() ? 'Bereits eingelöst' : 'Zum Weitergeben' }}</span>
+                    </li>
                 @endforeach
             </ul>
         </section>
@@ -198,7 +201,7 @@
     {{-- Gift purchase card --}}
     <section aria-labelledby="verschenken-titel" class="{{ $card }}">
         <h2 id="verschenken-titel" class="{{ $h2 }}">Mitgliedschaft verschenken</h2>
-        <p class="m-0 text-sm text-muted">
+        <p class="m-0 text-[15px] text-ink-2">
             Verschenke 12 Monate werbefreie Oase an Freunde oder Familie (2 Monate geschenkt). Du erhältst einen Gutscheincode zum Weitergeben.
         </p>
 
@@ -218,4 +221,19 @@
             @endforeach
         </div>
     </section>
+
+    <x-slot:aside>
+        <x-network.side-card title="Fair finanziert" tone="night">
+            <p class="m-0 text-[15px] text-on-night-2">Oasis ist werbefrei und lebt von den Beiträgen seiner Mitglieder. Bei Abstimmungen hat jedes Mitglied eine Stimme, egal welche Stufe.</p>
+            <a href="{{ route('app.votes') }}" wire:navigate class="o-link self-start text-[15px] text-on-night">Zu den Abstimmungen</a>
+        </x-network.side-card>
+        <x-network.side-card title="Gut zu wissen" tone="dune">
+            <ul class="m-0 flex list-none flex-col gap-1 p-0">
+                <li><a href="{{ route('oasis.preise') }}" wire:navigate class="o-link text-night">Stufen &amp; Preise</a></li>
+                <li><a href="{{ route('oasis.agb') }}" wire:navigate class="o-link text-night">AGB</a></li>
+                <li><a href="{{ route('oasis.hilfe') }}" wire:navigate class="o-link text-night">Hilfe &amp; Kontakt</a></li>
+            </ul>
+        </x-network.side-card>
+    </x-slot:aside>
+</x-network.columns>
 </div>

@@ -24,7 +24,7 @@
         <div class="o-container flex flex-wrap items-start gap-8">
 
             <form method="POST" action="{{ route('register') }}" aria-labelledby="test-titel" novalidate
-                  class="flex min-w-0 flex-[999_1_520px] flex-col gap-5 rounded-[32px] border border-paper-line bg-paper p-[clamp(28px,3.5vw,48px)]">
+                  class="flex min-w-0 flex-[999_1_520px] flex-col gap-5 rounded-[32px] border border-paper-line bg-paper p-5 sm:p-[clamp(28px,3.5vw,48px)]">
                 @csrf
                 <div class="flex flex-col gap-2.5">
                     <p class="m-0 text-[15px] font-bold text-ink-2">Schritt 1 von 3 · Konto</p>
@@ -52,10 +52,10 @@
                                    placeholder="z. B. Lena Berger" maxlength="50" required />
                     <x-oasis.field name="username" label="Benutzername" prefix="@" autocomplete="username"
                                    placeholder="lena" maxlength="30" pattern="[a-z0-9_]{3,30}" required
-                                   hint="3 bis 30 Zeichen: Kleinbuchstaben, Ziffern und _" />
+                                   hint="3 bis 30 Zeichen: Kleinbuchstaben, Ziffern und Unterstrich (_)" />
                 </div>
                 <x-oasis.field name="email" type="email" label="E-Mail-Adresse" autocomplete="email"
-                               placeholder="name@beispiel.de" required />
+                               placeholder="name@beispiel.tld" required />
                 <div class="o-auto-grid gap-x-5 gap-y-[18px] [--min:240px]">
                     <x-oasis.field name="password" type="password" label="Passwort" autocomplete="new-password"
                                    minlength="10" required hint="Mindestens 10 Zeichen" />
@@ -78,12 +78,12 @@
                     @enderror
                 </div>
 
-                <button type="submit" class="o-btn o-btn-primary">Konto erstellen und Test starten</button>
+                <button type="submit" class="o-btn o-btn-primary px-4 text-base sm:px-7 sm:text-lg">Konto erstellen und Test starten</button>
                 <p class="m-0 flex items-start gap-2.5 text-[15px] leading-normal text-ink-2">
                     <x-oasis.icon name="clock" :size="18" :stroke="2" class="mt-0.5 text-spring-text" />
                     <span>Dein Test endet nach {{ $trialDays }} Tagen von selbst. Zwei Tage vorher erinnern wir dich per E-Mail.</span>
                 </p>
-                <p class="m-0 text-base text-ink-2">Schon dabei? <a href="{{ route('login') }}" class="font-bold text-night underline underline-offset-4">Anmelden</a></p>
+                <p class="m-0 text-base text-ink-2">Schon dabei? <a href="{{ route('login') }}" class="inline-flex min-h-11 items-center font-bold whitespace-nowrap text-night underline underline-offset-4">Anmelden</a></p>
             </form>
 
             <aside aria-labelledby="erwartet-titel" class="flex flex-[1_1_340px] flex-col gap-6 rounded-[32px] bg-night p-[clamp(28px,3.5vw,44px)] text-on-night">

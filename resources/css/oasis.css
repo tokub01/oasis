@@ -85,6 +85,14 @@
         outline-color: var(--color-spring);
     }
 
+    /* Brand colour instead of the browser blue; in the base layer so utilities (e.g. switch styles) still win. */
+    input:is([type='checkbox'], [type='radio']) {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        accent-color: var(--color-night);
+    }
+
     summary {
         list-style: none;
         cursor: pointer;
@@ -152,10 +160,13 @@
         font-family: var(--font-display);
         font-variation-settings: 'SOFT' 100;
         font-weight: 500;
-        font-size: clamp(40px, 5vw, 72px);
+        font-size: clamp(32px, 5vw, 72px);
         line-height: 1.05;
         letter-spacing: -0.02em;
         text-wrap: balance;
+        /* Long German single words ("Widerrufsbelehrung") must break instead of overflowing on phones. */
+        overflow-wrap: break-word;
+        hyphens: auto;
     }
 
     .o-h2 {
@@ -249,6 +260,15 @@
         text-decoration-thickness: 1.5px;
     }
 
+    /* Link inside running text: no flex box or minimum height, so it does not tear the line apart. */
+    .o-link-inline {
+        font-weight: 700;
+        color: var(--color-night);
+        text-decoration: underline;
+        text-underline-offset: 4px;
+        overflow-wrap: anywhere;
+    }
+
     .o-label {
         font-size: 16px;
         font-weight: 700;
@@ -275,6 +295,11 @@
         font-size: 15px;
         font-weight: 600;
         color: var(--color-sun-text);
+    }
+
+    /* Error slots that are always rendered (e.g. Livewire) must not leave a gap while empty. */
+    .o-error:empty {
+        display: none;
     }
 
     /* Honeypot field: hidden from people, visible to naive bots. */

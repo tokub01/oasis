@@ -131,7 +131,7 @@ class Overview extends Component
             'isEligibleForWithdrawal' => $isEligibleForWithdrawal,
             'purchasedGifts' => $user->purchasedGiftMemberships()->latest('id')->get(),
             'tiers' => config('oasis.tiers', []),
-        ])->layout('layouts.app', ['title' => 'Mitgliedschaft', 'active' => 'mitgliedschaft']);
+        ])->layout('layouts.app', ['title' => 'Mitgliedschaft', 'active' => 'mitgliedschaft', 'wide' => true]);
     }
 
     /**

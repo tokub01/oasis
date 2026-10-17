@@ -10,7 +10,7 @@
             @csrf
             <x-oasis.field name="email" type="email" label="E-Mail-Adresse deines Kontos" autocomplete="email" required autofocus />
             <button type="submit" class="o-btn o-btn-dark">Link schicken</button>
-            <p class="m-0 text-center text-base text-ink-2"><a href="{{ route('login') }}" class="font-bold text-night underline underline-offset-4">Zurück zur Anmeldung</a></p>
+            <p class="m-0 text-center text-base text-ink-2"><a href="{{ route('login') }}" class="inline-flex min-h-11 items-center font-bold whitespace-nowrap text-night underline underline-offset-4">Zurück zur Anmeldung</a></p>
         </form>
     </x-oasis.auth-card>
 @endsection

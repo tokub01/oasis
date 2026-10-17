@@ -4,7 +4,7 @@
     Variables: $posts (CursorPaginator<Post>), $oases (Collection<Oasis> with members_count, largest first)
 --}}
 <div class="flex flex-col gap-6">
-<p role="status" aria-live="polite">{{ $postStatus }}</p>
+<p role="status" aria-live="polite" class="m-0 rounded-2xl bg-dune px-[18px] py-3.5 text-night empty:sr-only">{{ $postStatus }}</p>
 <p wire:loading class="text-muted">Wird geladen …</p>
     <x-network.columns label="Oasen und Hinweise">
         <div class="flex flex-col gap-2">
@@ -22,7 +22,7 @@
             <x-network.side-card title="Oasen">
                 @forelse ($oases as $oasis)
                     <a wire:key="discover-1-{{ $oasis->id }}" wire:navigate href="{{ route('network.oases.show', $oasis) }}" class="flex items-center gap-3 rounded-2xl px-1 py-1 text-ink no-underline hover:bg-sand">
-                        <span aria-hidden="true" class="size-9 flex-none rounded-full bg-{{ $oasis->color }}"></span>
+                        <span aria-hidden="true" class="size-9 flex-none rounded-full bg-{{ $oasis->color }} {{ $oasis->color === 'dune' ? 'ring-1 ring-inset ring-dune-line' : '' }}"></span>
                         <span class="flex min-w-0 flex-col leading-tight">
                             <span class="truncate font-bold text-night">{{ $oasis->name }}</span>
                             <span class="text-sm text-muted">{{ $oasis->members_count }} {{ $oasis->members_count === 1 ? 'Mitglied' : 'Mitglieder' }}</span>

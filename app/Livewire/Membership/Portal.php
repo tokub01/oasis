@@ -64,7 +64,7 @@ class Portal extends Component
 
         return view('livewire.membership.portal', [
             'payments' => $payments,
-        ])->layout('layouts.app', ['title' => 'Zahlungen verwalten', 'active' => 'mitgliedschaft']);
+        ])->layout('layouts.app', ['title' => 'Zahlungen verwalten', 'active' => 'mitgliedschaft', 'wide' => true]);
     }
 
     /**

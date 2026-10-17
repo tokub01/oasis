@@ -4,7 +4,7 @@
     Variables: $invitation (Invitation|null, with inviter)
 --}}
 <div class="flex flex-col gap-6">
-<p role="status" aria-live="polite">{{ $postStatus }}</p>
+<p role="status" aria-live="polite" class="m-0 rounded-2xl bg-dune px-[18px] py-3.5 text-night empty:sr-only">{{ $postStatus }}</p>
 <p wire:loading class="text-muted">Wird geladen …</p>
     <div class="o-container py-[clamp(48px,6vw,96px)]">
         <div class="mx-auto flex max-w-[620px] flex-col gap-5 rounded-[28px] bg-paper p-[clamp(24px,4vw,48px)]">

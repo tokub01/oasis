@@ -13,6 +13,8 @@
     $euro = fn ($value) => \App\Support\OasisFormat::euro($value);
     $trialDays = config('oasis.trial_days');
     $contactMail = config('oasis.mail.contact');
+    $serverLocation = config('oasis.server_location');
+    $serverLocation = filled($serverLocation) && ! \Illuminate\Support\Str::is('[*]', $serverLocation) ? $serverLocation : null;
 
     $topics = [
         ['id' => 'mitgliedschaft', 'title' => 'Test & Mitgliedschaft', 'text' => 'Preise, Stufen, Kündigung'],
@@ -42,10 +44,14 @@
         ],
         'datenschutz' => [
             ['q' => 'Verkauft Oasis meine Daten?', 'a' => 'Nein. Oasis lebt von Mitgliedsbeiträgen, nicht von Daten oder Werbung.'],
-            ['q' => 'Wo werden meine Daten gespeichert?', 'a' => config('oasis.server_location').'. Die Details stehen in der Datenschutzerklärung.'],
+            // Only answered once the open placeholder "[SERVERSTANDORT UND DIENSTLEISTER]" holds a real value.
+            $serverLocation !== null
+                ? ['q' => 'Wo werden meine Daten gespeichert?', 'a' => $serverLocation.'. Die Details stehen in der Datenschutzerklärung.']
+                : null,
             ['q' => 'Wie bekomme ich eine Kopie meiner Daten?', 'a' => 'In den Einstellungen unter „Daten herunterladen“ oder per E-Mail an '.config('oasis.mail.privacy').'.'],
         ],
     ];
+    $faqs = array_map(fn (array $questions) => array_values(array_filter($questions)), $faqs);
 @endphp
 
 @section('content')
@@ -59,8 +65,8 @@
                 <label for="h-suche" class="sr-only">Suche in der Hilfe</label>
                 <div class="flex min-h-[60px] items-center gap-3 rounded-full border border-field-line bg-field px-5">
                     <x-oasis.icon name="search" :size="22" :stroke="2" class="text-ink-2" />
-                    <input id="h-suche" type="search" placeholder="z. B. kündigen, Patenplatz, Passwort" autocomplete="off"
-                           class="min-h-14 min-w-0 flex-1 border-none bg-transparent text-lg text-ink">
+                    <input id="h-suche" type="search" placeholder="z. B. kündigen, Passwort" autocomplete="off"
+                           class="min-h-14 min-w-0 flex-1 border-none bg-transparent text-base text-ink sm:text-lg">
                 </div>
                 <p data-help-status role="status" class="mt-3 text-base font-semibold text-ink-2 empty:hidden"></p>
             </form>
@@ -105,9 +111,12 @@
             <div class="flex flex-wrap items-center justify-between gap-x-10 gap-y-5 rounded-[28px] bg-night p-[clamp(28px,3.5vw,44px)] text-on-night">
                 <div class="flex max-w-[620px] flex-col gap-2">
                     <h2 id="kontakt-titel" class="o-display text-[clamp(26px,2.6vw,36px)] leading-[1.2]">Nicht gefunden, was du suchst?</h2>
-                    <p class="text-[17px] leading-[1.6] text-on-night-2">Schreib uns an {{ $contactMail }}. Wir antworten in der Regel innerhalb von {{ config('oasis.support_reply_days') }} Werktagen.</p>
+                    <p class="text-[17px] leading-[1.6] text-on-night-2">Schreib uns an <a href="mailto:{{ $contactMail }}" class="font-bold text-on-night underline underline-offset-4 [overflow-wrap:anywhere]">{{ $contactMail }}</a>. Wir antworten in der Regel innerhalb von {{ config('oasis.support_reply_days') }} Werktagen.</p>
                 </div>
-                <a href="{{ route('oasis.melden') }}" class="inline-flex min-h-12 items-center rounded-full border border-on-night-muted px-[22px] text-base font-bold text-on-night no-underline">Rechtswidrige Inhalte melden</a>
+                <div class="flex flex-col items-start gap-1">
+                    <a href="mailto:{{ $contactMail }}" class="o-btn o-btn-primary">E-Mail schreiben</a>
+                    <a href="{{ route('oasis.melden') }}" class="o-link text-base text-on-night">Rechtswidrige Inhalte melden</a>
+                </div>
             </div>
         </div>
     </section>

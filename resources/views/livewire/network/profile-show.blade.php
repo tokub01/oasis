@@ -15,7 +15,7 @@
 
 <div @class(['flex flex-col gap-6', 'o-container py-8' => ! auth()->check()])>
 @guest <p class="rounded-2xl bg-dune p-4"><b>Du liest als Gast.</b> Zum Folgen, Antworten und Schreiben brauchst du ein Konto.</p> @endguest
-<p role="status" aria-live="polite">{{ $postStatus }}</p>
+<p role="status" aria-live="polite" class="m-0 rounded-2xl bg-dune px-[18px] py-3.5 text-night empty:sr-only">{{ $postStatus }}</p>
 <p wire:loading class="text-muted">Wird geladen …</p>
     <x-network.columns label="Über {{ $member->display_name }}">
         <header class="overflow-hidden rounded-[24px] bg-paper">
@@ -85,7 +85,7 @@
             <x-network.side-card title="Oasen">
                 @forelse ($oases as $oasis)
                     <a wire:key="profile-show-1-{{ $oasis->id }}" wire:navigate href="{{ route('network.oases.show', $oasis) }}" class="flex items-center gap-3 rounded-2xl px-1 py-1 text-ink no-underline hover:bg-sand">
-                        <span aria-hidden="true" class="size-9 flex-none rounded-full bg-{{ $oasis->color }}"></span>
+                        <span aria-hidden="true" class="size-9 flex-none rounded-full bg-{{ $oasis->color }} {{ $oasis->color === 'dune' ? 'ring-1 ring-inset ring-dune-line' : '' }}"></span>
                         <span class="flex min-w-0 flex-col leading-tight">
                             <span class="truncate font-bold text-night">{{ $oasis->name }}</span>
                             <span class="text-sm text-muted">{{ $oasis->pivot->role === 'host' ? 'Gastgeber:in' : 'Mitglied' }}</span>
@@ -102,7 +102,7 @@
                     <a wire:navigate href="{{ route('network.stats') }}" class="o-btn o-btn-md self-start bg-on-night text-night">Deine Zahlen</a>
                 </x-network.side-card>
                 <x-network.side-card title="Sichtbarkeit" tone="dune">
-                    <p class="m-0 text-[15px] text-ink-2">{{ $member->privacy()->profile_audience->label() }}. <a wire:navigate href="{{ route('app.privacy') }}" class="o-link">Privatsphäre-Einstellungen</a></p>
+                    <p class="m-0 text-[15px] text-ink-2">{{ $member->privacy()->profile_audience->label() }}. <a wire:navigate href="{{ route('app.privacy') }}" class="font-bold text-night underline underline-offset-4">Privatsphäre-Einstellungen</a></p>
                 </x-network.side-card>
             @else
                 <x-network.side-card title="Ein Netzwerk ohne Werbung" tone="dune">

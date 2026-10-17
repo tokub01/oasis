@@ -3,7 +3,7 @@
     of a JavaScript dialog, because the CSP allows no inline scripts. Variables: $oasis (with members_count, posts_count)
 --}}
 <div class="flex flex-col gap-6">
-<p role="status" aria-live="polite">{{ $postStatus }}</p>
+<p role="status" aria-live="polite" class="m-0 rounded-2xl bg-dune px-[18px] py-3.5 text-night empty:sr-only">{{ $postStatus }}</p>
 <p wire:loading class="text-muted">Wird geladen …</p>
     <div class="flex flex-col gap-6">
         <div class="flex flex-col gap-2">

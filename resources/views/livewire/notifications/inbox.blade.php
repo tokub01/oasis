@@ -1,12 +1,11 @@
 {{-- Hint inbox, component App\Livewire\Notifications\Inbox. Variables: paginated $hints, visible $groups. --}}
 <div>
 <x-network.columns label="Über Hinweise">
-    <header class="flex flex-col gap-3">
-        <h1 class="o-h2 m-0 text-night">Hinweise</h1>
-        <p class="m-0 text-ink-2">Was dich betrifft, in Ruhe und der Reihe nach.</p>
-        <p role="status" class="m-0 text-spring-text">{{ $status }}</p>
+    <div class="flex flex-col gap-3">
+        <x-network.page-header eyebrow="Für dich" title="Hinweise">Was dich betrifft, in Ruhe und der Reihe nach.</x-network.page-header>
+        <p role="status" class="m-0 font-bold text-spring-text empty:sr-only">{{ $status }}</p>
         <button wire:click="markAllRead" wire:loading.attr="disabled" class="o-btn o-btn-sm o-btn-outline self-start" type="button">Alle als gelesen markieren</button>
-    </header>
+    </div>
     @forelse ($groups as $group => $entries)
         <section wire:key="group-{{ $group }}" aria-labelledby="group-{{ $loop->index }}" class="flex flex-col gap-3">
             <h2 id="group-{{ $loop->index }}" class="m-0 text-xl font-extrabold text-night">{{ $group }}</h2>
@@ -26,9 +25,11 @@
             </ul>
         </section>
     @empty
-        <p class="text-ink-2">Hier gibt es gerade keine Hinweise für dich.</p>
+        <p class="m-0 rounded-[20px] border-2 border-dashed border-dune-line p-6 text-center text-ink-2">Hier gibt es gerade keine Hinweise für dich.</p>
     @endforelse
-    {{ $hints->links() }}
+    @if ($hints->hasPages())
+        {{ $hints->links() }}
+    @endif
     <x-slot:aside>
         <x-network.side-card title="Du entscheidest" tone="dune">
             <p class="m-0 text-ink-2">Wähle, welche Hinweise du erhalten möchtest. Eine tägliche E-Mail gibt es nur, wenn du sie einschaltest.</p>

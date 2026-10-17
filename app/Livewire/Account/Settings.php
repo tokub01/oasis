@@ -141,7 +141,7 @@ class Settings extends Component
     public function enableTwoFactor(EnableTwoFactorAuthentication $enable): void
     {
         $user = $this->actor();
-        if (! $this->ensurePasswordIsConfirmed()) {
+        if (! $this->ensurePasswordIsConfirmed('zwei-faktor-titel')) {
             return;
         }
 
@@ -156,7 +156,7 @@ class Settings extends Component
     public function confirmTwoFactor(ConfirmTwoFactorAuthentication $confirm): void
     {
         $user = $this->actor();
-        if (! $this->ensurePasswordIsConfirmed()) {
+        if (! $this->ensurePasswordIsConfirmed('zwei-faktor-titel')) {
             return;
         }
 
@@ -174,7 +174,7 @@ class Settings extends Component
     public function regenerateRecoveryCodes(GenerateNewRecoveryCodes $generate): void
     {
         $user = $this->actor();
-        if (! $this->ensurePasswordIsConfirmed()) {
+        if (! $this->ensurePasswordIsConfirmed('zwei-faktor-titel')) {
             return;
         }
 
@@ -189,7 +189,7 @@ class Settings extends Component
     public function disableTwoFactor(DisableTwoFactorAuthentication $disable): void
     {
         $user = $this->actor();
-        if (! $this->ensurePasswordIsConfirmed()) {
+        if (! $this->ensurePasswordIsConfirmed('zwei-faktor-titel')) {
             return;
         }
 
@@ -205,7 +205,7 @@ class Settings extends Component
     public function deleteAccount(DeleteAccount $delete): void
     {
         $user = $this->actor();
-        if (! $this->ensurePasswordIsConfirmed()) {
+        if (! $this->ensurePasswordIsConfirmed('loeschen-titel')) {
             return;
         }
 
@@ -252,9 +252,10 @@ class Settings extends Component
 
     /**
      * Enforce Laravel's recent password confirmation window (`auth.password_timeout`), redirecting to
-     * `password.confirm` when expired or missing.
+     * `password.confirm` when expired or missing. Afterwards the member returns to $section (the heading id of the
+     * part they were in), not to the top of the page.
      */
-    private function ensurePasswordIsConfirmed(): bool
+    private function ensurePasswordIsConfirmed(string $section): bool
     {
         $confirmedAt = (int) session('auth.password_confirmed_at', 0);
         $timeout = (int) config('auth.password_timeout', 10800);
@@ -263,7 +264,7 @@ class Settings extends Component
             return true;
         }
 
-        session()->put('url.intended', route('app.settings'));
+        session()->put('url.intended', route('app.settings').'#'.$section);
 
         $this->redirectRoute('password.confirm', navigate: true);
 

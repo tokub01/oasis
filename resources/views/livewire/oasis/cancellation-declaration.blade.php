@@ -6,12 +6,12 @@
     <fieldset class="m-0 p-0 border-0 flex flex-col gap-[10px]">
         <legend class="p-0 [margin-bottom:10px] text-[16px] font-extrabold">Art der Kündigung</legend>
         <label class="flex items-center gap-[12px] [min-height:52px] [padding:0_16px] border border-dune-line rounded-[14px] bg-field text-[17px] cursor-pointer">
-            <input type="radio" name="type" wire:model.live="form.type" value="ordentlich" class="[width:20px] [height:20px] m-0 accent-night">
+            <input type="radio" name="type" wire:model.live="form.type" value="ordentlich" class="[width:20px] [height:20px] m-0 flex-none accent-night">
             <span>
                 <b>Ordentlich</b> zum nächstmöglichen Zeitpunkt</span>
         </label>
         <label class="flex items-center gap-[12px] [min-height:52px] [padding:0_16px] border border-dune-line rounded-[14px] bg-field text-[17px] cursor-pointer">
-            <input type="radio" name="type" wire:model.live="form.type" value="ausserordentlich" class="[width:20px] [height:20px] m-0 accent-night">
+            <input type="radio" name="type" wire:model.live="form.type" value="ausserordentlich" class="[width:20px] [height:20px] m-0 flex-none accent-night">
             <span>
                 <b>Außerordentlich</b> aus wichtigem Grund</span>
         </label>
@@ -26,10 +26,10 @@
     <fieldset class="m-0 p-0 border-0 flex flex-col gap-[10px]">
         <legend class="p-0 [margin-bottom:10px] text-[16px] font-extrabold">Wann soll die Kündigung wirken?</legend>
         <label class="flex items-center gap-[12px] [min-height:52px] [padding:0_16px] border border-dune-line rounded-[14px] bg-field text-[17px] cursor-pointer">
-            <input type="radio" name="timing" wire:model.live="form.timing" value="naechst" class="[width:20px] [height:20px] m-0 accent-night">Zum nächstmöglichen Zeitpunkt</label>
+            <input type="radio" name="timing" wire:model.live="form.timing" value="naechst" class="[width:20px] [height:20px] m-0 flex-none accent-night">Zum nächstmöglichen Zeitpunkt</label>
         <div class="flex flex-wrap items-center [gap:10px_14px] [min-height:52px] [padding:6px_16px] border border-dune-line rounded-[14px] bg-field">
             <label class="flex items-center gap-[12px] text-[17px] cursor-pointer">
-                <input type="radio" name="timing" wire:model.live="form.timing" value="datum" class="[width:20px] [height:20px] m-0 accent-night">Zu einem bestimmten Datum:</label>
+                <input type="radio" name="timing" wire:model.live="form.timing" value="datum" class="[width:20px] [height:20px] m-0 flex-none accent-night">Zu einem bestimmten Datum:</label>
             <label for="k-datum" class="[position:absolute] [width:1px] [height:1px] [overflow:hidden] [clip:rect(0_0_0_0)]">Gewünschtes Kündigungsdatum</label>
             <input id="k-datum" type="date" class="o-input min-w-0" wire:model="form.effective_date" @required($form->timing === 'datum') aria-invalid="{{ $errors->has('form.effective_date') ? 'true' : 'false' }}" @if ($errors->has('form.effective_date')) aria-describedby="k-datum-error" @endif>
             <p id="k-datum-error" class="o-error">@error('form.effective_date'){{ $message }}@enderror</p>

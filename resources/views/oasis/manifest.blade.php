@@ -6,7 +6,12 @@
 ])
 
 @php
+    // Values in [BRACKETS] are open placeholders (config/oasis.php) and are never shown on the page.
+    $isSet = fn (?string $value) => filled($value) && ! \Illuminate\Support\Str::is('[*]', $value);
+
     $founder = config('oasis.founder');
+    $hasFounder = $isSet($founder['name']) && $isSet($founder['text']);
+    $statutes = $isSet(config('oasis.statutes')) ? config('oasis.statutes') : null;
 
     $promises = [
         ['title' => 'Keine Werbung. Nie.', 'text' => 'Oasis verkauft keine Anzeigen und keine Aufmerksamkeit.'],
@@ -25,11 +30,11 @@
             <div class="flex flex-col gap-[22px]">
                 <p class="o-eyebrow o-eyebrow-night">Manifest</p>
                 <h1 id="m-titel" class="o-h1 text-[clamp(44px,6vw,84px)] leading-[1.02]">Ein Ort im Netz, der seinen Mitgliedern gehört.</h1>
-                <p class="max-w-[32em] text-[clamp(18px,1.5vw,20px)] leading-[1.6] text-on-night-2">Wofür Oasis steht, was wir versprechen und wer dahinter steht.</p>
+                <p class="max-w-[32em] text-[clamp(18px,1.5vw,20px)] leading-[1.6] text-on-night-2">Wofür Oasis steht und was wir versprechen{{ $hasFounder ? ' – und wer dahinter steht' : '' }}.</p>
             </div>
             <svg viewBox="0 0 600 520" aria-hidden="true" focusable="false" class="h-auto w-[min(520px,100%)] justify-self-center">
                 <path d="M80 280 A220 220 0 0 1 520 280 Z" class="fill-sun"></path>
-                <path d="M30 350 q50 -38 100 0 t100 0 t100 0 t100 0 t100 0 t100 0" fill="none" stroke-width="18" stroke-linecap="round" class="stroke-spring"></path>
+                <path d="M50 350 q50 -38 100 0 t100 0 t100 0 t100 0 t100 0" fill="none" stroke-width="18" stroke-linecap="round" class="stroke-spring"></path>
                 <path d="M100 420 q50 -38 100 0 t100 0 t100 0 t100 0" fill="none" stroke-width="18" stroke-linecap="round" opacity="0.6" class="stroke-spring"></path>
                 <path d="M200 490 q50 -38 100 0 t100 0" fill="none" stroke-width="18" stroke-linecap="round" opacity="0.35" class="stroke-spring"></path>
             </svg>
@@ -65,30 +70,34 @@
                 <x-oasis.icon name="lock" :size="26" :stroke="1.8" class="text-night" />
                 <p class="flex-[1_1_480px] text-lg leading-[1.55] text-ink">
                     @if (config('oasis.promises_codified'))
-                        <b>Festgeschrieben:</b> Diese Versprechen stehen in unseren {{ config('oasis.statutes') }}. Ändern ließen sie sich nur, wenn die Mitglieder zustimmen.
+                        <b>Festgeschrieben:</b> @if ($statutes) Diese Versprechen stehen in unseren {{ $statutes }}.@else Diese Versprechen sind verbindlich festgeschrieben.@endif Ändern ließen sie sich nur, wenn die Mitglieder zustimmen.
                     @else
-                        <b>Wird festgeschrieben:</b> Vor dem Start schreiben wir diese Versprechen in unsere {{ config('oasis.statutes') }}. Ändern ließen sie sich dann nur, wenn die Mitglieder zustimmen.
+                        <b>Wird festgeschrieben:</b> @if ($statutes) Vor dem Start schreiben wir diese Versprechen in unsere {{ $statutes }}.@else Vor dem Start schreiben wir diese Versprechen verbindlich fest.@endif Ändern ließen sie sich dann nur, wenn die Mitglieder zustimmen.
                     @endif
                 </p>
             </div>
         </div>
     </section>
 
-    {{-- Founder --}}
+    {{-- Founder; until name and text are filled in, only the contact addresses are shown. --}}
     <section aria-labelledby="wer-titel" class="py-[clamp(64px,7vw,104px)]">
         <div class="o-container o-auto-grid items-center gap-x-[72px] gap-y-10 [--min:340px]">
-            @if (! empty($founder['photo']))
+            @if ($hasFounder && $isSet($founder['photo']))
                 <img src="{{ asset($founder['photo']) }}" alt="Foto von {{ $founder['name'] }}" class="aspect-[4/3] w-full rounded-[28px] object-cover">
-            @else
-                <div role="img" aria-label="Platzhalter für ein Foto" class="flex aspect-[4/3] w-full items-center justify-center rounded-[28px] border-2 border-dashed border-[#B9A88C] bg-dune text-base font-bold text-muted">[FOTO]</div>
             @endif
             <div class="flex flex-col gap-[18px]">
-                <h2 id="wer-titel" class="o-h2-s text-night">Wer dahinter steht</h2>
-                <p class="text-xl font-extrabold text-night">{{ $founder['name'] }}, Gründer:in</p>
-                <p class="max-w-[34em] text-lg leading-[1.6] text-ink-2">{{ $founder['text'] }}</p>
+                @if ($hasFounder)
+                    <h2 id="wer-titel" class="o-h2-s text-night">Wer dahinter steht</h2>
+                    <p class="text-xl font-extrabold text-night">{{ $founder['name'] }}, Gründer:in</p>
+                    <p class="max-w-[34em] text-lg leading-[1.6] text-ink-2">{{ $founder['text'] }}</p>
+                @else
+                    <h2 id="wer-titel" class="o-h2-s text-night">Kontakt</h2>
+                @endif
                 <div class="flex flex-col gap-1 text-[17px]">
-                    <span><b>Kontakt:</b> {{ config('oasis.mail.contact') }}</span>
-                    <span><b>Presse:</b> {{ config('oasis.mail.press') }}</span>
+                    <span>@if ($hasFounder)<b>Kontakt:</b> @endif<a href="mailto:{{ config('oasis.mail.contact') }}" class="text-night underline underline-offset-4 [overflow-wrap:anywhere]">{{ config('oasis.mail.contact') }}</a></span>
+                    @if (config('oasis.mail.press') !== config('oasis.mail.contact'))
+                        <span><b>Presse:</b> <a href="mailto:{{ config('oasis.mail.press') }}" class="text-night underline underline-offset-4 [overflow-wrap:anywhere]">{{ config('oasis.mail.press') }}</a></span>
+                    @endif
                 </div>
             </div>
         </div>

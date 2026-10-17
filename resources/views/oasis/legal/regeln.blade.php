@@ -5,8 +5,8 @@
 --}}
 @extends('oasis.legal._frame', ['legalTitle' => 'Community-Regeln', 'legalKey' => 'regeln'])
 @section('legal-content')
-    <p class="mb-6 rounded-[14px] bg-dune p-4">Platzhalter: Diese Seite braucht einen anwaltlich geprüften Text.</p>
     <div class="flex flex-col gap-[20px] [max-width:44em]">
+        <p class="m-0 [padding:14px_18px] rounded-[14px] bg-dune text-[15px]">Platzhalter: Diese Seite braucht einen anwaltlich geprüften Text.</p>
         <p class="m-0 text-[18px] [line-height:1.6]">Oasis soll ein Ort sein, an dem man gern ist. Dafür gelten für alle diese Regeln:</p>
         <ol class="m-0 p-0 list-none flex flex-col gap-[16px]">
             <li class="flex gap-[16px] items-start">

@@ -15,7 +15,7 @@
                 <span @class(['h-1.5 flex-1 rounded-full', 'bg-night' => $i <= $step, 'bg-dune' => $i > $step])></span>
             @endfor
         </div>
-        <p role="status" aria-live="polite" class="m-0 min-h-6 text-spring-text">{{ $status }}</p>
+        <p role="status" aria-live="polite" class="m-0 font-bold text-spring-text empty:sr-only">{{ $status }}</p>
     </header>
 
     @if ($section)

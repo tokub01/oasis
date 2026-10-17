@@ -21,6 +21,11 @@
     $carriedMuted = $carried && $viewer && in_array($carried->user_id, $viewer->mutedUserIds(), true);
     $postUrl = route('network.posts.show', $post);
     $bookmarked = $viewer && ($post->bookmarked ?? $viewer->hasBookmarked($post));
+    // Phones: the actions share one row as icon-over-label tiles; from 640px they sit side by side as pills.
+    $actionCount = ($canInteract ? 1 + (int) $canReply + (int) $canCarry : 0) + ($viewer ? 1 : 0);
+    $actionGrid = $actionCount === 3 ? 'grid-cols-3' : 'grid-cols-4';
+    $action = 'inline-flex min-h-11 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-none bg-transparent px-1 py-1 text-xs no-underline sm:w-auto sm:flex-row sm:gap-2 sm:rounded-full sm:px-3 sm:text-base';
+    $menuItem = 'flex min-h-11 w-full cursor-pointer items-center rounded-xl border-none bg-transparent px-3 text-left text-[15px] font-bold text-night no-underline hover:bg-sand';
 @endphp
 
 <article id="tropfen-{{ $post->id }}" {{ $attributes->class('flex flex-col gap-3 rounded-[24px] border border-paper-line bg-paper p-[22px]') }}>
@@ -34,16 +39,16 @@
         <a wire:navigate href="{{ route('oasis.profil', $post->author->username) }}" class="flex-none no-underline" tabindex="-1">
             <x-network.avatar :user="$post->author" />
         </a>
-        <div class="flex min-w-0 flex-col leading-[1.35]">
-            <a wire:navigate href="{{ route('oasis.profil', $post->author->username) }}" class="text-base font-extrabold text-ink no-underline">{{ $post->author->display_name }}</a>
+        <div class="flex min-w-0 flex-1 flex-col leading-[1.35]">
+            <a wire:navigate href="{{ route('oasis.profil', $post->author->username) }}" class="self-start text-base font-extrabold text-ink no-underline">{{ $post->author->display_name }}</a>
             <span class="text-sm text-muted">
                 {{ '@'.$post->author->username }}
                 @if ($post->oasis)
-                    · in <a wire:navigate href="{{ route('network.oases.show', $post->oasis) }}" class="text-muted underline underline-offset-4">{{ $post->oasis->name }}</a>
+                    · in <a wire:navigate href="{{ route('network.oases.show', $post->oasis) }}" class="py-2 text-muted underline underline-offset-4">{{ $post->oasis->name }}</a>
                 @endif
                 ·
                 @if ($link)
-                    <a wire:navigate href="{{ $postUrl }}" class="text-muted underline underline-offset-4"><time datetime="{{ $post->created_at->toIso8601String() }}">{{ $post->created_at->locale('de')->diffForHumans() }}</time></a>
+                    <a wire:navigate href="{{ $postUrl }}" class="py-2 text-muted underline underline-offset-4"><time datetime="{{ $post->created_at->toIso8601String() }}">{{ $post->created_at->locale('de')->diffForHumans() }}</time></a>
                 @else
                     <time datetime="{{ $post->created_at->toIso8601String() }}">{{ $post->created_at->locale('de')->isoFormat('D. MMMM YYYY, HH:mm') }}</time>
                 @endif
@@ -52,6 +57,57 @@
                 @endif
             </span>
         </div>
+
+        @if ($viewer)
+            {{-- Rarely needed actions live in a "⋯" menu (no JavaScript: <details>); confirmations stay nested inside. --}}
+            <details class="relative flex-none self-start">
+                <summary aria-label="Weitere Aktionen zum Tropfen von {{ $post->author->display_name }}" title="Weitere Aktionen"
+                         class="flex size-11 cursor-pointer list-none items-center justify-center rounded-full text-2xl leading-none text-night hover:bg-sand [&::-webkit-details-marker]:hidden">
+                    <span aria-hidden="true">⋯</span>
+                </summary>
+                <div class="absolute top-full right-0 z-10 mt-1 flex w-64 flex-col rounded-2xl border border-paper-line bg-paper p-2 shadow-lg">
+                    @can('removeFromOasis', $post)
+                        <form wire:submit="removePostFromOasis({{ $post->id }})">
+                            <button type="submit" wire:loading.attr="disabled" class="{{ $menuItem }}">Aus Oase entfernen</button>
+                        </form>
+                    @endcan
+                    @can('delete', $post)
+                        <details>
+                            <summary class="{{ $menuItem }} list-none [&::-webkit-details-marker]:hidden">Löschen …</summary>
+                            <div class="flex flex-col gap-2 px-3 pt-1 pb-2 text-sm">
+                                <span class="font-bold text-night">Wirklich löschen?</span>
+                                <form wire:submit="deletePost({{ $post->id }})">
+                                    <button type="submit" wire:loading.attr="disabled" class="o-btn o-btn-sm w-full bg-sun text-sm font-bold text-sun-ink">Löschen bestätigen</button>
+                                </form>
+                            </div>
+                        </details>
+                    @elseif ($viewer->id !== $post->author->id)
+                        @if ($viewer->hasMuted($post->author))
+                            <form wire:submit="unmuteUser({{ $post->author->id }})">
+                                <button type="submit" wire:loading.attr="disabled" class="{{ $menuItem }}">Nicht mehr stumm</button>
+                            </form>
+                        @else
+                            <form wire:submit="muteUser({{ $post->author->id }})">
+                                <button type="submit" wire:loading.attr="disabled" class="{{ $menuItem }}">Stummschalten</button>
+                            </form>
+                        @endif
+                        <details>
+                            <summary class="{{ $menuItem }} list-none [&::-webkit-details-marker]:hidden">Blockieren …</summary>
+                            <div class="flex flex-col gap-2 px-3 pt-1 pb-2 text-sm">
+                                <span class="font-bold text-night">Wirklich blockieren?</span>
+                                <span class="text-ink-2">Ihr verliert gegenseitige Follows.</span>
+                                <form wire:submit="blockUser({{ $post->author->id }})">
+                                    <button type="submit" wire:loading.attr="disabled" class="o-btn o-btn-sm w-full bg-night text-sm font-bold text-on-night">Blockieren bestätigen</button>
+                                </form>
+                            </div>
+                        </details>
+                        <a wire:navigate href="{{ route('oasis.melden', ['url' => $postUrl]) }}" class="{{ $menuItem }}">Melden</a>
+                    @else
+                        <a wire:navigate href="{{ route('oasis.melden', ['url' => $postUrl]) }}" class="{{ $menuItem }}">Melden</a>
+                    @endcan
+                </div>
+            </details>
+        @endif
     </header>
 
     @if ($post->isQuestion())
@@ -138,9 +194,7 @@
                                 </a>
                                 <span class="text-xs text-muted">{{ '@'.$reply->author->username }}</span>
                             </div>
-                            <p class="m-0 text-ink-2 whitespace-pre-line break-words text-sm">
-                                <x-network.rich-text :text="$reply->body" :author="$reply->author" />
-                            </p>
+                            <p class="m-0 text-ink-2 whitespace-pre-line break-words text-sm"><x-network.rich-text :text="$reply->body" :author="$reply->author" /></p>
                         </div>
                     </div>
                 @endforeach
@@ -151,103 +205,62 @@
         </div>
     @endif
 
-    <footer class="flex flex-wrap items-center gap-1.5 text-muted">
-        @if ($canInteract)
-            @if ($canReply)
-                <a wire:navigate href="{{ $postUrl }}#antworten" class="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-night no-underline">
-                    <x-oasis.icon name="reply" :size="20" /><span>Antworten</span>
-                </a>
+    @if ($viewer)
+        <footer class="grid w-full {{ $actionGrid }} gap-1 text-muted sm:flex sm:flex-wrap sm:items-center sm:gap-1.5">
+            @if ($canInteract)
+                @if ($canReply)
+                    <a wire:navigate href="{{ $postUrl }}#antworten" class="{{ $action }} text-night">
+                        <x-oasis.icon name="reply" :size="20" /><span>Antworten</span>
+                    </a>
+                @endif
+                @if ($canCarry)
+                    <a wire:navigate href="{{ route('network.posts.carry', $post) }}" class="{{ $action }} text-night">
+                        <x-oasis.icon name="repost" :size="20" /><span>Weitertragen</span>
+                    </a>
+                @endif
+                @if ($post->reacted)
+                    <form wire:submit="unreact({{ $post->id }})">
+                        <button type="submit" wire:loading.attr="disabled" aria-pressed="true" class="{{ $action }} text-sun-text">
+                            <x-oasis.icon name="heart" :size="20" /><span>Reagiert</span>
+                        </button>
+                    </form>
+                @else
+                    <form wire:submit="react({{ $post->id }})">
+                        <button type="submit" wire:loading.attr="disabled" aria-pressed="false" class="{{ $action }} text-night">
+                            <x-oasis.icon name="heart" :size="20" /><span>Reagieren</span>
+                        </button>
+                    </form>
+                @endif
             @endif
-            @if ($canCarry)
-                <a wire:navigate href="{{ route('network.posts.carry', $post) }}" class="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-night no-underline">
-                    <x-oasis.icon name="repost" :size="20" /><span>Weitertragen</span>
-                </a>
-            @endif
-            @if ($post->reacted)
-                <form wire:submit="unreact({{ $post->id }})">
 
-                    <button type="submit" wire:loading.attr="disabled" aria-pressed="true" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-none bg-transparent px-3 text-sun-text">
-                        <x-oasis.icon name="heart" :size="20" /><span>Reagiert</span>
-                    </button>
-                </form>
-            @else
-                <form wire:submit="react({{ $post->id }})">
-                    <button type="submit" wire:loading.attr="disabled" aria-pressed="false" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-none bg-transparent px-3 text-night">
-                        <x-oasis.icon name="heart" :size="20" /><span>Reagieren</span>
-                    </button>
-                </form>
-            @endif
-        @elseif (! $viewer)
-            <span class="text-sm">Antworten und Reagieren nur für Mitglieder · <a wire:navigate href="{{ route('register') }}" class="text-night underline underline-offset-4">{{ config('oasis.trial_days') }} Tage testen</a></span>
-        @endif
-
-        @if ($viewer)
             @if ($bookmarked)
                 <form wire:submit="unbookmark({{ $post->id }})">
-
-                    <button type="submit" wire:loading.attr="disabled" aria-pressed="true" aria-label="Aus Merkliste entfernen" title="Aus Merkliste entfernen" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-none bg-transparent px-3 text-spring-text">
+                    <button type="submit" wire:loading.attr="disabled" aria-pressed="true" aria-label="Aus Merkliste entfernen" title="Aus Merkliste entfernen" class="{{ $action }} text-spring-text">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="flex-none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
                         <span>Gemerkt</span>
                     </button>
                 </form>
             @else
                 <form wire:submit="bookmark({{ $post->id }})">
-                    <button type="submit" wire:loading.attr="disabled" aria-pressed="false" aria-label="Tropfen merken" title="Tropfen merken" class="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-none bg-transparent px-3 text-night">
+                    <button type="submit" wire:loading.attr="disabled" aria-pressed="false" aria-label="Tropfen merken" title="Tropfen merken" class="{{ $action }} text-night">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="flex-none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
                         <span>Merken</span>
                     </button>
                 </form>
             @endif
-        @endif
-
-        <span class="ml-auto flex flex-wrap items-center gap-1.5">
-            @can('removeFromOasis', $post)
-                <form wire:submit="removePostFromOasis({{ $post->id }})">
-                    <button type="submit" wire:loading.attr="disabled" class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Aus Oase entfernen</button>
-                </form>
-            @endcan
-            @can('delete', $post)
-                <details class="relative inline-block">
-                    <summary class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Löschen</summary>
-                    <div class="absolute right-0 bottom-full z-10 mb-2 flex flex-col gap-2 rounded-2xl border border-paper-line bg-paper p-3 shadow-lg text-xs whitespace-nowrap">
-                        <span class="font-bold text-night">Wirklich löschen?</span>
-                        <form wire:submit="deletePost({{ $post->id }})">
-
-                            <button type="submit" wire:loading.attr="disabled" class="o-btn o-btn-sm bg-sun text-sun-ink text-xs font-bold w-full">Löschen bestätigen</button>
-                        </form>
-                    </div>
-                </details>
-            @else
-                @if ($viewer && $viewer->id !== $post->author->id)
-                    @if ($viewer->hasMuted($post->author))
-                        <form wire:submit="unmuteUser({{ $post->author->id }})">
-
-                            <button type="submit" wire:loading.attr="disabled" class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Nicht mehr stumm</button>
-                        </form>
-                    @else
-                        <form wire:submit="muteUser({{ $post->author->id }})">
-                            <button type="submit" wire:loading.attr="disabled" class="o-link cursor-pointer border-none bg-transparent px-2 text-sm">Stumm</button>
-                        </form>
-                    @endif
-                    <details class="relative inline-block">
-                        <summary class="o-link cursor-pointer border-none bg-transparent px-2 text-sm text-muted">Blockieren</summary>
-                        <div class="absolute right-0 bottom-full z-10 mb-2 flex flex-col gap-2 rounded-2xl border border-paper-line bg-paper p-3 shadow-lg text-xs whitespace-nowrap">
-                            <span class="font-bold text-night">Wirklich blockieren?</span>
-                            <span class="text-ink-2 max-w-[200px] whitespace-normal">Ihr verliert gegenseitige Follows.</span>
-                            <form wire:submit="blockUser({{ $post->author->id }})">
-                                <button type="submit" wire:loading.attr="disabled" class="o-btn o-btn-sm bg-night text-on-night text-xs font-bold w-full">Blockieren bestätigen</button>
-                            </form>
-                        </div>
-                    </details>
-                    <a wire:navigate href="{{ route('oasis.melden', ['url' => $postUrl]) }}" class="o-link px-2 text-sm">Melden</a>
-                @elseif ($viewer)
-                    <a wire:navigate href="{{ route('oasis.melden', ['url' => $postUrl]) }}" class="o-link px-2 text-sm">Melden</a>
-                @endif
-            @endcan
-        </span>
-    </footer>
+        </footer>
+    @else
+        <footer class="text-sm text-muted">
+            Antworten und Reagieren nur für Mitglieder <span class="whitespace-nowrap"><span aria-hidden="true" class="max-sm:hidden">· </span><a wire:navigate href="{{ route('register') }}" class="-my-2 inline-block py-2 max-sm:block text-night underline underline-offset-4">{{ config('oasis.trial_days') }} Tage testen</a></span>
+        </footer>
+    @endif
 
     @if ($link && $canReply && $viewer && $viewer->id !== $post->author->id && $viewer->followsMutually($post->author))
-        <div id="quick-reply-{{ $post->id }}"><x-network.compose :reply-to="$post" :images="false" /></div>
+        <details id="quick-reply-{{ $post->id }}" class="border-t border-paper-line pt-2" wire:ignore.self>
+            <summary class="flex min-h-11 cursor-pointer items-center gap-2 text-[15px] font-bold text-night">
+                <x-oasis.icon name="reply" :size="18" />Schnell antworten
+            </summary>
+            <x-network.compose :reply-to="$post" :images="false" :inline="true" />
+        </details>
     @endif
 </article>

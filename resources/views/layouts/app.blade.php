@@ -69,24 +69,27 @@
 
     <div class="lg:grid lg:min-h-screen lg:grid-cols-[260px_1fr]">
         <header class="border-b border-dune-line bg-paper lg:sticky lg:top-0 lg:h-screen lg:border-r lg:border-b-0">
-            <div class="flex items-center justify-between gap-4 px-5 py-4 lg:h-full lg:flex-col lg:items-stretch lg:justify-start lg:gap-8 lg:px-6 lg:py-8">
+            <div class="flex items-center justify-between gap-4 px-5 py-4 lg:h-full lg:flex-col lg:items-stretch lg:justify-start lg:gap-5 lg:overflow-y-auto lg:px-6 lg:py-6">
                 <a href="{{ route('app.home') }}" wire:navigate aria-label="Oasis – zur Quelle" class="flex min-h-11 items-center text-night no-underline">
                     <x-oasis.logo :size="36" />
                 </a>
 
-                {{-- Search: a field in the sidebar from 1024px, an icon link on phones (next to "Mehr"). --}}
-                <form method="GET" action="{{ route('search.index') }}" role="search" class="hidden lg:block">
-                    <label for="app-search" class="sr-only">Suchen</label>
-                    <input id="app-search" type="search" name="q" maxlength="100" placeholder="Suchen …" value="{{ request()->routeIs('search.index') ? request('q') : '' }}"
-                           class="o-input min-h-11 w-full py-2">
-                </form>
+                {{-- Search: a field in the sidebar from 1024px, an icon link on phones (next to "Mehr").
+                     The search page has its own field, so the sidebar field would only duplicate it there. --}}
+                @unless (request()->routeIs('search.index'))
+                    <form method="GET" action="{{ route('search.index') }}" role="search" class="hidden lg:block">
+                        <label for="app-search" class="sr-only">Suchen</label>
+                        <input id="app-search" type="search" name="q" maxlength="100" placeholder="Suchen …"
+                               class="o-input min-h-11 w-full py-2">
+                    </form>
+                @endunless
                 <a href="{{ route('search.index') }}" wire:navigate aria-label="Suchen" class="ml-auto flex min-h-11 min-w-11 items-center justify-center rounded-full text-night lg:hidden">
                     <x-oasis.icon name="search" :size="22" />
                 </a>
 
                 <nav aria-label="App-Navigation"
                      class="fixed inset-x-0 bottom-0 z-20 border-t border-dune-line bg-paper pb-[env(safe-area-inset-bottom)] lg:static lg:border-0 lg:bg-transparent lg:pb-0">
-                    <ul class="m-0 flex list-none justify-around p-0 lg:flex-col lg:justify-start lg:gap-1">
+                    <ul class="m-0 flex list-none justify-around p-0 px-2 py-1 lg:flex-col lg:px-0 lg:justify-start lg:gap-1 lg:py-0">
                         @foreach ($nav as $key => [$label, $icon, $href])
                             <li>
                                 <a href="{{ $href }}" wire:navigate @if ($active === $key) aria-current="page" @endif
@@ -105,7 +108,7 @@
 
                 {{-- Desktop: account pages as a plain list under the main navigation. --}}
                 <nav aria-label="Konto" class="hidden lg:block">
-                    <ul class="m-0 flex list-none flex-col gap-1 p-0">
+                    <ul class="m-0 flex list-none flex-col gap-0 p-0">
                         @foreach ($more as $key => [$label, $href])
                             <li><a href="{{ $href }}" wire:navigate @if ($active === $key) aria-current="page" @endif
                                    @class(['flex min-h-11 items-center gap-2 rounded-xl px-4 no-underline', 'font-bold text-night bg-dune' => $active === $key, 'text-ink-2' => $active !== $key])>{{ $label }}@if ($key === 'hinweise' && $hasUnread)<span class="size-2 rounded-full bg-spring" aria-hidden="true"></span><span class="sr-only">(neue Hinweise)</span>@endif</a></li>
@@ -141,7 +144,7 @@
 
         <div class="flex min-w-0 flex-col pb-24 lg:pb-0">
             @if ($trialDaysLeft !== null)
-                <p role="status" class="m-0 bg-night px-5 py-2.5 text-center text-sm text-on-night">
+                <p role="status" class="m-0 bg-night px-5 py-2.5 text-center text-sm text-balance text-on-night">
                     Noch {{ $trialDaysLeft }} {{ $trialDaysLeft === 1 ? 'Tag' : 'Tage' }} in deinem Test. Der Test endet von selbst.
                 </p>
             @endif

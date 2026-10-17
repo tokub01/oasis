@@ -18,5 +18,8 @@
     "to": "bis",
     "of": "von",
     "results": "Ergebnisse",
-    "Go to page :page": "Gehe zu Seite :page"
+    "Go to page :page": "Gehe zu Seite :page",
+    "Verify your email address": "Bestätige deine E-Mail-Adresse",
+    "Reset your password": "Setze dein Passwort zurück",
+    "The provided password was incorrect.": "Das Passwort stimmt nicht."
 }

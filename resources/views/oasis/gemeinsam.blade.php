@@ -10,7 +10,7 @@
         <div class="o-container o-auto-grid [--min:420px] [gap:clamp(40px,_5vw,_72px)] items-center">
             <div class="flex flex-col gap-[22px]">
                 <p class="o-eyebrow">Gemeinsam starten</p>
-                <h1 id="g-titel" class="m-0 o-display font-medium [font-size:clamp(44px,_6vw,_84px)] [line-height:1.02] [letter-spacing:-0.02em] text-night">Zieh nicht allein um.</h1>
+                <h1 id="g-titel" class="o-h1 m-0 text-[clamp(44px,6vw,84px)] leading-[1.02] text-night">Zieh nicht allein um.</h1>
                 <p class="m-0 [max-width:32em] [font-size:clamp(18px,_1.5vw,_20px)] [line-height:1.6] text-ink-2">Ein Netzwerk ist nur so gut wie die Menschen darin. Darum könnt ihr bei Oasis als Gruppe starten: Euer Test beginnt erst, wenn alle da sind.</p>
                 <a href="{{ route('register') }}" class="[align-self:flex-start] inline-flex items-center justify-center [min-height:56px] [padding:0_28px] rounded-[999px] bg-sun text-sun-ink text-[18px] font-extrabold no-underline">Gruppe anlegen</a>
             </div>
@@ -69,19 +69,19 @@
 
     <section aria-labelledby="ablauf-titel" class="[padding:clamp(64px,_7vw,_104px)_0]">
         <div class="o-container flex flex-col gap-[44px]">
-            <h2 id="ablauf-titel" class="m-0 o-display font-medium [font-size:clamp(30px,_3.2vw,_46px)] [line-height:1.12] [letter-spacing:-0.015em] text-night">So funktioniert der Gruppenstart</h2>
-            <ol class="m-0 p-0 list-none o-auto-grid [--min:300px] gap-[24px]">
-                <li class="flex flex-col gap-[12px] [padding:32px_28px] bg-paper rounded-[24px]">
+            <h2 id="ablauf-titel" class="o-h2-s m-0 text-night">So funktioniert der Gruppenstart</h2>
+            <ol class="m-0 grid list-none gap-6 p-0 md:grid-cols-3">
+                <li class="flex flex-col gap-3 rounded-[24px] bg-paper px-7 py-8 md:px-5 lg:px-7">
                     <span aria-hidden="true" class="o-display text-[56px] font-medium [line-height:1] text-sun-text">1</span>
                     <h3 class="m-0 text-[22px] [line-height:1.3] font-extrabold text-night">Gruppe anlegen</h3>
                     <p class="m-0 text-[16px] [line-height:1.6] text-ink-2">Gib eurer Gruppe einen Namen, zum Beispiel „WG Kastanienallee“ oder „Fachschaft Bio“.</p>
                 </li>
-                <li class="flex flex-col gap-[12px] [padding:32px_28px] bg-paper rounded-[24px]">
+                <li class="flex flex-col gap-3 rounded-[24px] bg-paper px-7 py-8 md:px-5 lg:px-7">
                     <span aria-hidden="true" class="o-display text-[56px] font-medium [line-height:1] text-sun-text">2</span>
                     <h3 class="m-0 text-[22px] [line-height:1.3] font-extrabold text-night">Link teilen</h3>
                     <p class="m-0 text-[16px] [line-height:1.6] text-ink-2">Schick den Einladungslink per WhatsApp, Signal oder Mail. Wer ihn öffnet, kann erst mal ohne Konto reinlesen.</p>
                 </li>
-                <li class="flex flex-col gap-[12px] [padding:32px_28px] bg-paper rounded-[24px]">
+                <li class="flex flex-col gap-3 rounded-[24px] bg-paper px-7 py-8 md:px-5 lg:px-7">
                     <span aria-hidden="true" class="o-display text-[56px] font-medium [line-height:1] text-sun-text">3</span>
                     <h3 class="m-0 text-[22px] [line-height:1.3] font-extrabold text-night">Gemeinsam loslegen</h3>
                     <p class="m-0 text-[16px] [line-height:1.6] text-ink-2">Euer {{ config('oasis.trial_days') }}-Tage-Test startet für alle gleichzeitig, sobald die Gruppe vollständig ist.</p>
@@ -137,7 +137,7 @@
         <div class="o-container o-auto-grid [--min:420px] [gap:40px_72px] items-start">
             <div class="flex flex-col gap-[16px]">
                 <p class="o-eyebrow">Für Organisationen</p>
-                <h2 id="orga-titel" class="m-0 o-display font-medium [font-size:clamp(30px,_3.2vw,_46px)] [line-height:1.12] [letter-spacing:-0.015em] text-night">Mit vielen auf einmal umziehen?</h2>
+                <h2 id="orga-titel" class="o-h2-s m-0 text-night">Mit vielen auf einmal umziehen?</h2>
                 <p class="m-0 [max-width:30em] text-[18px] [line-height:1.6] text-ink-2">Hochschulgruppen, Vereine und Initiativen: Schreibt uns, dann planen wir euren Start gemeinsam, mit eigener Oase und Gastgeber:innen aus euren Reihen.</p>
             </div>
             <livewire:oasis.organisation-enquiry />

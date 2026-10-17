@@ -11,13 +11,18 @@ namespace App\Support;
 class OasisFormat
 {
     /**
+     * Euro sign behind a no-break space, so "5 €" never wraps between amount and sign.
+     */
+    public const CURRENCY = "\u{00A0}€";
+
+    /**
      * German euro amount: whole amounts without cents ("5 €"), others with two decimals ("7,25 €").
      */
     public static function euro(float|int $amount): string
     {
         $decimals = floor($amount) == $amount ? 0 : 2;
 
-        return number_format($amount, $decimals, ',', '.').' €';
+        return number_format($amount, $decimals, ',', '.').self::CURRENCY;
     }
 
     /**
@@ -25,6 +30,6 @@ class OasisFormat
      */
     public static function money(float|int $amount): string
     {
-        return number_format($amount, 2, ',', '.').' €';
+        return number_format($amount, 2, ',', '.').self::CURRENCY;
     }
 }

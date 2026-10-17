@@ -5,6 +5,19 @@
     'active' => 'funktionen',
 ])
 
+@php
+    // Open placeholders such as "[iOS und Android]" are not shown: the phone card only appears once real apps exist.
+    $apps = config('oasis.apps');
+
+    $devices = array_values(array_filter([
+        filled($apps) && ! \Illuminate\Support\Str::is('[*]', $apps)
+            ? ['icon' => 'phone', 'title' => 'Fürs Handy', 'text' => 'Als App für '.$apps.', gebaut für kurze Momente zwischendurch.']
+            : null,
+        ['icon' => 'monitor', 'title' => 'Am Rechner', 'text' => 'Im Browser auf '.config('oasis.domain').', mit Platz für längere Gespräche.'],
+        ['icon' => 'users', 'title' => 'Für Gäste lesbar', 'text' => 'Öffentliche Tropfen lassen sich teilen und ohne Konto lesen.'],
+    ]));
+@endphp
+
 @section('content')
     {{-- Intro --}}
     <section aria-labelledby="f-titel" class="pt-[clamp(56px,6vw,88px)] pb-[clamp(48px,5vw,72px)]">
@@ -28,7 +41,7 @@
                     'Ein klares Ende statt endlosem Scrollen',
                 ]" />
             </div>
-            <figure aria-label="Beispiel: das Ende der Quelle" class="flex flex-col gap-3.5 rounded-[28px] bg-dune p-[clamp(24px,3vw,40px)]">
+            <figure aria-label="Beispiel: das Ende der Quelle" class="flex w-full max-w-[560px] flex-col gap-3.5 justify-self-center rounded-[28px] bg-dune p-[clamp(24px,3vw,40px)]">
                 <div class="flex flex-col gap-2 rounded-[20px] bg-paper p-[18px]">
                     <div class="flex items-center gap-3">
                         <div aria-hidden="true" class="flex size-10 flex-none items-center justify-center rounded-[20px] bg-night text-sm font-extrabold text-on-night">AK</div>
@@ -48,7 +61,12 @@
     {{-- Tropfen und Weitertragen --}}
     <section aria-labelledby="tropfen-titel" class="o-section-s">
         <div class="o-container o-auto-grid items-center gap-[clamp(40px,5vw,80px)] [--min:420px]">
-            <figure aria-label="Beispiel: ein weitergetragener Tropfen" class="flex flex-col gap-3 rounded-[28px] bg-dune p-[clamp(24px,3vw,40px)]">
+            <div class="flex flex-col gap-[18px]">
+                <p class="o-eyebrow text-spring-text">Tropfen und Weitertragen</p>
+                <h2 id="tropfen-titel" class="o-h2-s text-night">Kurz gesagt, gut weitergegeben.</h2>
+                <p class="max-w-[32em] text-lg leading-[1.6] text-ink-2">Ein Tropfen ist ein kurzer Beitrag mit Text oder Bildern. Wer etwas weiterträgt, schreibt ein paar eigene Worte dazu. So wird aus Teilen ein Gespräch statt ein Reflex.</p>
+            </div>
+            <figure aria-label="Beispiel: ein weitergetragener Tropfen" class="flex w-full max-w-[560px] flex-col gap-3 justify-self-center lg:order-first rounded-[28px] bg-dune p-[clamp(24px,3vw,40px)]">
                 <p class="flex items-center gap-2 text-[15px] font-bold text-ink-2">
                     <x-oasis.icon name="repost" :size="18" :stroke="1.9" />
                     Jonas hat das weitergetragen</p>
@@ -63,11 +81,6 @@
                     </div>
                 </div>
             </figure>
-            <div class="flex flex-col gap-[18px]">
-                <p class="o-eyebrow text-spring-text">Tropfen und Weitertragen</p>
-                <h2 id="tropfen-titel" class="o-h2-s text-night">Kurz gesagt, gut weitergegeben.</h2>
-                <p class="max-w-[32em] text-lg leading-[1.6] text-ink-2">Ein Tropfen ist ein kurzer Beitrag mit Text oder Bildern. Wer etwas weiterträgt, schreibt ein paar eigene Worte dazu. So wird aus Teilen ein Gespräch statt ein Reflex.</p>
-            </div>
         </div>
     </section>
 
@@ -79,13 +92,13 @@
                 <h2 id="oasen-titel" class="o-h2-s text-night">Räume für das, was dich interessiert.</h2>
                 <p class="max-w-[32em] text-lg leading-[1.6] text-ink-2">Oasen sind Themenräume mit Gastgeber:innen und eigenen Hausregeln. Vom Stadtgarten über analoge Fotografie bis zum Lesekreis. Einer Oase folgst du wie einem Menschen.</p>
             </div>
-            <figure aria-label="Beispiele für Oasen" class="flex flex-col gap-3 rounded-[28px] bg-dune p-[clamp(24px,3vw,40px)]">
+            <figure aria-label="Beispiele für Oasen" class="flex w-full max-w-[560px] flex-col gap-3 justify-self-center rounded-[28px] bg-dune p-3 sm:p-[clamp(24px,3vw,40px)]">
                 @foreach ([
                     ['name' => 'Stadtgarten', 'text' => 'Gärtnern, tauschen, ernten', 'color' => 'bg-spring', 'followed' => true],
                     ['name' => 'Korn & Licht', 'text' => 'Analoge Fotografie', 'color' => 'bg-sun', 'followed' => false],
                     ['name' => 'Lesekreis', 'text' => 'Ein Buch im Monat, gemeinsam', 'color' => 'bg-night', 'followed' => false],
                 ] as $oase)
-                    <div class="flex items-center gap-3.5 rounded-[18px] bg-paper px-[18px] py-4">
+                    <div class="flex items-center gap-3 rounded-[18px] bg-paper p-3 sm:gap-3.5 sm:px-[18px] sm:py-4">
                         <div aria-hidden="true" class="size-11 flex-none rounded-[14px] {{ $oase['color'] }}"></div>
                         <div class="flex flex-1 flex-col leading-[1.35]"><span class="text-[17px] font-extrabold">{{ $oase['name'] }}</span><span class="text-[15px] text-muted">{{ $oase['text'] }}</span></div>
                         @if ($oase['followed'])
@@ -102,7 +115,12 @@
     {{-- Leise Zahlen und Karawane --}}
     <section aria-labelledby="leise-titel" class="o-section-s">
         <div class="o-container o-auto-grid items-center gap-[clamp(40px,5vw,80px)] [--min:420px]">
-            <figure aria-label="Beispiel: Reaktionen sind nur für dich sichtbar" class="flex flex-col gap-3 rounded-[28px] bg-dune p-[clamp(24px,3vw,40px)]">
+            <div class="flex flex-col gap-[18px]">
+                <p class="o-eyebrow text-spring-text">Leise Zahlen und Karawane</p>
+                <h2 id="leise-titel" class="o-h2-s text-night">Gesehen werden ohne Wettrennen.</h2>
+                <p class="max-w-[32em] text-lg leading-[1.6] text-ink-2">Deine Karawane sind die Menschen, die dir folgen. Wie viele auf einen Tropfen reagiert haben, siehst nur du. So zählt, was gesagt wird, und nicht, wie laut.</p>
+            </div>
+            <figure aria-label="Beispiel: Reaktionen sind nur für dich sichtbar" class="flex w-full max-w-[560px] flex-col gap-3 justify-self-center lg:order-first rounded-[28px] bg-dune p-[clamp(24px,3vw,40px)]">
                 <div class="flex flex-col gap-3 rounded-[20px] bg-paper p-[18px]">
                     <div class="flex items-center gap-3">
                         <div aria-hidden="true" class="flex size-10 flex-none items-center justify-center rounded-[20px] bg-sun text-sm font-extrabold text-sun-ink">DU</div>
@@ -115,11 +133,6 @@
                     </div>
                 </div>
             </figure>
-            <div class="flex flex-col gap-[18px]">
-                <p class="o-eyebrow text-spring-text">Leise Zahlen und Karawane</p>
-                <h2 id="leise-titel" class="o-h2-s text-night">Gesehen werden ohne Wettrennen.</h2>
-                <p class="max-w-[32em] text-lg leading-[1.6] text-ink-2">Deine Karawane sind die Menschen, die dir folgen. Wie viele auf einen Tropfen reagiert haben, siehst nur du. So zählt, was gesagt wird, und nicht, wie laut.</p>
-            </div>
         </div>
     </section>
 
@@ -134,7 +147,7 @@
                     <x-oasis.icon name="arrow-right" :size="18" :stroke="2" />
                 </a>
             </div>
-            <figure aria-label="Beispiel: einen Tropfen melden" class="rounded-[28px] bg-dune p-[clamp(24px,3vw,40px)]">
+            <figure aria-label="Beispiel: einen Tropfen melden" class="w-full max-w-[560px] justify-self-center rounded-[28px] bg-dune p-[clamp(24px,3vw,40px)]">
                 <div class="flex flex-col gap-3.5 rounded-[20px] bg-paper p-[22px]">
                     <p class="flex items-center gap-2.5 text-lg font-extrabold text-night">
                         <x-oasis.icon name="flag" :size="20" :stroke="1.9" />
@@ -154,14 +167,10 @@
 
     {{-- Geräte --}}
     <section aria-label="Geräte" class="py-[clamp(48px,5vw,72px)]">
-        <div class="o-container o-auto-grid gap-6 [--min:300px]">
-            @foreach ([
-                ['icon' => 'phone', 'title' => 'Fürs Handy', 'text' => 'Als App für '.config('oasis.apps').', gebaut für kurze Momente zwischendurch.'],
-                ['icon' => 'monitor', 'title' => 'Am Rechner', 'text' => 'Im Browser auf '.config('oasis.domain').', mit Platz für längere Gespräche.'],
-                ['icon' => 'users', 'title' => 'Für Gäste lesbar', 'text' => 'Öffentliche Tropfen lassen sich teilen und ohne Konto lesen.'],
-            ] as $device)
-                <div class="flex items-start gap-[18px] rounded-3xl border border-dune-line p-7">
-                    <x-oasis.icon :name="$device['icon']" :size="28" :stroke="1.8" class="text-night" />
+        <div @class(['o-container grid gap-6', 'md:grid-cols-3' => count($devices) === 3, 'md:grid-cols-2' => count($devices) === 2])>
+            @foreach ($devices as $device)
+                <div class="flex items-start gap-[18px] rounded-3xl border border-dune-line p-7 md:flex-col md:gap-4 md:p-6 lg:flex-row lg:gap-[18px] lg:p-7">
+                    <x-oasis.icon :name="$device['icon']" :size="28" :stroke="1.8" class="flex-none text-night" />
                     <div class="flex flex-col gap-1.5">
                         <h3 class="text-xl font-extrabold text-night">{{ $device['title'] }}</h3>
                         <p class="text-base leading-[1.55] text-ink-2">{{ $device['text'] }}</p>
@@ -172,13 +181,13 @@
     </section>
 
     {{-- Call to action --}}
-    <section aria-labelledby="f-cta" class="bg-night py-[clamp(64px,7vw,104px)] text-on-night">
+    <section aria-labelledby="f-cta" class="bg-sun py-[clamp(64px,7vw,104px)] text-sun-ink">
         <div class="o-container flex flex-wrap items-center justify-between gap-x-12 gap-y-7">
-            <div class="flex max-w-[640px] flex-col gap-3">
+            <div class="flex max-w-[640px] flex-col gap-2.5">
                 <h2 id="f-cta" class="o-h2">Probier es selbst aus.</h2>
-                <p class="text-lg leading-[1.6] text-on-night-2">{{ config('oasis.trial_days') }} Tage voller Zugang, ohne Zahlungsdaten. Der Test endet von selbst.</p>
+                <p class="text-lg leading-[1.6]">{{ config('oasis.trial_days') }} Tage voller Zugang, ohne Zahlungsdaten. Der Test endet von selbst.</p>
             </div>
-            <a href="{{ route('register') }}" class="o-btn o-btn-primary">{{ config('oasis.trial_days') }} Tage kostenlos testen</a>
+            <a href="{{ route('register') }}" class="o-btn o-btn-dark px-[30px]">{{ config('oasis.trial_days') }} Tage kostenlos testen</a>
         </div>
     </section>
 @endsection

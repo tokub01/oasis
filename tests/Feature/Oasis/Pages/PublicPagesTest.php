@@ -122,20 +122,22 @@ it('renders changed membership prices and derives yearly and daily amounts from 
         'oasis.year_months' => 9,
         'oasis.vat_rate' => 7,
     ]);
+    // Amounts and the euro sign are joined by a no-break space, so a price never wraps apart.
+    $eur = "\u{00A0}€";
     $this->get(route('oasis.preise'))->assertOk()
-        ->assertSee('data-month="7,25 €" data-year="65,25 €"', false)
-        ->assertSee('data-month="9,50 €" data-year="85,50 €"', false)
-        ->assertSee('data-month="ab 21 €" data-year="ab 189 €"', false)
+        ->assertSee("data-month=\"7,25{$eur}\" data-year=\"65,25{$eur}\"", false)
+        ->assertSee("data-month=\"9,50{$eur}\" data-year=\"85,50{$eur}\"", false)
+        ->assertSee("data-month=\"ab 21{$eur}\" data-year=\"ab 189{$eur}\"", false)
         ->assertSee('rund 24 Cent am Tag')->assertSee('rund 18 Cent am Tag')
         ->assertSee('3 Monate geschenkt')->assertSee('inklusive 7 % Umsatzsteuer')
-        ->assertDontSee('data-month="3 €"', false)->assertDontSee('data-year="50 €"', false);
+        ->assertDontSee("data-month=\"3{$eur}\"", false)->assertDontSee("data-year=\"50{$eur}\"", false);
 
     config(['oasis.checkout_enabled' => true]);
-    $this->get(route('oasis.mitglied'))->assertOk()->assertSee('9,50 €')
-        ->assertSee('data-month="7,25 € / Monat"', false)
-        ->assertSee('data-year="65,25 € / Jahr"', false);
+    $this->get(route('oasis.mitglied'))->assertOk()->assertSee("9,50{$eur}")
+        ->assertSee("data-month=\"7,25{$eur} / Monat\"", false)
+        ->assertSee("data-year=\"65,25{$eur} / Jahr\"", false);
     foreach (['home', 'hilfe'] as $page) {
-        $this->get(route('oasis.'.$page))->assertOk()->assertSee('7,25 €')->assertSee('9,50 €');
+        $this->get(route('oasis.'.$page))->assertOk()->assertSee("7,25{$eur}")->assertSee("9,50{$eur}");
     }
 });
 
@@ -191,9 +193,24 @@ it('renders operator, contact, founder and service placeholders from changed con
     $this->get(route('oasis.preise'))->assertOk()->assertSee('4.321 Mitglieder');
 });
 
+it('hides open [placeholder] values instead of showing them on public pages', function () {
+    config([
+        'oasis.founder.name' => '[DEIN NAME]', 'oasis.founder.text' => '[Gründer-Text]', 'oasis.founder.photo' => null,
+        'oasis.statutes' => '[AGB / Satzung]', 'oasis.apps' => '[iOS und Android]',
+        'oasis.server_location' => '[SERVERSTANDORT UND DIENSTLEISTER]', 'oasis.promises_codified' => false,
+    ]);
+    $this->get(route('oasis.manifest'))->assertOk()
+        ->assertDontSee('[DEIN NAME]')->assertDontSee('[Gründer-Text]')->assertDontSee('[FOTO]')
+        ->assertDontSee('[AGB / Satzung]')->assertDontSee('Wer dahinter steht')
+        ->assertSee('Wird festgeschrieben:')->assertSee(config('oasis.mail.press'));
+    $this->get(route('oasis.funktionen'))->assertOk()->assertDontSee('[iOS und Android]')->assertDontSee('Fürs Handy');
+    $this->get(route('oasis.hilfe'))->assertOk()->assertDontSee('[SERVERSTANDORT')
+        ->assertDontSee('Wo werden meine Daten gespeichert?');
+});
+
 it('marks the active main-navigation link on each matching page', function ($page) {
     $response = $this->get(route('oasis.'.$page))->assertOk();
-    expect($response->getContent())->toContain('href="'.route('oasis.'.$page).'" wire:navigate aria-current="page"');
+    expect($response->getContent())->toMatch('/href="'.preg_quote(route('oasis.'.$page), '/').'"\s+wire:navigate\s+aria-current="page"/');
 })->with(['funktionen', 'preise', 'sicherheit', 'manifest', 'gemeinsam']);
 
 it('sends signed-in members from login and registration into the app, never in a circle', function (string $page) {
@@ -210,7 +227,7 @@ it('explains privacy and security with the same providers as the privacy policy,
     config(['oasis.privacy.hosting' => 'Configured Hosting GmbH', 'oasis.privacy.mail_provider' => null]);
 
     $this->get(route('oasis.sicherheit'))->assertOk()
-        ->assertSee('Datenschutz &amp; Sicherheit', false)->assertSee('Ende-zu-Ende verschlüsselt')
+        ->assertSee('Datenschutz &amp; Sicherheit', false)->assertSee('Ende-zu-Ende</span> verschlüsselt', false)
         ->assertSee('Configured Hosting GmbH')->assertSee('legen wir vor dem Start fest')
         ->assertSee(config('oasis.privacy.ai_provider'))->assertSee(route('oasis.datenschutz'), false);
     $this->get(route('oasis.home'))->assertSee(route('oasis.sicherheit'), false);

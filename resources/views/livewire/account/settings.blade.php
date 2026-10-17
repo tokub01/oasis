@@ -14,7 +14,9 @@
 @endphp
 
 <div class="flex flex-col gap-6">
-    <h1 class="o-h2 m-0 text-night">Einstellungen</h1>
+    <x-network.page-header eyebrow="Konto" title="Einstellungen">
+        Profil, Passwort, Anmeldung und deine Daten an einem Ort.
+    </x-network.page-header>
 
     @if ($status !== '')
         <p role="status" aria-live="polite" class="m-0 rounded-2xl bg-dune px-[18px] py-3.5">{{ $status }}</p>
@@ -55,10 +57,10 @@
             <section aria-labelledby="zwei-faktor-titel" class="{{ $card }}">
                 <h2 id="zwei-faktor-titel" class="{{ $h2 }}">Zwei-Faktor-Anmeldung</h2>
                 @if ($twoFactorActive)
-                    <p class="m-0 text-ink-2">Aktiv. Bei der Anmeldung fragen wir zusätzlich nach einem Code aus deiner Authenticator-App.</p>
+                    <p class="m-0 text-[15px] text-ink-2">Aktiv. Bei der Anmeldung fragen wir zusätzlich nach einem Code aus deiner Authenticator-App.</p>
                     @if ($showRecoveryCodes)
                         <div class="flex flex-col gap-2">
-                            <p class="m-0 font-bold">Bewahre diese Wiederherstellungscodes sicher auf. Jeder funktioniert einmal.</p>
+                            <p class="m-0 text-[15px] font-bold text-night">Bewahre diese Wiederherstellungscodes sicher auf. Jeder funktioniert einmal.</p>
                             <ul class="m-0 grid list-none grid-cols-2 gap-2 rounded-2xl bg-dune p-4 font-mono text-sm">
                                 @foreach ($user->recoveryCodes() as $recoveryCode)
                                     <li wire:key="recovery-{{ $loop->index }}">{{ $recoveryCode }}</li>
@@ -75,14 +77,14 @@
                         </form>
                     </div>
                 @elseif ($twoFactorPending)
-                    <p class="m-0 text-ink-2">Scanne den QR-Code mit deiner Authenticator-App und gib den angezeigten Code ein.</p>
+                    <p class="m-0 text-[15px] text-ink-2">Scanne den QR-Code mit deiner Authenticator-App und gib den angezeigten Code ein.</p>
                     <div class="self-start rounded-2xl bg-white p-4" role="img" aria-label="QR-Code für die Authenticator-App">{!! $user->twoFactorQrCodeSvg() !!}</div>
                     <form wire:submit="confirmTwoFactor" class="flex flex-col gap-4" novalidate>
                         <x-oasis.field name="code" label="Sechsstelliger Code" wire:model="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" required />
                         <button type="submit" wire:loading.attr="disabled" class="o-btn o-btn-md o-btn-dark self-start">Bestätigen</button>
                     </form>
                 @else
-                    <p class="m-0 text-ink-2">Schütze dein Konto zusätzlich mit einem Code aus einer Authenticator-App.</p>
+                    <p class="m-0 text-[15px] text-ink-2">Schütze dein Konto zusätzlich mit einem Code aus einer Authenticator-App.</p>
                     <form wire:submit="enableTwoFactor">
                         <button type="submit" wire:loading.attr="disabled" class="o-btn o-btn-md o-btn-outline">Einschalten</button>
                     </form>
@@ -91,13 +93,13 @@
 
             <section aria-labelledby="daten-titel" class="{{ $card }}">
                 <h2 id="daten-titel" class="{{ $h2 }}">Deine Daten</h2>
-                <p class="m-0 text-ink-2">Lade deine Daten herunter: Konto, Profil, Tropfen mit Bildern, wem du folgst, Oasen und Gemerktes – als ZIP-Datei. Verschlüsselte Chat-Nachrichten können wir nicht lesen und deshalb nicht exportieren.</p>
+                <p class="m-0 text-[15px] text-ink-2">Lade deine Daten herunter: Konto, Profil, Tropfen mit Bildern, wem du folgst, Oasen und Gemerktes – als ZIP-Datei. Verschlüsselte Chat-Nachrichten können wir nicht lesen und deshalb nicht exportieren.</p>
                 <a href="{{ route('account.export') }}" class="o-btn o-btn-md o-btn-outline self-start">Daten herunterladen</a>
             </section>
 
             <section aria-labelledby="loeschen-titel" class="{{ $card }} border-sun-text">
                 <h2 id="loeschen-titel" class="{{ $h2 }}">Konto löschen</h2>
-                <p class="m-0 text-ink-2">Dein Konto und alle Daten dazu werden endgültig gelöscht. Eine laufende Mitgliedschaft kündigst du vorher über „<a wire:navigate href="{{ route('oasis.kuendigen') }}" class="text-night underline underline-offset-4">Verträge hier kündigen</a>“.</p>
+                <p class="m-0 text-[15px] text-ink-2">Dein Konto und alle Daten dazu werden endgültig gelöscht. Eine laufende Mitgliedschaft kündigst du vorher über „<a wire:navigate href="{{ route('oasis.kuendigen') }}" class="text-night underline underline-offset-4">Verträge hier kündigen</a>“.</p>
                 <form wire:submit="deleteAccount">
                     <label class="flex items-start gap-3 text-[15px] leading-normal">
                         <input type="checkbox" name="confirm" value="1" wire:model="confirm" required class="mt-0.5 size-5 flex-none accent-night">

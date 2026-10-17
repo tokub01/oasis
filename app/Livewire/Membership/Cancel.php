@@ -72,7 +72,7 @@ class Cancel extends Component
             'subscription' => $subscription,
             'tierName' => $tierName,
             'effectiveDate' => $effectiveDate,
-        ])->layout('layouts.app', ['title' => 'Mitgliedschaft kündigen', 'active' => 'mitgliedschaft']);
+        ])->layout('layouts.app', ['title' => 'Mitgliedschaft kündigen', 'active' => 'mitgliedschaft', 'wide' => true]);
     }
 
     /**

@@ -48,10 +48,12 @@
 
 @section('content')
     <section aria-labelledby="s-titel" class="bg-night py-[clamp(64px,7vw,112px)] text-on-night">
-        <div class="o-container flex max-w-[52em] flex-col gap-[22px]">
-            <p class="o-eyebrow o-eyebrow-night">Vertrauen</p>
-            <h1 id="s-titel" class="o-h1 text-[clamp(40px,5.4vw,76px)] leading-[1.04]">Datenschutz &amp; Sicherheit</h1>
-            <p class="max-w-[34em] text-[clamp(18px,1.5vw,20px)] leading-[1.6] text-on-night-2">Was mit deinen Daten passiert und wie wir sie schützen – in klaren Worten. Die rechtlich vollständige Fassung steht in der <a href="{{ route('oasis.datenschutz') }}" wire:navigate class="text-on-night underline underline-offset-4">Datenschutzerklärung</a>.</p>
+        <div class="o-container">
+            <div class="flex max-w-[52em] flex-col gap-[22px]">
+                <p class="o-eyebrow o-eyebrow-night">Vertrauen</p>
+                <h1 id="s-titel" class="o-h1 text-[clamp(40px,5.4vw,76px)] leading-[1.04]">Datenschutz &amp; Sicherheit</h1>
+                <p class="max-w-[34em] text-[clamp(18px,1.5vw,20px)] leading-[1.6] text-on-night-2">Was mit deinen Daten passiert und wie wir sie schützen – in klaren Worten. Die rechtlich vollständige Fassung steht in der <a href="{{ route('oasis.datenschutz') }}" wire:navigate class="text-on-night underline underline-offset-4">Datenschutzerklärung</a>.</p>
+            </div>
         </div>
     </section>
 
@@ -72,7 +74,7 @@
     <section aria-labelledby="chat-titel" class="border-y border-paper-line bg-paper py-[clamp(64px,7vw,104px)]">
         <div class="o-container o-auto-grid items-start gap-x-[72px] gap-y-8 [--min:340px]">
             <div class="flex flex-col gap-3">
-                <h2 id="chat-titel" class="o-h2-s text-night">Der Chat ist Ende-zu-Ende verschlüsselt</h2>
+                <h2 id="chat-titel" class="o-h2-s text-night">Der Chat ist <span class="whitespace-nowrap">Ende-zu-Ende</span> verschlüsselt</h2>
                 <p class="text-lg leading-[1.6] text-ink-2">Echte Ende-zu-Ende-Verschlüsselung: Nicht einmal Oasis kann mitlesen.</p>
             </div>
             <ul class="m-0 flex list-none flex-col gap-4 p-0 text-[17px] leading-[1.6] text-ink">
@@ -123,10 +125,12 @@
     </section>
 
     <section aria-labelledby="rechte-titel" class="bg-dune py-[clamp(64px,7vw,104px)]">
-        <div class="o-container flex max-w-[52em] flex-col gap-5">
-            <h2 id="rechte-titel" class="o-h2-s text-night">Deine Rechte</h2>
-            <p class="text-[17px] leading-[1.65] text-ink">Du kannst jederzeit erfahren, welche Daten wir über dich haben, sie berichtigen, herunterladen oder löschen lassen. Den Export und das Löschen deines Kontos erledigst du selbst in den <a href="{{ route('app.settings') }}" wire:navigate class="text-night underline underline-offset-4">Einstellungen</a>.</p>
-            <p class="text-[17px] leading-[1.65] text-ink">Fragen zum Datenschutz: <a href="mailto:{{ config('oasis.mail.privacy') }}" class="text-night underline underline-offset-4">{{ config('oasis.mail.privacy') }}</a>. Du kannst dich außerdem bei der Aufsichtsbehörde beschweren: {{ $privacy['authority'] ?? $notYet }}.</p>
+        <div class="o-container">
+            <div class="flex max-w-[52em] flex-col gap-5">
+                <h2 id="rechte-titel" class="o-h2-s text-night">Deine Rechte</h2>
+                <p class="text-[17px] leading-[1.65] text-ink">Du kannst jederzeit erfahren, welche Daten wir über dich haben, sie berichtigen, herunterladen oder löschen lassen. Den Export und das Löschen deines Kontos erledigst du selbst in den <a href="{{ route('app.settings') }}" wire:navigate class="text-night underline underline-offset-4">Einstellungen</a>.</p>
+                <p class="text-[17px] leading-[1.65] text-ink">Fragen zum Datenschutz: <a href="mailto:{{ config('oasis.mail.privacy') }}" class="text-night underline underline-offset-4">{{ config('oasis.mail.privacy') }}</a>. Du kannst dich außerdem bei der Aufsichtsbehörde beschweren: {{ $privacy['authority'] ?? $notYet }}.</p>
+            </div>
         </div>
     </section>
 @endsection

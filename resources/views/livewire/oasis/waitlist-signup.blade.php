@@ -10,7 +10,7 @@
     <div class="flex flex-col gap-[6px]">
         <label for="gr-gruppe" class="text-[15px] font-bold">Mit wem willst du starten? <span class="font-medium text-muted">(optional)</span>
         </label>
-        <input id="gr-gruppe" type="text" placeholder="z. B. meine WG, meine Fachschaft" class="o-input min-w-0" wire:model="form.group" aria-invalid="{{ $errors->has('form.group') ? 'true' : 'false' }}" aria-describedby="gr-gruppe-error">
+        <input id="gr-gruppe" type="text" placeholder="z. B. WG oder Fachschaft" class="o-input min-w-0" wire:model="form.group" aria-invalid="{{ $errors->has('form.group') ? 'true' : 'false' }}" aria-describedby="gr-gruppe-error">
         <p id="gr-gruppe-error" class="o-error">@error('form.group'){{ $message }}@enderror</p>
     </div>
     <label class="flex gap-[12px] items-start text-[15px] [line-height:1.5] text-ink">

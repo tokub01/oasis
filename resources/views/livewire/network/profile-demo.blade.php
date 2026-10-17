@@ -8,7 +8,7 @@
 --}}
 
 <div class="flex flex-col gap-6">
-<p role="status" aria-live="polite">{{ $postStatus }}</p>
+<p role="status" aria-live="polite" class="m-0 rounded-2xl bg-dune px-[18px] py-3.5 text-night empty:sr-only">{{ $postStatus }}</p>
 <p wire:loading class="text-muted">Wird geladen …</p>
     <div role="region" aria-label="Hinweis für Gäste" class="border-b border-dune-line bg-dune">
         <div class="o-container flex flex-wrap items-center justify-between gap-x-6 gap-y-3 py-[18px]">

@@ -5,8 +5,8 @@
 --}}
 @extends('oasis.legal._frame', ['legalTitle' => 'Impressum', 'legalKey' => 'impressum'])
 @section('legal-content')
-    <p class="mb-6 rounded-[14px] bg-dune p-4">Platzhalter: Diese Seite braucht einen anwaltlich geprüften Text.</p>
     <div class="flex flex-col gap-[24px] [max-width:44em]">
+        <p class="m-0 [padding:14px_18px] rounded-[14px] bg-dune text-[15px]">Platzhalter: Diese Seite braucht einen anwaltlich geprüften Text.</p>
         <section class="flex flex-col gap-[6px]">
             <h2 class="m-0 text-[20px] font-extrabold text-night">Angaben gemäß § 5 DDG</h2>
             <p class="m-0">{{ config('oasis.operator.legal_name') }}<br>{{ config('oasis.operator.legal_form') }}<br>{{ config('oasis.operator.street') }}<br>{{ config('oasis.operator.city') }}<br>{{ config('oasis.operator.country') }}</p>

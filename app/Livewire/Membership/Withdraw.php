@@ -77,7 +77,7 @@ class Withdraw extends Component
             'user' => $user,
             'subscription' => $subscription,
             'tierName' => $tierName,
-        ])->layout('layouts.app', ['title' => 'Mitgliedschaft widerrufen', 'active' => 'mitgliedschaft']);
+        ])->layout('layouts.app', ['title' => 'Mitgliedschaft widerrufen', 'active' => 'mitgliedschaft', 'wide' => true]);
     }
 
     /**

@@ -10,9 +10,9 @@
         <div class="o-container o-auto-grid [--min:420px] [gap:clamp(40px,_5vw,_72px)] items-center">
             <div class="flex flex-col gap-[22px]">
                 <p class="o-eyebrow o-eyebrow-night">Gründungsphase</p>
-                <h1 id="gr-titel" class="m-0 o-display font-medium [font-size:clamp(44px,_6vw,_84px)] [line-height:1.02] [letter-spacing:-0.02em] [text-wrap:balance]">Sei von Anfang an dabei.</h1>
+                <h1 id="gr-titel" class="o-h1 m-0 text-[clamp(44px,6vw,84px)] leading-[1.02]">Sei von Anfang an dabei.</h1>
                 <p class="m-0 [max-width:32em] [font-size:clamp(18px,_1.5vw,_20px)] [line-height:1.6] text-on-night-2">@if (config('oasis.launch_date'))Oasis startet am {{ \Illuminate\Support\Carbon::parse(config('oasis.launch_date'))->format('d.m.Y') }}.@else Oasis startet bald, den Termin geben wir hier bekannt.@endif Die ersten {{ number_format(config('oasis.founding.seats'), 0, ',', '.') }} Mitglieder werden Gründungsmitglieder: mit Preisgarantie und einer Stimme in der allerersten Abstimmung.</p>
-                <p class="text-on-night-muted">Veröffentlichen wir ab dem Start</p>
+                <p class="m-0 text-base text-on-night-muted"><b class="text-on-night-2">Vergebene Gründungsplätze:</b> Veröffentlichen wir ab dem Start.</p>
             </div>
             <livewire:oasis.waitlist-signup />
         </div>
@@ -20,7 +20,7 @@
 
     <section aria-labelledby="vorteile-titel" class="[padding:clamp(64px,_7vw,_104px)_0]">
         <div class="o-container flex flex-col gap-[40px]">
-            <h2 id="vorteile-titel" class="m-0 o-display font-medium [font-size:clamp(30px,_3.2vw,_46px)] [line-height:1.12] [letter-spacing:-0.015em] text-night">Was Gründungsmitglieder bekommen</h2>
+            <h2 id="vorteile-titel" class="o-h2-s m-0 text-night max-sm:text-[26px]">Was Gründungsmitglieder bekommen</h2>
             <div class="o-auto-grid [--min:240px] gap-[24px]">
                 <div class="flex flex-col gap-[14px] [padding:28px] bg-paper rounded-[24px]">
                     <div aria-hidden="true" class="[width:48px] [height:48px] rounded-[24px] bg-dune text-night flex items-center justify-center">
@@ -79,7 +79,7 @@
     <section aria-labelledby="maezene-titel" class="[padding:clamp(64px,_7vw,_104px)_0] bg-dune">
         <div class="o-container o-auto-grid [--min:420px] [gap:32px_72px] items-center">
             <div class="flex flex-col gap-[16px]">
-                <h2 id="maezene-titel" class="m-0 o-display font-medium [font-size:clamp(30px,_3.2vw,_46px)] [line-height:1.12] [letter-spacing:-0.015em] text-night">Gründungs-Mäzen:innen</h2>
+                <h2 id="maezene-titel" class="o-h2-s m-0 text-night">Gründungs-Mäzen:innen</h2>
                 <p class="m-0 [max-width:32em] text-[18px] [line-height:1.6] text-ink-2">Wer als Mäzen startet, kann auf Wunsch auf unserer Dankesliste stehen. Ein sichtbares Zeichen, dass Oasis von Anfang an getragen wird und niemand wegen Geld draußen bleiben muss.</p>
             </div>
             <div class="flex flex-col gap-[14px] [padding:32px] bg-paper rounded-[28px]">
@@ -92,7 +92,7 @@
 
     <section aria-labelledby="gfaq-titel" class="[padding:clamp(64px,_7vw,_104px)_0]">
         <div class="o-container o-auto-grid [--min:360px] [gap:32px_72px] items-start">
-            <h2 id="gfaq-titel" class="m-0 o-display font-medium [font-size:clamp(30px,_3.2vw,_46px)] [line-height:1.12] [letter-spacing:-0.015em] text-night">Fragen zur Gründungsphase</h2>
+            <h2 id="gfaq-titel" class="o-h2-s m-0 text-night">Fragen zur Gründungsphase</h2>
             <div class="flex flex-col border-t border-dune-line">
                 <x-oasis.faq-item question="Was kostet die Gründungsmitgliedschaft?" :open="true">
                     <p>Dasselbe wie jede Mitgliedschaft: Solidar {{ \App\Support\OasisFormat::euro(config('oasis.tiers.solidar.monthly')) }}, Oase {{ \App\Support\OasisFormat::euro(config('oasis.tiers.oase.monthly')) }} oder Mäzen ab {{ \App\Support\OasisFormat::euro(config('oasis.tiers.maezen.monthly')) }} im Monat. Der Unterschied: Dein Preis bleibt, solange du dabei bist.</p>

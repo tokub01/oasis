@@ -20,7 +20,7 @@
                 <p class="m-0 text-muted">Deine private Liste gespeicherter Tropfen. Niemand sieht, wer was gemerkt hat – auch Autor:innen nicht.</p>
             </div>
 
-            <x-network.feed :posts="$posts" empty="Du hast dir noch keine Tropfen gemerkt. In jeder Tropfen-Karte findest du den Knopf «Merken»." />
+            <x-network.feed :posts="$posts" empty="Du hast dir noch keine Tropfen gemerkt. In jeder Tropfen-Karte findest du den Knopf „Merken“." />
         </div>
 
         <x-slot:aside>

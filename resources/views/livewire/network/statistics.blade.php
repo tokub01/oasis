@@ -3,7 +3,7 @@
     Variables: $totals (MemberStats::totals), $weekly (MemberStats::weekly), $topPosts (Collection<Post> with counts)
 --}}
 <div class="flex flex-col gap-6">
-<p role="status" aria-live="polite">{{ $postStatus }}</p>
+<p role="status" aria-live="polite" class="m-0 rounded-2xl bg-dune px-[18px] py-3.5 text-night empty:sr-only">{{ $postStatus }}</p>
 <p wire:loading class="text-muted">Wird geladen …</p>
     <div class="flex flex-col gap-6">
         <div class="flex flex-col gap-2">
@@ -31,7 +31,7 @@
             @forelse ($topPosts as $post)
                 <a wire:key="statistics-1-{{ $post->id }}" wire:navigate href="{{ route('network.posts.show', $post) }}" class="flex flex-col gap-1 rounded-2xl border border-dune-line p-4 text-ink no-underline">
                     <span class="line-clamp-2">{{ $post->body }}</span>
-                    <span class="text-sm text-muted">{{ $post->reactions_count }} Reaktionen · {{ $post->replies_count }} Antworten · {{ $post->created_at->locale('de')->isoFormat('D. MMMM') }}</span>
+                    <span class="text-sm text-muted">{{ $post->reactions_count }} {{ $post->reactions_count === 1 ? 'Reaktion' : 'Reaktionen' }} · {{ $post->replies_count }} {{ $post->replies_count === 1 ? 'Antwort' : 'Antworten' }} · {{ $post->created_at->locale('de')->isoFormat('D. MMMM') }}</span>
                 </a>
             @empty
                 <p class="m-0 text-ink-2">In den letzten 30 Tagen hast du nichts geschrieben.</p>

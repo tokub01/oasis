@@ -11,11 +11,9 @@
     @endif
 
     <x-network.columns label="Hinweise">
-        <div class="flex flex-col gap-2">
-            <p class="o-eyebrow m-0">Mitbestimmen</p>
-            <h1 class="o-h2 m-0 text-night">Abstimmungen</h1>
-            <p class="m-0 text-ink-2">Jedes Mitglied hat eine Stimme, egal welche Stufe. Geheim: Wir speichern nur, dass du abgestimmt hast, nicht wie. Ergebnisse zeigen wir nach dem Ende.</p>
-        </div>
+        <x-network.page-header eyebrow="Mitbestimmen" title="Abstimmungen">
+            Jedes Mitglied hat eine Stimme, egal welche Stufe. Geheim: Wir speichern nur, dass du abgestimmt hast, nicht wie. Ergebnisse zeigen wir nach dem Ende.
+        </x-network.page-header>
 
         @unless ($canVote)
             <p class="m-0 rounded-2xl bg-dune px-[18px] py-3.5">Abstimmen können Mitglieder mit aktiver Mitgliedschaft. Während des Tests kannst du mitlesen.</p>

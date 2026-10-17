@@ -46,15 +46,15 @@
                 </a>
                 <p class="text-base leading-[1.6] text-on-night-2">Das werbefreie soziale Netzwerk. Getragen von Mitgliedern, nicht von Werbekunden.</p>
             </div>
-            <div class="flex flex-[3_1_560px] flex-wrap gap-x-10 gap-y-8">
+            <div class="grid flex-[3_1_560px] grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-4">
                 @foreach ($columns as $title => $links)
-                    <nav aria-label="{{ $title }}" class="flex flex-[1_1_140px] flex-col gap-1">
+                    <nav aria-label="{{ $title }}" class="flex min-w-0 flex-col gap-1">
                         <p class="mb-2 text-sm font-bold uppercase tracking-[1.5px] text-on-night-muted">{{ $title }}</p>
                         @foreach ($links as [$label, $href])
                             <a href="{{ $href }}" wire:navigate class="inline-flex min-h-11 items-center text-base text-on-night no-underline">{{ $label }}</a>
                         @endforeach
                         @if ($title === 'Hilfe')
-                            <span class="inline-flex min-h-11 items-center text-base text-on-night-2">{{ config('oasis.mail.contact') }}</span>
+                            <a href="mailto:{{ config('oasis.mail.contact') }}" class="inline-flex min-h-11 items-center text-base text-on-night-2 underline underline-offset-4">{{ Str::before(config('oasis.mail.contact'), '@') }}@<wbr>{{ Str::after(config('oasis.mail.contact'), '@') }}</a>
                         @endif
                     </nav>
                 @endforeach

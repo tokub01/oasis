@@ -27,7 +27,7 @@
                 <x-oasis.icon name="eye" :size="22" class="text-night" />
                 <span><b>Du liest als Gast.</b> Antworten, folgen und eigene Tropfen schreiben kannst du im kostenlosen Test.</span>
             </p>
-            <a href="{{ route('register') }}" class="o-btn o-btn-md o-btn-primary text-base font-extrabold">{{ config('oasis.trial_days') }} Tage kostenlos testen</a>
+            <a href="{{ route('register') }}" class="o-btn o-btn-md o-btn-outline text-base font-extrabold">{{ config('oasis.trial_days') }} Tage kostenlos testen</a>
         </div>
     </div>
 

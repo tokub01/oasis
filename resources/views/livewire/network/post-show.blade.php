@@ -10,7 +10,7 @@
 
 <div @class(['flex flex-col gap-6', 'o-container py-8' => ! auth()->check()])>
 @guest <p class="rounded-2xl bg-dune p-4"><b>Du liest als Gast.</b> Zum Folgen, Antworten und Schreiben brauchst du ein Konto.</p> @endguest
-<p role="status" aria-live="polite">{{ $postStatus }}</p>
+<p role="status" aria-live="polite" class="m-0 rounded-2xl bg-dune px-[18px] py-3.5 text-night empty:sr-only">{{ $postStatus }}</p>
 <p wire:loading class="text-muted">Wird geladen …</p>
     <x-network.columns>
         <h1 class="sr-only">Tropfen von {{ $author->display_name }}</h1>
@@ -48,7 +48,7 @@
             @if ($post->oasis)
                 <x-network.side-card title="In der Oase">
                     <a wire:navigate href="{{ route('network.oases.show', $post->oasis) }}" class="flex items-center gap-3 text-ink no-underline">
-                        <span aria-hidden="true" class="size-10 flex-none rounded-full bg-{{ $post->oasis->color }}"></span>
+                        <span aria-hidden="true" class="size-10 flex-none rounded-full bg-{{ $post->oasis->color }} {{ $post->oasis->color === 'dune' ? 'ring-1 ring-inset ring-dune-line' : '' }}"></span>
                         <span class="font-extrabold text-night">{{ $post->oasis->name }}</span>
                     </a>
                     <p class="m-0 text-[15px] text-ink-2">{{ $post->oasis->description }}</p>

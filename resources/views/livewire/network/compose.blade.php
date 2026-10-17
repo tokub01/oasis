@@ -20,7 +20,7 @@
     </div>
     @if ($toneNudge)
         <div role="status" class="flex flex-col gap-2 rounded-2xl bg-dune p-4">
-            <p class="m-0">Nochmal lesen? Dein Tropfen klingt verletzend. Vielleicht findest du andere Worte.</p>
+            <p class="m-0">Nochmal lesen? Dein Tropfen klingt verletzend. Vielleicht findest du andere Worte. Ist er deutlich beleidigend, hetzerisch oder herabsetzend, halten wir ihn nach dem Senden zurück, bis das Moderationsteam ihn geprüft hat.</p>
             <label class="flex min-h-11 items-center gap-3"><input type="checkbox" wire:model="tone_confirmed"> So senden – ich meine es genau so.</label>
         </div>
     @endif

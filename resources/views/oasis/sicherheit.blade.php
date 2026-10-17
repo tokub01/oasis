@@ -106,7 +106,7 @@
         <div class="o-container o-auto-grid items-start gap-x-[72px] gap-y-8 [--min:340px]">
             <h2 id="pruefung-titel" class="o-h2-s text-night">Moderation mit Augenmaß</h2>
             <div class="flex max-w-[40em] flex-col gap-4 text-[17px] leading-[1.65] text-ink">
-                <p>Öffentliche Texte prüft ein Sprachmodell in der EU auf Beleidigungen, Hetze, Drohungen und sexuelle Inhalte. Dabei geht nur der Text hinaus – kein Name, kein Benutzername, keine E-Mail-Adresse.</p>
+                <p>Öffentliche Texte prüft ein Sprachmodell in der EU auf Beleidigungen, Hetze, Drohungen, Extremismus, Mobbing und sexuelle Inhalte. Eindeutige Fälle halten wir schon beim Senden zurück, bis ein Mensch sie geprüft hat. Dabei geht nur der Text hinaus – kein Name, kein Benutzername, keine E-Mail-Adresse.</p>
                 <p>Das Ergebnis ist ein Hinweis, keine Entscheidung: Ob etwas gegen die Regeln verstößt, entscheidet immer ein Mensch, mit Begründung. Gegen Moderationsentscheidungen kannst du widersprechen.</p>
                 <p>Verschlüsselte Chats werden nie automatisch geprüft. Wer dort etwas Verletzendes bekommt, kann die Nachricht selbst melden.</p>
             </div>

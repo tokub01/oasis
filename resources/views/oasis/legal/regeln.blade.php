@@ -12,12 +12,12 @@
             <li class="flex gap-[16px] items-start">
                 <span aria-hidden="true" class="flex-none [width:32px] o-display text-[22px] font-semibold text-sun-text">1</span>
                 <span>
-                    <b>Sei respektvoll.</b> Keine Beleidigungen, keine Belästigung, keine Drohungen.</span>
+                    <b>Sei respektvoll.</b> Keine Beleidigungen, keine Belästigung, kein Mobbing, keine Drohungen.</span>
             </li>
             <li class="flex gap-[16px] items-start">
                 <span aria-hidden="true" class="flex-none [width:32px] o-display text-[22px] font-semibold text-sun-text">2</span>
                 <span>
-                    <b>Kein Hass.</b> Keine Hetze gegen Menschen wegen Herkunft, Religion, Geschlecht, sexueller Orientierung, Behinderung oder anderer Merkmale.</span>
+                    <b>Kein Hass.</b> Keine Hetze gegen Menschen wegen Herkunft, Religion, Geschlecht, sexueller Orientierung, Behinderung oder anderer Merkmale. Keine Volksverhetzung, keine Verherrlichung des Nationalsozialismus, keine extremistischen Parolen oder Kennzeichen. Politische Meinungen sind willkommen – solange sie Menschen nicht abwerten.</span>
             </li>
             <li class="flex gap-[16px] items-start">
                 <span aria-hidden="true" class="flex-none [width:32px] o-display text-[22px] font-semibold text-sun-text">3</span>

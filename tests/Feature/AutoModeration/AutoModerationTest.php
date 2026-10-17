@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Moderation\ApplyContentVerdict;
 use App\Actions\Moderation\DecideCase;
 use App\Ai\Agents\ContentCheck as ContentCheckAgent;
 use App\Enums\Role;
@@ -10,6 +11,7 @@ use App\Models\ContentCheck;
 use App\Models\ModerationCase;
 use App\Models\Post;
 use App\Models\User;
+use App\Support\Moderation\ContentAssessor;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Tests\Support\NetworkActions;
@@ -27,7 +29,8 @@ beforeEach(function () {
 /** Structured agent output with all categories at 0 except the given ones. */
 function verdict(array $scores = [], string $reason = ''): array
 {
-    return $scores + ['insult' => 0, 'hate' => 0, 'threat' => 0, 'sexual' => 0, 'sexual_minors' => 0, 'reason' => $reason];
+    return $scores + ['insult' => 0, 'hate' => 0, 'threat' => 0, 'extremism' => 0, 'harassment' => 0, 'sexual' => 0, 'sexual_minors' => 0,
+        'reason' => $reason];
 }
 
 function moderator(): User
@@ -44,8 +47,8 @@ it('publishes clean Tropfen without a case and records the check', function () {
         ->and(ModerationCase::count())->toBe(0);
 });
 
-it('asks "Nochmal lesen?" before an insulting Tropfen and reports it when sent anyway', function () {
-    ContentCheckAgent::fake([verdict(['insult' => 0.9], 'Direkte Beleidigung einer Person.')]);
+it('asks "Nochmal lesen?" before an insulting Tropfen and reports a borderline one when sent anyway', function () {
+    ContentCheckAgent::fake([verdict(['insult' => 0.75], 'Direkte Beleidigung einer Person.')]);
     $me = N::member();
 
     NetworkActions::publish(['body' => 'Du bist ein Idiot', 'visibility' => 'public'], $me)->assertHasErrors('body')->assertSet('toneNudge', true);
@@ -79,6 +82,59 @@ it('holds clearly sexual Tropfen for review, tells the author and lets only auth
     auth()->logout();
     $this->get(route('network.posts.show', $post))->assertNotFound();
     $this->actingAs(moderator())->get(route('network.posts.show', $post))->assertOk();
+});
+
+it('holds a clearly insulting Tropfen already when it is sent, with the reason in the Tropfen and a report', function () {
+    ContentCheckAgent::fake([verdict(['insult' => 0.92], 'Herabwürdigende Beschimpfung einer Person.')]);
+    $author = N::member();
+    $mentioned = N::member();
+    $body = '@'.$mentioned->username.' du bist ein Idiot';
+
+    NetworkActions::publish(['body' => $body, 'visibility' => 'public'], $author)->assertSet('toneNudge', true);
+    NetworkActions::publish(['body' => $body, 'visibility' => 'public', 'tone_confirmed' => '1'])
+        ->assertHasNoErrors()->assertSet('status', fn ($status) => str_starts_with($status, 'Gesendet, aber zurückgehalten'));
+    $post = Post::sole();
+
+    expect($post->held_at)->not->toBeNull()->and($post->holdReason())->toBe('eine Beleidigung')
+        ->and(ModerationCase::sole()->priority->value)->toBe('normal')
+        ->and($mentioned->notifications()->count())->toBe(0);
+    Mail::assertSent(ContentHeldNotice::class, fn ($mail) => $mail->hasTo($author->email) && str_contains($mail->render(), 'möglicherweise eine Beleidigung erkannt'));
+
+    $this->actingAs($author)->get(route('network.posts.show', $post))->assertOk()
+        ->assertSee('Zurückgehalten und dem Moderationsteam gemeldet')->assertSee('möglicherweise eine Beleidigung erkannt')
+        ->assertSee('Herabwürdigende Beschimpfung einer Person.');
+    $this->actingAs($mentioned)->get(route('network.posts.show', $post))->assertNotFound();
+});
+
+it('holds extremist slogans and Mobbing, and marks extremism as urgent', function (string $category, string $reason, string $priority) {
+    ContentCheckAgent::fake([verdict([$category => 0.9], 'Begründung.')]);
+    NetworkActions::publish(['body' => 'Text '.$category, 'visibility' => 'public', 'tone_confirmed' => '1'], N::member())->assertHasNoErrors();
+
+    expect(Post::sole()->held_at)->not->toBeNull()->and(Post::sole()->holdReason())->toBe($reason)
+        ->and(ModerationCase::sole()->priority->value)->toBe($priority);
+})->with([
+    ['extremism', 'extremistische oder volksverhetzende Inhalte', 'urgent'],
+    ['harassment', 'Mobbing gegen eine Person', 'normal'],
+    ['hate', 'Hass oder Hetze gegen Menschen', 'normal'],
+]);
+
+it('lifts a hold from sending when the full check does not confirm it', function () {
+    ContentCheckAgent::fake([verdict(['insult' => 0.9]), verdict()]);
+    NetworkActions::publish(['body' => 'Grenzfall', 'visibility' => 'public', 'tone_confirmed' => '1'], N::member());
+    $post = Post::sole();
+    ModerationCase::query()->delete();
+    Cache::flush();
+
+    (new CheckContent(ContentCheck::sole()))->handle(app(ContentAssessor::class), app(ApplyContentVerdict::class));
+
+    expect($post->fresh()->held_at)->toBeNull();
+});
+
+it('asks the model about extremism and Mobbing and keeps political opinions out of scope', function () {
+    $agent = new ContentCheckAgent;
+    $instructions = (string) $agent->instructions();
+
+    expect($instructions)->toContain('extremism:')->toContain('harassment: Mobbing')->toContain('strengere Migrationspolitik');
 });
 
 it('makes a held Tropfen visible again when a human decides "no action", and says so in the decision mail', function () {

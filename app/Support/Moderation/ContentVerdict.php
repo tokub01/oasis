@@ -13,9 +13,14 @@ final class ContentVerdict
         'insult' => 'Beleidigung',
         'hate' => 'Hass/Hetze',
         'threat' => 'Drohung',
+        'extremism' => 'Extremismus/Volksverhetzung',
+        'harassment' => 'Mobbing',
         'sexual' => 'Sexueller Inhalt',
         'sexual_minors' => 'Sexueller Bezug zu Minderjährigen',
     ];
+
+    /** Hostile categories: nudged before sending, held when clear (hold_abuse_threshold). */
+    private const ABUSE = ['insult', 'hate', 'threat', 'extremism', 'harassment'];
 
     /**
      * @param  non-empty-array<string, float>  $scores  category => 0..1
@@ -54,24 +59,64 @@ final class ContentVerdict
         return $this->highest() >= (float) config('oasis.moderation.report_threshold');
     }
 
-    /** Clearly sexual (or any sexual reference to minors): hidden until a human reviewed it. */
+    /** Hidden until a human reviewed it: clearly sexual (or any sexual reference to minors), or clearly abusive. */
     public function shouldHold(): bool
+    {
+        return $this->holdsSexual() || $this->holdsAbuse();
+    }
+
+    /**
+     * Why a Tropfen is held, for its author (post card, ContentHeldNotice), fitting "… hat möglicherweise {reason}
+     * erkannt"; null when nothing is held.
+     */
+    public function holdReason(): ?string
+    {
+        if ($this->holdsSexual()) {
+            return 'sexuelle Inhalte';
+        }
+        if (! $this->holdsAbuse()) {
+            return null;
+        }
+        $phrases = ['insult' => 'eine Beleidigung', 'hate' => 'Hass oder Hetze gegen Menschen', 'threat' => 'eine Drohung',
+            'extremism' => 'extremistische oder volksverhetzende Inhalte', 'harassment' => 'Mobbing gegen eine Person'];
+        $strongest = 'insult';
+        foreach (self::ABUSE as $category) {
+            if ($this->scores[$category] > $this->scores[$strongest]) {
+                $strongest = $category;
+            }
+        }
+
+        return $phrases[$strongest];
+    }
+
+    private function holdsSexual(): bool
     {
         return $this->scores['sexual'] >= (float) config('oasis.moderation.hold_threshold')
             || $this->scores['sexual_minors'] >= (float) config('oasis.moderation.report_threshold');
     }
 
+    private function holdsAbuse(): bool
+    {
+        return $this->abuseScore() >= (float) config('oasis.moderation.hold_abuse_threshold');
+    }
+
+    private function abuseScore(): float
+    {
+        return max(array_map(fn (string $category) => $this->scores[$category], self::ABUSE));
+    }
+
     /** Hostile tone worth a "Nochmal lesen?" hint before sending. */
     public function shouldNudge(): bool
     {
-        return max($this->scores['insult'], $this->scores['hate'], $this->scores['threat'])
-            >= (float) config('oasis.moderation.nudge_threshold');
+        return $this->abuseScore() >= (float) config('oasis.moderation.nudge_threshold');
     }
 
-    /** Sexual content or threats are urgent for the moderation queue. */
+    /** Sexual content, threats and extremism (possibly criminal, §§ 86a, 130, 241 StGB) are urgent for the queue. */
     public function isUrgent(): bool
     {
-        return $this->shouldHold() || $this->scores['threat'] >= (float) config('oasis.moderation.report_threshold');
+        $report = (float) config('oasis.moderation.report_threshold');
+
+        return $this->holdsSexual() || $this->scores['threat'] >= $report || $this->scores['extremism'] >= $report;
     }
 
     /** @return array{scores: non-empty-array<string, float>, reason: string, source: string} */

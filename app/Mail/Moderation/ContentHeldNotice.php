@@ -14,7 +14,8 @@ use Illuminate\Mail\Mailables\Envelope;
  */
 class ContentHeldNotice extends Mailable
 {
-    public function __construct(public Post $post) {}
+    /** @param  string  $reason  what the check found, e.g. "eine Beleidigung" (ContentVerdict::holdReason) */
+    public function __construct(public Post $post, public string $reason = 'einen möglichen Regelverstoß') {}
 
     public function envelope(): Envelope
     {
@@ -23,6 +24,6 @@ class ContentHeldNotice extends Mailable
 
     public function content(): Content
     {
-        return new Content(view: 'moderation.mail.held', with: ['postUrl' => route('network.posts.show', $this->post)]);
+        return new Content(view: 'moderation.mail.held', with: ['postUrl' => route('network.posts.show', $this->post), 'reason' => $this->reason]);
     }
 }

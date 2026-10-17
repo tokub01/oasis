@@ -16,6 +16,9 @@ return [
     'threat' => [
         'abstechen', 'umbringen', 'abknallen', 'kaltmachen', 'aufschlitzen',
     ],
+    'extremism' => [
+        'judenpack', 'holocaustluege', 'volksschaedling', 'volksschaedlinge', 'umvolkung', 'rassenschande',
+    ],
     'sexual' => [
         'ficken', 'fick', 'porno', 'nacktbilder', 'nudes', 'wichsen', 'sperma',
     ],

@@ -14,8 +14,9 @@ use Illuminate\Support\Facades\Mail;
 /**
  * Stores the verdict of the automated check and acts on it:
  * - flagged → a moderation case (source `content_check`, urgent for sexual content or threats);
- * - clearly sexual Tropfen → held (hidden for everyone but the author) until a human decides, with an Art. 17 DSA
- *   notice to the author. Nothing is deleted automatically.
+ * - clearly sexual or clearly abusive Tropfen → held (hidden for everyone but the author) until a human decides, with
+ *   an Art. 17 DSA notice to the author. PublishPost may already have held it when it was sent; a hold the full check
+ *   does not confirm is lifted again. Nothing is deleted automatically.
  * - sexual reference to minors → the case is escalated at once (EscalateCase: quarantine, evidence, alert).
  */
 class ApplyContentVerdict
@@ -30,13 +31,20 @@ class ApplyContentVerdict
                 'status' => 'checked', 'scores' => $verdict->scores, 'reason' => $verdict->reason ?: null,
                 'source' => $verdict->source, 'flagged' => $verdict->shouldReport(), 'checked_at' => now(),
             ]);
+            $post = $check->checkable;
             if (! $verdict->shouldReport()) {
+                if ($post instanceof Post && $post->held_at !== null
+                    && ModerationCase::where('source_type', $check->getMorphClass())->where('source_id', $check->id)->doesntExist()) {
+                    $post->forceFill(['held_at' => null])->save();
+                }
+
                 return null;
             }
 
-            $post = $check->checkable;
-            if ($post instanceof Post && $verdict->shouldHold() && $post->held_at === null) {
-                $post->forceFill(['held_at' => now()])->save();
+            if ($post instanceof Post && $verdict->shouldHold()) {
+                if ($post->held_at === null) {
+                    $post->forceFill(['held_at' => now()])->save();
+                }
                 $heldPost = $post;
             }
 
@@ -44,7 +52,7 @@ class ApplyContentVerdict
         });
 
         if ($heldPost instanceof Post) {
-            Mail::to($heldPost->author->email)->send(new ContentHeldNotice($heldPost));
+            Mail::to($heldPost->author->email)->send(new ContentHeldNotice($heldPost, (string) $verdict->holdReason()));
         }
         // Sexual reference to minors: escalate without waiting for a person (quarantine, evidence, alert). A human
         // still decides about consequences and any report.

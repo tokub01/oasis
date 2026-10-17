@@ -4,10 +4,12 @@ namespace App\Models;
 
 use App\Enums\Network\PostKind;
 use App\Enums\Network\Visibility;
+use App\Support\Moderation\ContentVerdict;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -106,6 +108,28 @@ class Post extends Model
     public function images(): HasMany
     {
         return $this->hasMany(PostImage::class)->orderBy('position');
+    }
+
+    /**
+     * Result of the automated check (stage 10); its reason is shown to the author while the Tropfen is held.
+     *
+     * @return MorphOne<ContentCheck, $this>
+     */
+    public function contentCheck(): MorphOne
+    {
+        return $this->morphOne(ContentCheck::class, 'checkable');
+    }
+
+    /** Why the automated check holds this Tropfen ("eine Beleidigung", …), or null when it is not held. */
+    public function holdReason(): ?string
+    {
+        $check = $this->held_at === null ? null : $this->contentCheck;
+        if ($check === null || $check->scores === null) {
+            return $this->held_at === null ? null : 'einen möglichen Regelverstoß';
+        }
+
+        return ContentVerdict::fromArray($check->scores, (string) $check->source)->holdReason()
+            ?? 'einen möglichen Regelverstoß';
     }
 
     /**

@@ -137,7 +137,15 @@
         <p class="m-0 rounded-2xl bg-dune px-4 py-3 text-sm">Die Gastgeber:innen haben diesen Tropfen aus der Oase entfernt. Nur du siehst ihn noch.</p>
     @endif
     @if ($post->held_at)
-        <p class="m-0 rounded-2xl bg-dune px-4 py-3 text-sm">Unsere automatische Prüfung hat in diesem Tropfen möglicherweise sexuelle Inhalte erkannt. Bis ein Mensch aus dem Moderationsteam ihn geprüft hat, siehst nur du ihn.</p>
+        {{-- Held by the automated check (docs/oasis-auto-moderation.md); only the author and staff see the Tropfen. --}}
+        <div role="note" class="flex flex-col gap-1.5 rounded-2xl border border-sun/40 bg-dune px-4 py-3 text-sm">
+            <p class="m-0 font-bold text-night">Zurückgehalten und dem Moderationsteam gemeldet</p>
+            <p class="m-0">Unsere automatische Prüfung hat in diesem Tropfen möglicherweise {{ $post->holdReason() }} erkannt. Bis ein Mensch aus dem Moderationsteam ihn geprüft hat, siehst nur du ihn – in der Regel innerhalb von 48 Stunden.</p>
+            @if (filled($post->contentCheck?->reason))
+                <p class="m-0 text-ink-2">Begründung der Prüfung: „{{ $post->contentCheck->reason }}“</p>
+            @endif
+            <p class="m-0 text-ink-2">Ist alles in Ordnung, wird er für alle sichtbar. Du kannst ihn jederzeit selbst löschen. <a href="{{ route('oasis.regeln') }}" class="o-link">Community-Regeln</a></p>
+        </div>
     @endif
 
     <p class="m-0 text-[17px] leading-[1.55] whitespace-pre-line break-words"><x-network.rich-text :text="$post->body" :author="$post->author" /></p>

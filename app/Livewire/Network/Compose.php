@@ -162,7 +162,11 @@ class Compose extends Component
         $post = app(PublishPost::class)->handle(auth()->user(), ['body' => $this->body, 'visibility' => $this->visibility,
             'kind' => $this->kind, 'oasis' => $context['oasis'], 'reply_to' => $context['reply'], 'carried' => $context['carried']], $images);
         $this->reset('body', 'images', 'alts', 'tone_confirmed', 'toneNudge', 'link_read');
-        $this->status = $post->reply_to_id ? 'Deine Antwort ist da.' : 'Dein Tropfen ist da.';
+        $this->status = match (true) {
+            $post->held_at !== null => 'Gesendet, aber zurückgehalten: Unsere Prüfung hat möglicherweise '.$post->holdReason().' erkannt. Das Moderationsteam schaut ihn sich an; bis dahin siehst nur du ihn.',
+            $post->reply_to_id !== null => 'Deine Antwort ist da.',
+            default => 'Dein Tropfen ist da.',
+        };
         $this->dispatch('post-published');
         if ($context['carried']) {
             $this->redirectRoute('app.home', navigate: true);

@@ -1,10 +1,10 @@
-{{-- ContentHeldNotice (Art. 17 DSA): post (Post), postUrl (string). Sent when the automated check holds a Tropfen. No JS. --}}
+{{-- ContentHeldNotice (Art. 17 DSA): post (Post), postUrl (string), reason (string, e.g. "eine Beleidigung"). Sent when the automated check holds a Tropfen. No JS. --}}
 <!DOCTYPE html>
 <html lang="de"><head><meta charset="utf-8"><title>Dein Tropfen wird geprüft</title></head><body>
 <h1>Dein Tropfen wird geprüft</h1>
 <p>Hallo {{ $post->author->display_name }},</p>
 <p>unsere automatische Prüfung hat in deinem Tropfen vom {{ $post->created_at->timezone('Europe/Berlin')->format('d.m.Y H:i') }} Uhr
-möglicherweise sexuelle Inhalte erkannt. Bis ein Mensch aus unserem Moderationsteam ihn geprüft hat, siehst nur du ihn:
+möglicherweise {{ $reason }} erkannt und ihn dem Moderationsteam gemeldet. Bis ein Mensch aus unserem Moderationsteam ihn geprüft hat, siehst nur du ihn:
 <a href="{{ $postUrl }}">{{ $postUrl }}</a></p>
 <ul>
     <li>Die Einschätzung kam von einem automatisierten Verfahren (Sprachmodell). Entscheiden wird ein Mensch, in der Regel innerhalb von 48 Stunden.</li>

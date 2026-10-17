@@ -107,6 +107,8 @@ return [
         'report_threshold' => 0.7,
         // Clearly sexual Tropfen are held until reviewed.
         'hold_threshold' => 0.85,
+        // Clearly insulting, hateful or threatening Tropfen are held until reviewed, already when they are sent.
+        'hold_abuse_threshold' => 0.8,
     ],
 
     // Free trial length in days. Used in every "30 Tage testen" text.

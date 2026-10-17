@@ -5,9 +5,11 @@ namespace App\Actions\Network;
 use App\Enums\Network\PostKind;
 use App\Enums\Network\Visibility;
 use App\Events\Network\PostPublished;
+use App\Models\ContentCheck;
 use App\Models\Oasis;
 use App\Models\Post;
 use App\Models\User;
+use App\Support\Moderation\ContentAssessor;
 use App\Support\Security\AccountLimits;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +25,7 @@ use Throwable;
  */
 class PublishPost
 {
-    public function __construct(private readonly StorePostImage $images) {}
+    public function __construct(private readonly StorePostImage $images, private readonly ContentAssessor $assessor) {}
 
     /**
      * @param  array{body: string, visibility: string, kind?: string|PostKind|null, oasis?: Oasis|null, reply_to?: Post|null, carried?: Post|null}  $input
@@ -57,15 +59,30 @@ class PublishPost
             $kind = PostKind::Post;
         }
 
-        $post = DB::transaction(fn () => Post::create([
-            'user_id' => $author->id,
-            'oasis_id' => $oasis?->id,
-            'reply_to_id' => $context?->id,
-            'carried_post_id' => ($input['carried'] ?? null)?->id,
-            'body' => $input['body'],
-            'visibility' => $visibility,
-            'kind' => $kind,
-        ]));
+        // Clearly abusive or sexual: held from the first moment, so nobody else ever sees it before a human reviewed it
+        // (docs/oasis-auto-moderation.md). The composer already asked for this verdict, so it usually comes from the
+        // cache; without the language model the word list answers, which never holds.
+        $verdict = $this->assessor->assess((string) $input['body']);
+
+        $post = DB::transaction(function () use ($author, $oasis, $context, $input, $visibility, $kind, $verdict) {
+            $post = new Post([
+                'user_id' => $author->id,
+                'oasis_id' => $oasis?->id,
+                'reply_to_id' => $context?->id,
+                'carried_post_id' => ($input['carried'] ?? null)?->id,
+                'body' => $input['body'],
+                'visibility' => $visibility,
+                'kind' => $kind,
+            ]);
+            $post->forceFill(['held_at' => $verdict->shouldHold() ? now() : null])->save();
+            if ($post->held_at !== null) {
+                // The background check (PostPublished → CheckContent) confirms it, opens the case and sends the notice.
+                ContentCheck::create(['checkable_type' => $post->getMorphClass(), 'checkable_id' => $post->id, 'status' => 'pending',
+                    'scores' => $verdict->scores, 'reason' => $verdict->reason ?: null, 'source' => $verdict->source, 'flagged' => true]);
+            }
+
+            return $post;
+        });
 
         try {
             foreach ($images as $position => $image) {

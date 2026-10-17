@@ -42,6 +42,8 @@ class Tag extends NetworkPage
         }
 
         return $this->page('livewire.search.tag', ['tag' => $this->tag,
-            'posts' => $budgetAvailable ? app(PostFeed::class)->tagged($this->tag, auth()->user()) : new CursorPaginator([], 20)], '#'.$this->tag, 'entdecken', true);
+            'posts' => $budgetAvailable ? app(PostFeed::class)->tagged($this->tag, auth()->user()) : new CursorPaginator([], 20)], '#'.$this->tag, 'entdecken', true,
+            // A topic collects Tropfen of many people; some do not want search engines, so the page is never indexed.
+            noindex: true);
     }
 }

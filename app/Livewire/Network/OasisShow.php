@@ -50,6 +50,8 @@ class OasisShow extends NetworkPage
             'hosts' => $oasis->hosts()->orderBy('display_name')->get(),
             'posts' => app(PostFeed::class)->inOasis($oasis, auth()->user()),
             'isMember' => $oasis->isMember(auth()->user()), 'isHost' => $oasis->isHost(auth()->user()),
-        ], $oasis->name, 'oasen', true);
+        ], $oasis->name, 'oasen', true,
+            // An oasis shows Tropfen of many people; some do not want search engines, so the page is never indexed.
+            noindex: true);
     }
 }

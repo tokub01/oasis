@@ -135,3 +135,12 @@ describe('PrivacySetting::allows', function () {
             ->and($owner->privacy()->search_engines)->toBeFalse();
     });
 });
+
+it('keeps pages that collect Tropfen of many people out of search engines', function () {
+    $author = N::member(['username' => 'sammelautorin']);
+    $oasis = N::oasis($author, ['visibility' => 'public']);
+    N::post($author, ['body' => 'Ein Tropfen zu #sammelthema', 'oasis_id' => $oasis->id]);
+
+    $this->get(route('search.tags.show', 'sammelthema'))->assertOk()->assertSee('noindex', false);
+    $this->get(route('network.oases.show', $oasis))->assertOk()->assertSee('noindex', false);
+});

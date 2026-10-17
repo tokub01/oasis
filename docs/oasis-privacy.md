@@ -45,3 +45,37 @@ changes it.
 
 Tests: `tests/Feature/Privacy` (pages, saving, refused values, the audience matrix) plus the enforcement tests in the
 network, search and chat areas.
+
+## Live E2E against the running app
+
+This opt-in test drives the running local app over real HTTP, like the chat E2E (`docs/oasis-chat-client.md`). It is
+separate from the offline test globs and needs no new packages. Start Sail (app, database; Reverb is not needed), then
+run from the WSL repository:
+
+```sh
+./vendor/bin/sail node --test tests/e2e/privacy.e2e.mjs
+```
+
+`tests/e2e/support/privacy-fixtures.php` requires `APP_ENV=local`; `tests/e2e/support/browser.mjs` refuses a
+non-loopback URL (`E2E_URL` may select another local port). The fixture creates three verified
+`privacy-e2e-<run>-…@demo.oasis.tld` trial accounts: the **owner**, a person the owner **follows**, and a **stranger**
+who follows the owner (the Karawane is no audience, so this must not help). A **guest** without login completes the
+set. Follows and the block are made through the real Livewire actions of the profile page.
+
+For every setting and every offered audience the owner saves the value through a real Livewire request of
+`privacy.center` (`settings.<key>`, exactly as `wire:model.live` sends it) and the test checks the stored row, then
+the effect: profile 200/404 and Entdecken, composer preselection and the stored visibility, the Karawane number,
+mention hint (database and `/app/hinweise`) and profile link, reply/carry buttons, pages and `publish` (denied viewers
+replay a composer snapshot taken while it was still allowed and must get 403), chat user search, direct chat and adding
+to a group, people search, and `noindex` on the guest profile and Tropfen pages for all six `search_engines` ×
+`profile_audience` combinations. It also checks that a block wins over open settings and that refused values, replacing
+the whole `settings` array, unknown keys and the locked `status` property change nothing. A separate subtest checks the
+public topic page `/themen/{tag}` for the same `search_engines` rule.
+
+Each check is printed as `OK`/`FEHLER` with expected and actual value; a setting's subtest fails if any of its checks
+fails, the other settings still run. Finally the fixture removes the run's content checks and pending queue jobs and
+deletes the three accounts through `DeleteAccount`, then verifies that users, privacy rows, Tropfen, hints, follows,
+blocks, chat identities, conversations, memberships and sessions are gone and that counts and digests of all other
+accounts (demo data) are unchanged — also when an assertion fails. Interrupting the process forcibly can skip this
+cleanup. Output contains no cookies, CSRF values or passwords. The moderation language model is called for each
+published test Tropfen when it is configured.

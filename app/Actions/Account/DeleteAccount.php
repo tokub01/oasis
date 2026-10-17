@@ -3,6 +3,7 @@
 namespace App\Actions\Account;
 
 use App\Actions\Network\ManageOasis;
+use App\Models\ContentCheck;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,8 @@ use Illuminate\Validation\ValidationException;
  * - Oases where the account is the only host get a new host (longest member) or are closed (stage 9, F8).
  * - Database rows cascade from `users`; uploaded images are removed from the media disk after the commit, so a
  *   failed deletion never loses files of a still existing account.
+ * - The cascade fires no model events, so the automated checks of the deleted texts are removed explicitly (except
+ *   those a moderation case is based on, see ContentCheck).
  */
 class DeleteAccount
 {
@@ -38,6 +41,7 @@ class DeleteAccount
             DB::table('password_reset_tokens')->where('email', $user->email)->delete();
             DB::table('sessions')->where('user_id', $user->id)->delete();
             $user->delete();
+            ContentCheck::orphaned()->delete();
         });
 
         $disk = Storage::disk(config('oasis.media_disk'));

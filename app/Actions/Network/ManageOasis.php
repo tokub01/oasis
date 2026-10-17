@@ -6,6 +6,7 @@ use App\Actions\Notifications\SendHint;
 use App\Enums\Network\OasisRole;
 use App\Enums\Network\Visibility;
 use App\Enums\Notifications\NoticeKind;
+use App\Models\ContentCheck;
 use App\Models\Follow;
 use App\Models\Oasis;
 use App\Models\Post;
@@ -53,13 +54,15 @@ class ManageOasis
 
     /**
      * Close an oasis (hosts only, checked by the caller). Its Tropfen stay with their authors without an oasis
-     * (`posts.oasis_id` is nulled by the foreign key); memberships and follows of the oasis are removed.
+     * (`posts.oasis_id` is nulled by the foreign key); memberships, follows and the automated check of the oasis
+     * (unless a moderation case is based on it) are removed.
      */
     public function close(Oasis $oasis): void
     {
         DB::transaction(function () use ($oasis): void {
             Follow::where('followable_type', $oasis->getMorphClass())->where('followable_id', $oasis->id)->delete();
             $oasis->delete();
+            ContentCheck::orphaned()->whereMorphedTo('checkable', $oasis)->delete();
         });
     }
 

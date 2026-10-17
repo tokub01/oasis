@@ -41,6 +41,21 @@ profiles: guests no longer see the location and the oasis list until the member 
 - "Karawane" (followers) is deliberately not an audience: anyone can follow without consent, so it would not protect.
 - Blocks are not part of the rule and are checked separately – a block always wins.
 
+## Unter 18
+
+Members under 18 (by `users.birth_date`; Oasis is open from 16) get stricter limits until their 18th birthday:
+nothing public (profile, Tropfen, Karawane size, location, oasis list), no search engines, chats only from people
+they follow. `PrivacySetting::MINOR_CHOICES` lists the allowed values, `MINOR_DEFAULTS` the strict fallback.
+
+- **Read:** `User::privacy()` applies `limitForMinor()` in memory, so every check (`allows`, `indexable`, the composer
+  preselection) sees strict values even if looser ones are stored.
+- **Write:** `PrivacyOptions::rule()`/`choices()` offer and accept only allowed values; a first row starts from
+  `MINOR_DEFAULTS`, never from the looser column defaults. `PublishPost` stores every Tropfen of a minor members-only
+  and the composer offers no public option.
+- **Existing data:** migration `2026_10_17_700000_limit_privacy_of_minors` clamped stored rows and public Tropfen.
+- On the 18th birthday nothing changes by itself; the member can then open things up. Tests:
+  `tests/Feature/Privacy/MinorProtectionTest.php`.
+
 ## Further controls
 
 Modelled on the controls large networks offer, limited to what Oasis actually does (no ads, no face recognition):

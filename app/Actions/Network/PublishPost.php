@@ -38,6 +38,10 @@ class PublishPost
                 $visibility = Visibility::Members;
             }
         }
+        // Members under 18 write for members only (docs/oasis-privacy.md, "Unter 18").
+        if ($author->isMinor()) {
+            $visibility = Visibility::Members;
+        }
 
         $kind = match ($input['kind'] ?? null) {
             PostKind::Question, 'question' => PostKind::Question,

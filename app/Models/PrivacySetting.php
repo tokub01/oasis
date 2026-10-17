@@ -45,6 +45,27 @@ class PrivacySetting extends Model
         'chat_invites_audience' => [Audience::Members, Audience::Following, Audience::Nobody],
     ];
 
+    /**
+     * Members under 18 (docs/oasis-privacy.md, "Unter 18"): the values they may choose. Everything else is off limits
+     * until their 18th birthday – nothing public (profile, Tropfen, Karawane size, location, oasis list), no search engines, chats only
+     * from people they follow.
+     */
+    public const MINOR_CHOICES = [
+        'profile_audience' => ['members', 'following'],
+        'follower_count_audience' => ['members', 'following', 'nobody'],
+        'location_audience' => ['members', 'following', 'nobody'],
+        'oases_audience' => ['members', 'following', 'nobody'],
+        'chat_invites_audience' => ['following', 'nobody'],
+        'default_post_visibility' => ['members'],
+        'search_engines' => [false],
+    ];
+
+    /** The strictest common value per limited setting, used when a stored value is outside MINOR_CHOICES. */
+    public const MINOR_DEFAULTS = [
+        'profile_audience' => 'members', 'follower_count_audience' => 'members', 'location_audience' => 'members', 'oases_audience' => 'members',
+        'chat_invites_audience' => 'following', 'default_post_visibility' => 'members', 'search_engines' => false,
+    ];
+
     /** @var array<int, bool> Follow results only for explicitly checked viewer IDs. */
     private array $knownFollows = [];
 
@@ -129,6 +150,22 @@ class PrivacySetting extends Model
         }
 
         return false;
+    }
+
+    /**
+     * Apply the limits for members under 18 to this instance (in memory, nothing is saved): a stored value outside
+     * MINOR_CHOICES – e.g. from before a correction of the birth date – counts as the strict default.
+     */
+    public function limitForMinor(): static
+    {
+        foreach (self::MINOR_CHOICES as $key => $allowed) {
+            $value = $this->{$key};
+            if (! in_array($value instanceof \BackedEnum ? $value->value : $value, $allowed, true)) {
+                $this->setAttribute($key, self::MINOR_DEFAULTS[$key]);
+            }
+        }
+
+        return $this;
     }
 
     /** Search engines may index public guest pages only when the profile is public and the member opts in. */

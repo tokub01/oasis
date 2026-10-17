@@ -5,6 +5,7 @@ namespace App\Support\Privacy;
 use App\Enums\Network\Visibility;
 use App\Enums\Privacy\Audience;
 use App\Models\PrivacySetting;
+use App\Models\User;
 use Illuminate\Validation\Rule;
 
 /**
@@ -63,27 +64,40 @@ final class PrivacyOptions
     }
 
     /**
-     * Choices of an audience setting: value => German label.
+     * Choices of a setting for $member: value => German label. Members under 18 get only the values they may choose.
      *
      * @return array<string, string>
      */
-    public static function choices(string $key): array
+    public static function choices(string $key, ?User $member = null): array
     {
-        if ($key === 'default_post_visibility') {
-            return collect(Visibility::cases())->mapWithKeys(fn (Visibility $v) => [$v->value => $v->label()])->all();
-        }
+        /** @var array<string, string> $choices */
+        $choices = $key === 'default_post_visibility'
+            ? collect(Visibility::cases())->mapWithKeys(fn (Visibility $v) => [$v->value => $v->label()])->all()
+            : collect(PrivacySetting::AUDIENCES[$key])->mapWithKeys(fn (Audience $a) => [$a->value => $a->label()])->all();
 
-        return collect(PrivacySetting::AUDIENCES[$key])->mapWithKeys(fn (Audience $a) => [$a->value => $a->label()])->all();
+        return self::limited($key, $member)
+            ? array_filter($choices, fn (string $value) => in_array($value, PrivacySetting::MINOR_CHOICES[$key], true), ARRAY_FILTER_USE_KEY)
+            : $choices;
+    }
+
+    /** Whether $member is under 18 and this setting is limited for them. */
+    public static function limited(string $key, ?User $member): bool
+    {
+        return $member?->isMinor() === true && isset(PrivacySetting::MINOR_CHOICES[$key]);
     }
 
     /**
-     * Validation rule for one setting; unknown keys are rejected by the callers before this is reached.
+     * Validation rule for one setting and member; unknown keys are rejected by the callers before this is reached.
      *
      * @return list<mixed>
      */
-    public static function rule(string $key): array
+    public static function rule(string $key, ?User $member = null): array
     {
-        return self::isSwitch($key) ? ['required', 'boolean'] : ['required', 'string', Rule::in(array_keys(self::choices($key)))];
+        if (self::isSwitch($key)) {
+            return self::limited($key, $member) ? ['required', 'boolean', Rule::in(PrivacySetting::MINOR_CHOICES[$key])] : ['required', 'boolean'];
+        }
+
+        return ['required', 'string', Rule::in(array_keys(self::choices($key, $member)))];
     }
 
     /** German wording of a value: the audience label, or Ja/Nein for a switch. */

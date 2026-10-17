@@ -24,10 +24,12 @@ class UpdatePrivacySetting
         if (! in_array($key, PrivacyOptions::keys(), true)) {
             throw new InvalidArgumentException('Unknown privacy setting: '.$key);
         }
-        $value = Validator::make(['value' => $value], ['value' => PrivacyOptions::rule($key)])->validate()['value'];
+        $value = Validator::make(['value' => $value], ['value' => PrivacyOptions::rule($key, $member)])->validate()['value'];
 
-        // Through the relation, so the account is set by the server and never mass-assigned.
-        $settings = $member->privacySetting()->updateOrCreate([], [$key => $value]);
+        // Through the relation, so the account is set by the server and never mass-assigned. A first row of a member
+        // under 18 starts from the strict values, never from the looser column defaults.
+        $settings = $member->privacySetting()->firstOrCreate([], $member->isMinor() ? PrivacySetting::MINOR_DEFAULTS : []);
+        $settings->update([$key => $value]);
         $member->setRelation('privacySetting', $settings);
 
         return $settings;

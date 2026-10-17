@@ -63,6 +63,7 @@
             <label for="visibility-{{ $id }}" class="o-label">Wer darf lesen?</label>
             <select id="visibility-{{ $id }}" wire:model="visibility" class="o-input font-normal" aria-describedby="visibility-hint-{{ $id }}">
                 @foreach (\App\Enums\Network\Visibility::cases() as $option)
+                    @continue(auth()->user()?->isMinor() && $option === \App\Enums\Network\Visibility::Public)
                     <option wire:key="visibility-{{ $option->value }}" value="{{ $option->value }}">{{ $option === \App\Enums\Network\Visibility::Public ? 'Öffentlich' : $option->label() }}</option>
                 @endforeach
             </select>

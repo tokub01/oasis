@@ -1,6 +1,12 @@
 <?php
 
+use App\Http\Controllers\Operations\HealthController;
+use Illuminate\Support\Facades\Route;
+
 require __DIR__.'/oasis.php';
+
+// Operations: health check for uptime monitors (token-protected, docs/oasis-operations.md).
+Route::get('/gesundheit', HealthController::class)->name('operations.health');
 
 require __DIR__.'/app.php';
 

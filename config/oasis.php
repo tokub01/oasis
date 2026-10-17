@@ -131,6 +131,24 @@ return [
     'server_location' => 'Auf Servern von IONOS in Deutschland; hochgeladene Bilder liegen verschlüsselt bei Amazon Web Services in Frankfurt am Main',
 
     /*
+     * Operations (docs/oasis-operations.md): encrypted backups with a weekly restore test, the health check and error
+     * mails. Secrets only in .env.
+     */
+    'operations' => [
+        // Disk for backups: ideally a separate, versioned EU bucket (filesystems.php), not the server itself.
+        'backup_disk' => env('OASIS_BACKUP_DISK', 'local'),
+        // Base64 key for backups (`php artisan oasis:backup-key`); keep a copy outside the server.
+        'backup_key' => env('OASIS_BACKUP_KEY'),
+        'backup_keep_days' => 14,
+        // Separate database the restore test may create, fill and drop again.
+        'verify_database' => env('OASIS_BACKUP_VERIFY_DATABASE', 'oasis_restore_check'),
+        // Secret for /gesundheit (uptime monitors); without it the URL answers 404.
+        'health_token' => env('OASIS_HEALTH_TOKEN'),
+        // Mail the operator about unexpected errors in production (ErrorAlert).
+        'error_mails' => (bool) env('OASIS_ERROR_MAILS', true),
+    ],
+
+    /*
      * Erklärung zur Barrierefreiheit (§ 14 BFSG, Anlage 3). Draft values: confirm before launch (docs/oasis-legal-review.md).
      */
     'accessibility' => [

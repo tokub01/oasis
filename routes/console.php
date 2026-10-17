@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\SystemHeartbeat;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -20,6 +21,13 @@ Schedule::command('oasis:prune-expired-accounts')->dailyAt('03:00');
 
 // Reconcile missed payment callbacks without overlapping ledger updates.
 Schedule::command('oasis:mollie-sync')->everyTenMinutes()->withoutOverlapping();
+
+// Operations (docs/oasis-operations.md): heartbeat proving the scheduler runs, encrypted backup, weekly restore test
+// and the health check that mails the operator about problems.
+Schedule::call(fn () => SystemHeartbeat::success('scheduler'))->everyMinute()->name('scheduler-heartbeat');
+Schedule::command('oasis:backup')->dailyAt('02:30')->withoutOverlapping();
+Schedule::command('oasis:backup-verify')->weeklyOn(0, '04:30')->withoutOverlapping();
+Schedule::command('oasis:health-check')->everyFifteenMinutes()->withoutOverlapping();
 
 // Stage 10: re-queue automated content checks that never ran (e.g. queue worker down).
 Schedule::command('oasis:moderation-sweep')->everyTenMinutes()->withoutOverlapping();

@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureStaff;
 use App\Http\Middleware\EnsureUserCanParticipate;
 use App\Http\Middleware\SecurityHeaders;
+use App\Support\Operations\ErrorAlert;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -28,6 +29,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [SecurityHeaders::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Error tracking without a third-party service: mail the operator about unexpected errors (docs/oasis-operations.md).
+        $exceptions->report(fn (Throwable $exception) => ErrorAlert::report($exception));
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*', 'app/chat/api/*', 'broadcasting/auth') || $request->expectsJson(),
         );

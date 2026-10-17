@@ -25,10 +25,13 @@ What is enforced in code, and what must be done outside the code before launch.
       payment methods in the dashboard and complete Mollie's data-processing arrangements.
 - [ ] Hosting: HTTPS only (HSTS active), `APP_DEBUG=false`, `APP_ENV=production`, queue worker and scheduler
       (`model:prune`, trial reminders) running, `php artisan config:cache route:cache view:cache`.
-- [ ] Backups: daily encrypted database backups off-site (EU), tested restore; image storage included.
+- [ ] Backups: in code (`oasis:backup`, weekly `oasis:backup-verify`, docs/oasis-operations.md). On the server: set
+      `OASIS_BACKUP_KEY` (copy off-site), a separate versioned EU bucket for `OASIS_BACKUP_DISK=backups`, S3
+      versioning for images.
 - [ ] Image storage: move from the local private disk to EU object storage (IONOS or AWS eu-central-1) – decision open.
 - [ ] Mail provider (planned Amazon SES eu-central-1) with SPF/DKIM/DMARC; fill `oasis.privacy.mail_provider`.
-- [ ] Monitoring: uptime check on `/up`, error tracking without personal data, log retention (`oasis.privacy.server_log_days`).
+- [ ] Monitoring: in code (health check, `/gesundheit`, alerts, error mails – docs/oasis-operations.md). On the
+      server: `OASIS_HEALTH_TOKEN`, an EU uptime monitor on `/gesundheit`, `LOG_CHANNEL=daily` with `LOG_DAILY_DAYS=7`.
 - [ ] Moderation audit trail as database triggers (needs SUPER/trigger rights on the production database).
 - [ ] Legal: lawyer review of Impressum, Datenschutz, AGB, Widerruf; DPIA for the chat and moderation; fill the
       open retention periods in `config/oasis.php` (`[noch festzulegen]`).

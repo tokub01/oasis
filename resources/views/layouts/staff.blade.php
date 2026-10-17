@@ -6,7 +6,7 @@
 
     Variables:
       title   string       page title (suffix " · Moderation" is added)
-      active  string|null  current navigation item: queue|roles|admin|votes|payments|breaches
+      active  string|null  current navigation item: queue|roles|admin|votes|payments|breaches|system
 --}}
 @php
     $user = auth()->user();
@@ -18,6 +18,7 @@
         'votes' => ['Abstimmungen', route('admin.votes.index'), $user?->can('administrate')],
         'payments' => ['Zahlungen', route('admin.payments'), $user?->can('administrate')],
         'breaches' => ['Datenpannen', route('admin.breaches'), $user?->can('administrate')],
+        'system' => ['System', route('admin.system'), $user?->can('administrate')],
     ];
 @endphp
 <!DOCTYPE html>

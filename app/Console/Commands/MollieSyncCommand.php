@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\MembershipPayment;
 use App\Models\Subscription;
+use App\Models\SystemHeartbeat;
 use App\Services\Membership\MollieGateway;
 use App\Services\Membership\MollieMembershipService;
 use Illuminate\Console\Command;
@@ -46,6 +47,7 @@ class MollieSyncCommand extends Command
                 $this->error('Abo-Abgleich fehlgeschlagen: '.$subscription->id.' ('.$e::class.')');
             }
         }
+        $failed ? SystemHeartbeat::failure('mollie-sync') : SystemHeartbeat::success('mollie-sync');
         $this->info('Mollie-Abgleich abgeschlossen.');
 
         return $failed ? self::FAILURE : self::SUCCESS;

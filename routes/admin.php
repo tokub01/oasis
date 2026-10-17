@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Admin\Dashboard;
+use App\Livewire\Admin\DataBreaches;
 use App\Livewire\Admin\Payments;
 use App\Livewire\Admin\Votes;
 use App\Livewire\Governance\Votes as MemberVotes;
@@ -11,6 +12,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'staff',
     Route::livewire('/', Dashboard::class)->name('dashboard');
     Route::livewire('/abstimmungen', Votes::class)->name('votes.index');
     Route::livewire('/zahlungen', Payments::class)->name('payments');
+    Route::livewire('/datenpannen', DataBreaches::class)->name('breaches');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

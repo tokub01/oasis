@@ -65,6 +65,12 @@ class Settings extends Component
     public bool $showRecoveryCodes = false;
 
     /**
+     * Actions without input that continue by themselves after the password confirmation page, so the member does not
+     * have to press the button a second time (session key `settings.resume`, consumed on the next visit).
+     */
+    private const RESUMABLE = ['enableTwoFactor', 'regenerateRecoveryCodes'];
+
+    /**
      * Populate the current profile fields and adopt any flashed Fortify status or error bags.
      */
     public function mount(): void
@@ -80,6 +86,11 @@ class Settings extends Component
                 'two-factor-authentication-confirmed',
                 'recovery-codes-generated',
             ], true);
+        }
+
+        $resume = session()->pull('settings.resume');
+        if (in_array($resume, self::RESUMABLE, true) && $this->passwordRecentlyConfirmed()) {
+            app()->call([$this, $resume]);
         }
 
         $errors = session('errors');
@@ -141,7 +152,7 @@ class Settings extends Component
     public function enableTwoFactor(EnableTwoFactorAuthentication $enable): void
     {
         $user = $this->actor();
-        if (! $this->ensurePasswordIsConfirmed('zwei-faktor-titel')) {
+        if (! $this->ensurePasswordIsConfirmed('zwei-faktor-titel', 'enableTwoFactor')) {
             return;
         }
 
@@ -174,7 +185,7 @@ class Settings extends Component
     public function regenerateRecoveryCodes(GenerateNewRecoveryCodes $generate): void
     {
         $user = $this->actor();
-        if (! $this->ensurePasswordIsConfirmed('zwei-faktor-titel')) {
+        if (! $this->ensurePasswordIsConfirmed('zwei-faktor-titel', 'regenerateRecoveryCodes')) {
             return;
         }
 
@@ -255,19 +266,24 @@ class Settings extends Component
      * `password.confirm` when expired or missing. Afterwards the member returns to $section (the heading id of the
      * part they were in), not to the top of the page.
      */
-    private function ensurePasswordIsConfirmed(string $section): bool
+    private function ensurePasswordIsConfirmed(string $section, ?string $resume = null): bool
     {
-        $confirmedAt = (int) session('auth.password_confirmed_at', 0);
-        $timeout = (int) config('auth.password_timeout', 10800);
-
-        if ((time() - $confirmedAt) < $timeout) {
+        if ($this->passwordRecentlyConfirmed()) {
             return true;
         }
 
         session()->put('url.intended', route('app.settings').'#'.$section);
+        if ($resume !== null) {
+            session()->put('settings.resume', $resume);
+        }
 
         $this->redirectRoute('password.confirm', navigate: true);
 
         return false;
+    }
+
+    private function passwordRecentlyConfirmed(): bool
+    {
+        return (time() - (int) session('auth.password_confirmed_at', 0)) < (int) config('auth.password_timeout', 10800);
     }
 }

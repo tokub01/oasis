@@ -36,6 +36,31 @@ it('returns to the part of the settings the member came from after confirming th
     expect(session('url.intended'))->toBe(route('app.settings').'#zwei-faktor-titel');
 });
 
+it('switches two-factor on by itself after the password confirmation, without a second click', function () {
+    $member = N::member();
+    $this->actingAs($member);
+
+    Livewire::test(Settings::class)->call('enableTwoFactor')->assertRedirect(route('password.confirm'));
+    expect($member->fresh()->two_factor_secret)->toBeNull();
+
+    session()->put('auth.password_confirmed_at', time());
+    Livewire::test(Settings::class)->assertSee('Scanne den QR-Code');
+    expect($member->fresh()->two_factor_secret)->not->toBeNull()
+        ->and(session()->has('settings.resume'))->toBeFalse();
+});
+
+it('drops a pending two-factor step when the password was never confirmed', function () {
+    $member = N::member();
+    $this->actingAs($member);
+
+    Livewire::test(Settings::class)->call('enableTwoFactor');
+    Livewire::test(Settings::class)->assertDontSee('Scanne den QR-Code');
+    session()->put('auth.password_confirmed_at', time());
+    Livewire::test(Settings::class);
+
+    expect($member->fresh()->two_factor_secret)->toBeNull();
+});
+
 it('keeps the image panel open once an image is chosen, so a missing description is visible', function () {
     Storage::fake(config('oasis.media_disk'));
     $this->actingAs(N::member());

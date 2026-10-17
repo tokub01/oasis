@@ -63,7 +63,7 @@ describe('admin payment search', function () {
         $admin = paymentAdmin();
 
         Livewire::actingAs($admin)->test(Payments::class)->call('checkPayment', $record->id)
-            ->assertSee('Live bei Mollie')->assertSee('creditcard')->assertSee('erstattet 5.00 EUR')
+            ->assertSee('Live bei Mollie')->assertSee('Kreditkarte')->assertSee('erstattet 5,00')
             ->assertSeeHtml('href="https://my.mollie.com/dashboard/org_1/payments/'.$record->mollie_payment_id.'"');
 
         Log::shouldHaveReceived('info')->with('Admin Mollie lookup', ['admin_id' => $admin->id, 'kind' => 'payment', 'mollie_id' => $record->mollie_payment_id]);

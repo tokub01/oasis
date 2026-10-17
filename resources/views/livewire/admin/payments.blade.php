@@ -8,6 +8,11 @@
     $kinds = ['membership' => 'Mitgliedschaft', 'renewal' => 'Verlängerung', 'gift' => 'Geschenk', 'mandate' => 'Zahlungsmittel'];
     $date = fn (?string $iso) => $iso ? \Carbon\CarbonImmutable::parse($iso)->timezone('Europe/Berlin')->locale('de')->isoFormat('D. MMM YYYY, HH:mm') : '–';
     $label = fn (string $status) => $statuses[$status] ?? $status;
+    // Mollie sends amounts as "5.00" and method keys; shown the German way.
+    $amount = fn (?string $value) => $value === null ? '–' : OasisFormat::money((float) $value);
+    $methods = ['creditcard' => 'Kreditkarte', 'paypal' => 'PayPal', 'directdebit' => 'SEPA-Lastschrift', 'banktransfer' => 'Überweisung',
+        'applepay' => 'Apple Pay', 'googlepay' => 'Google Pay', 'ideal' => 'iDEAL', 'bancontact' => 'Bancontact', 'klarna' => 'Klarna'];
+    $method = fn (?string $key) => $key === null ? null : ($methods[$key] ?? $key);
 @endphp
 <div class="flex flex-col gap-8">
     <div class="flex flex-col gap-2">
@@ -55,8 +60,8 @@
                 <dl class="m-0 grid gap-x-6 gap-y-2 sm:grid-cols-[max-content_minmax(0,1fr)]">
                     <dt class="text-muted">Zahlung</dt><dd class="m-0 font-bold break-all">{{ $p['id'] }}</dd>
                     <dt class="text-muted">Status</dt><dd class="m-0 font-bold">{{ $label($p['status']) }}</dd>
-                    <dt class="text-muted">Betrag</dt><dd class="m-0">{{ $p['amount'] }} {{ $p['currency'] }}@if ($p['refunded'] && (float) $p['refunded'] > 0) · erstattet {{ $p['refunded'] }} {{ $p['currency'] }}@endif</dd>
-                    <dt class="text-muted">Zahlungsmittel</dt><dd class="m-0">{{ $p['method'] ?? '–' }}</dd>
+                    <dt class="text-muted">Betrag</dt><dd class="m-0">{{ $amount($p['amount']) }}@if ($p['refunded'] && (float) $p['refunded'] > 0) · erstattet {{ $amount($p['refunded']) }}@endif</dd>
+                    <dt class="text-muted">Zahlungsmittel</dt><dd class="m-0">{{ $method($p['method']) ?? '–' }}</dd>
                     <dt class="text-muted">Beschreibung</dt><dd class="m-0">{{ $p['description'] ?? '–' }}</dd>
                     <dt class="text-muted">Erstellt</dt><dd class="m-0">{{ $date($p['created']) }}</dd>
                     <dt class="text-muted">Bezahlt</dt><dd class="m-0">{{ $date($p['paid']) }}</dd>
@@ -81,8 +86,8 @@
                 @forelse ($mollie['payments'] as $p)
                     <div wire:key="mollie-payment-{{ $p['id'] }}" class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-paper-line pt-3">
                         <span class="flex min-w-0 flex-col">
-                            <span class="font-bold break-all">{{ $p['id'] }} · {{ $p['amount'] }} {{ $p['currency'] }}</span>
-                            <span class="text-sm text-ink-2">{{ $label($p['status']) }} · {{ $p['method'] ?? 'Zahlungsmittel offen' }} · {{ $date($p['created']) }}{{ $p['subscription'] ? ' · Abo' : '' }}</span>
+                            <span class="font-bold break-all">{{ $p['id'] }} · {{ $amount($p['amount']) }}</span>
+                            <span class="text-sm text-ink-2">{{ $label($p['status']) }} · {{ $method($p['method']) ?? 'Zahlungsmittel offen' }} · {{ $date($p['created']) }}{{ $p['subscription'] ? ' · Abo' : '' }}</span>
                         </span>
                         @if ($p['dashboard'])
                             <a href="{{ $p['dashboard'] }}" target="_blank" rel="noopener noreferrer" class="o-link inline-flex min-h-11 items-center text-[15px] text-night">In Mollie öffnen</a>

@@ -4,6 +4,8 @@ use App\Enums\Role;
 use App\Models\GiftMembership;
 use App\Models\Subscription;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
+use Tests\Support\NetworkFixtures as N;
 
 test('retention prune command skips deletion by default when config switch is disabled', function () {
     config()->set('oasis.retention.auto_delete_expired', false);
@@ -72,4 +74,24 @@ test('retention prune command deletes expired accounts past retention days when 
         ->and(User::find($userC->id))->not->toBeNull()
         ->and(User::find($userD->id))->not->toBeNull()
         ->and(User::find($userE->id))->not->toBeNull();
+});
+
+test('retention prune command keeps the download period after a paid membership and deletes like DeleteAccount', function () {
+    config()->set('oasis.retention.auto_delete_expired', true);
+    config()->set('oasis.retention_days', 30);
+    Storage::fake(config('oasis.media_disk'));
+
+    $recent = User::factory()->create(['role' => Role::Member, 'trial_ends_at' => now()->subYear()]);
+    Subscription::create(['user_id' => $recent->id, 'type' => 'oase', 'status' => 'canceled', 'paid_until' => now()->subDays(10)]);
+
+    $expired = User::factory()->create(['role' => Role::Member, 'trial_ends_at' => now()->subYear()]);
+    Subscription::create(['user_id' => $expired->id, 'type' => 'oase', 'status' => 'canceled', 'paid_until' => now()->subDays(40)]);
+    $post = N::post($expired);
+    Storage::disk(config('oasis.media_disk'))->put('network/posts/'.$post->id.'/bild.jpg', 'x');
+
+    $this->artisan('oasis:prune-expired-accounts')->expectsOutputToContain('Pruned 1 expired accounts')->assertSuccessful();
+
+    expect(User::find($recent->id))->not->toBeNull()
+        ->and(User::find($expired->id))->toBeNull();
+    Storage::disk(config('oasis.media_disk'))->assertMissing('network/posts/'.$post->id.'/bild.jpg');
 });

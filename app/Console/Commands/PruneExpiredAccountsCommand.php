@@ -2,13 +2,19 @@
 
 namespace App\Console\Commands;
 
+use App\Actions\Account\DeleteAccount;
 use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Scheduled command to prune accounts whose retention period has passed after trial end or cancellation.
  * Guarded by config('oasis.retention.auto_delete_expired') which defaults to false.
+ *
+ * The download period (`oasis.retention_days`, AGB § 13) runs from the end of the trial, the paid period or the gift,
+ * whichever is last. Deletion goes through DeleteAccount, so images, oasis hand-over and automated checks are handled
+ * exactly as when members delete their account themselves (Art. 17 GDPR).
  */
 class PruneExpiredAccountsCommand extends Command
 {
@@ -29,23 +35,20 @@ class PruneExpiredAccountsCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(): int
+    public function handle(DeleteAccount $deleteAccount): int
     {
         $enabled = config('oasis.retention.auto_delete_expired', false) || $this->option('force');
         $retentionDays = (int) config('oasis.retention_days', 30);
         $cutoff = now()->subDays($retentionDays);
 
-        // Find candidate accounts: trial ended before cutoff, no active subscription, no active gift, member role
+        // Candidates: members whose trial, paid period and gift all ended before the cutoff, and no running subscription.
         $candidateQuery = User::query()
             ->where('role', Role::Member)
             ->whereNotNull('trial_ends_at')
             ->where('trial_ends_at', '<', $cutoff)
-            ->whereDoesntHave('subscriptions', function ($query) {
-                $query->whereIn('status', ['active', 'canceled'])->where('paid_until', '>', now());
-            })
-            ->whereDoesntHave('giftMemberships', function ($query) {
-                $query->where('expires_at', '>', now());
-            });
+            ->whereDoesntHave('subscriptions', fn ($query) => $query
+                ->where(fn ($running) => $running->where('status', 'active')->orWhere('paid_until', '>', $cutoff)))
+            ->whereDoesntHave('giftMemberships', fn ($query) => $query->where('expires_at', '>', $cutoff));
 
         $count = $candidateQuery->count();
 
@@ -60,9 +63,12 @@ class PruneExpiredAccountsCommand extends Command
 
         $deletedCount = 0;
         foreach ($candidateQuery->get() as $user) {
-            // Delete account
-            $user->delete();
-            $deletedCount++;
+            try {
+                $deleteAccount->handle($user);
+                $deletedCount++;
+            } catch (ValidationException) {
+                // A membership was started meanwhile; the account stays.
+            }
         }
 
         $this->info("Pruned {$deletedCount} expired accounts.");

@@ -7,6 +7,7 @@ use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Http\Responses\NeutralPasswordResetLinkResponse;
+use App\Listeners\Account\CancelTwoFactorResets;
 use App\Listeners\Privacy\RecordLoginDevice;
 use App\Models\User;
 use App\Support\Security\BotProtection;
@@ -80,6 +81,8 @@ class FortifyServiceProvider extends ServiceProvider
         });
         // Login alerts (Privatsphäre → Geräte): remember browser and system of every sign-in.
         Event::listen(Login::class, RecordLoginDevice::class);
+        // Signing in with the second factor proves it is not lost: open recovery requests end.
+        Event::listen(Login::class, CancelTwoFactorResets::class);
         // Fortify has no reset-link limiter setting; matching also covers cached routes.
         Event::listen(RouteMatched::class, function (RouteMatched $event): void {
             if ($event->route->getName() === 'password.email') {

@@ -99,6 +99,25 @@ single-use recovery codes, export isolation, deletion/logout, and profile/passwo
 Run `./vendor/bin/sail artisan test`, `./vendor/bin/sail pint --test app tests routes config` and `npm run build`.
 The stage handoff in `docs/oasis-stage0-backend-report.md` records actual check results and integration notes.
 
+## Zwei-Faktor verloren (self-service recovery)
+
+For members who lost their phone and their recovery codes. Linked from the code entry ("Kein Zugriff auf deine
+Codes?") and the Hilfe FAQ. Routes `two-factor.recovery.*` below `/zwei-faktor-hilfe`, `TwoFactorRecoveryController`,
+logic in `App\Actions\Account\ManageTwoFactorReset`, table `two_factor_resets` (only a SHA-256 of the link token).
+
+1. **Password:** e-mail and password; the answer is identical for every input (also timing: a dummy hash is checked
+   when no account matches), at most 3 requests per address and day, bot traps. A new request cancels older ones.
+2. **E-mail:** the link (valid 24 h) proves access to the address.
+3. **Waiting period:** confirming starts `TwoFactorReset::WAIT_HOURS` (72 h) with a notice and the cancel link; for
+   staff accounts the operator inbox is alerted, too. Signing in with the second factor (or a remember-me login) fires
+   `Login`, and `CancelTwoFactorResets` ends every open request.
+4. **Finish** within 7 days after the wait: 2FA secret, codes and confirmation are removed, every session ends and the
+   remember-me token is renewed (`EndSessions`); a mail confirms it. The member signs in with the password and sets up
+   2FA again.
+
+GET pages never change anything; every step is a CSRF-protected POST. Rows are pruned 30 days after the last change.
+Tests: `tests/Feature/Account/TwoFactorRecoveryTest.php`.
+
 ## Export and deletion (stage 9)
 
 - **Export** (`/app/konto/export`, `App\Actions\Account\ExportAccount`): ZIP `oasis-daten.zip` with

@@ -13,6 +13,7 @@
     $active ??= null;
     $nav = [
         'queue' => ['Warteschlange', route('moderation.index'), true],
+        'suspensions' => ['Sperren', route('moderation.suspensions'), true],
         'roles' => ['Rollen', route('moderation.roles.index'), $user?->can('manageRoles')],
         'admin' => ['Statistik', route('admin.dashboard'), $user?->can('administrate')],
         'votes' => ['Abstimmungen', route('admin.votes.index'), $user?->can('administrate')],

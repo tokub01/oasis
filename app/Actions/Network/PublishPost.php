@@ -2,6 +2,7 @@
 
 namespace App\Actions\Network;
 
+use App\Actions\Moderation\SuspendAccount;
 use App\Enums\Network\PostKind;
 use App\Enums\Network\Visibility;
 use App\Events\Network\PostPublished;
@@ -25,7 +26,11 @@ use Throwable;
  */
 class PublishPost
 {
-    public function __construct(private readonly StorePostImage $images, private readonly ContentAssessor $assessor) {}
+    public function __construct(
+        private readonly StorePostImage $images,
+        private readonly ContentAssessor $assessor,
+        private readonly SuspendAccount $suspend,
+    ) {}
 
     /**
      * @param  array{body: string, visibility: string, kind?: string|PostKind|null, oasis?: Oasis|null, reply_to?: Post|null, carried?: Post|null}  $input
@@ -74,7 +79,7 @@ class PublishPost
                 'visibility' => $visibility,
                 'kind' => $kind,
             ]);
-            $post->forceFill(['held_at' => $verdict->shouldHold() ? now() : null])->save();
+            $post->forceFill(['held_at' => $verdict->shouldHold() && ! $author->isSuperAdmin() ? now() : null])->save();
             if ($post->held_at !== null) {
                 // The background check (PostPublished → CheckContent) confirms it, opens the case and sends the notice.
                 ContentCheck::create(['checkable_type' => $post->getMorphClass(), 'checkable_id' => $post->id, 'status' => 'pending',
@@ -96,6 +101,10 @@ class PublishPost
         }
 
         AccountLimits::remember($author, $post->body);
+        // Held → the account is locked at once until a person in the moderation team decides (docs/oasis-moderation.md).
+        if ($post->held_at !== null) {
+            $this->suspend->provisional($post, (string) $verdict->holdReason(), $verdict->reason);
+        }
         event(new PostPublished($post));
 
         return $post;

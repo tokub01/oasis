@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureNotSuspended;
 use App\Http\Middleware\EnsureStaff;
 use App\Http\Middleware\EnsureUserCanParticipate;
 use App\Http\Middleware\SecurityHeaders;
@@ -30,6 +31,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectUsersTo(fn () => route('app.home'));
         // CSP with per-request nonce and the other security headers on every web response (stage 7).
         $middleware->web(append: [SecurityHeaders::class]);
+        // Locked accounts only reach /app/gesperrt and the pages a member must always reach (docs/oasis-moderation.md).
+        $middleware->web(append: [EnsureNotSuspended::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Error tracking without a third-party service: mail the operator about unexpected errors (docs/oasis-operations.md).

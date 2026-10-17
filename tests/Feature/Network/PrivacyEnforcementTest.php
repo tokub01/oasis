@@ -164,6 +164,7 @@ it('checks Following audiences on a batch of cards without per-card queries', fu
     $chosen = $authors->take(4)->pluck('id')->all();
     Follow::where('follower_id', $authors->last()->id)->delete();
     $viewer->blockedUserIds();
+    $viewer->canParticipate(); // one lock lookup per request, memoized like the block list
     $posts = app(PostFeed::class)->withCardData(Post::query(), $viewer)->get();
     DB::enableQueryLog();
     DB::flushQueryLog();

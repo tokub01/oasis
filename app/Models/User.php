@@ -113,10 +113,15 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Determine whether the user is allowed to actively participate (post, reply, react, chat, create oases).
-     * Returns false if the trial has expired without an active subscription or gift.
+     * Returns false if the trial has expired without an active subscription or gift, or while the account is locked.
      */
     public function canParticipate(): bool
     {
+        // A locked account cannot write anything, staff included (only the operator account is never locked).
+        if ($this->lockedForRequest ??= $this->isSuspended()) {
+            return false;
+        }
+
         if ($this->role->isStaff()) {
             return true;
         }
@@ -163,6 +168,45 @@ class User extends Authenticatable implements MustVerifyEmail
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class)->latest('id');
+    }
+
+    /**
+     * Operator account (`oasis.moderation.super_admins` with the admin role): exempt from automated holds and locks.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === Role::Admin
+            && in_array(mb_strtolower((string) $this->email), array_map('mb_strtolower', config('oasis.moderation.super_admins', [])), true);
+    }
+
+    /**
+     * Account locks, newest first (docs/oasis-moderation.md, "Sperren").
+     *
+     * @return HasMany<AccountSuspension, $this>
+     */
+    public function suspensions(): HasMany
+    {
+        return $this->hasMany(AccountSuspension::class)->latest('id');
+    }
+
+    /** Lock state for policy checks, which run many times per request (feeds); null until first asked. */
+    private ?bool $lockedForRequest = null;
+
+    /** The lock in force, if any. */
+    public function activeSuspension(): ?AccountSuspension
+    {
+        return $this->suspensions()->active()->first();
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->suspensions()->active()->exists();
+    }
+
+    /** Violations confirmed by the moderation team and not overturned by a complaint. */
+    public function activeStrikeCount(): int
+    {
+        return AccountStrike::where('user_id', $this->id)->whereNull('overturned_at')->count();
     }
 
     /**

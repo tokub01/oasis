@@ -7,6 +7,7 @@ use App\Enums\Role;
 use App\Jobs\Moderation\CheckContent;
 use App\Mail\Moderation\ContentHeldNotice;
 use App\Mail\Moderation\DecisionNotice;
+use App\Models\AccountSuspension;
 use App\Models\ContentCheck;
 use App\Models\ModerationCase;
 use App\Models\Post;
@@ -76,6 +77,9 @@ it('holds clearly sexual Tropfen for review, tells the author and lets only auth
     expect($post->held_at)->not->toBeNull()->and(ModerationCase::sole()->priority->value)->toBe('urgent');
     Mail::assertSent(ContentHeldNotice::class, fn ($mail) => $mail->hasTo($author->email));
 
+    // The account is locked at once (SuspendAccount); once released, the author still sees why the Tropfen is held.
+    $this->get(route('network.posts.show', $post))->assertRedirect(route('app.suspended'));
+    AccountSuspension::query()->update(['ended_at' => now(), 'result' => 'released']);
     $this->get(route('network.posts.show', $post))->assertOk()->assertSee('möglicherweise sexuelle Inhalte');
     $this->actingAs(N::member())->get(route('network.posts.show', $post))->assertNotFound();
     $this->actingAs(N::member())->get(route('app.home'))->assertDontSee('expliziter Text');
@@ -100,6 +104,8 @@ it('holds a clearly insulting Tropfen already when it is sent, with the reason i
         ->and($mentioned->notifications()->count())->toBe(0);
     Mail::assertSent(ContentHeldNotice::class, fn ($mail) => $mail->hasTo($author->email) && str_contains($mail->render(), 'möglicherweise eine Beleidigung erkannt'));
 
+    expect($author->isSuspended())->toBeTrue();
+    AccountSuspension::query()->update(['ended_at' => now(), 'result' => 'released']);
     $this->actingAs($author)->get(route('network.posts.show', $post))->assertOk()
         ->assertSee('Zurückgehalten und dem Moderationsteam gemeldet')->assertSee('möglicherweise eine Beleidigung erkannt')
         ->assertSee('Herabwürdigende Beschimpfung einer Person.');

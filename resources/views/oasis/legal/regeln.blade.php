@@ -40,7 +40,7 @@
                     <b>Oasen dürfen strenger sein.</b> Gastgeber:innen können eigene Hausregeln ergänzen, aber diese Regeln nicht lockern.</span>
             </li>
         </ol>
-        <p class="m-0 [padding:16px_18px] rounded-[14px] bg-dune text-[16px] [line-height:1.55]">Bei Verstößen entfernen wir Inhalte oder schränken Konten ein. Jede Entscheidung begründen wir, und du kannst widersprechen.</p>
+        <p class="m-0 [padding:16px_18px] rounded-[14px] bg-dune text-[16px] [line-height:1.55]">Bei Verstößen entfernen wir Inhalte oder schränken Konten ein. Hält unsere automatische Prüfung einen Tropfen als eindeutigen Verstoß zurück, sperren wir das Konto vorläufig, bis ein Mensch aus dem Moderationsteam entschieden hat – in der Regel innerhalb von 48 Stunden. Du kannst dazu Stellung nehmen. Nach drei bestätigten Verstößen sperren wir ein Konto dauerhaft. Jede Entscheidung begründen wir, und du kannst widersprechen.</p>
     </div>
 
 @endsection

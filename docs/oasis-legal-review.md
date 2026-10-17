@@ -86,6 +86,15 @@ Diese Punkte sind keine Formulierungsfragen. Ohne sie wären einzelne Aussagen d
 - Widerrufsbelehrung: Passt das Muster für Dienstleistungen zur Mitgliedschaft als digitale Dienstleistung, auch mit
   dem kostenlosen Test vorab?
 
+- Kontosperren (`docs/oasis-moderation.md`, "Sperren"): Ein Konto wird automatisch vorläufig gesperrt, sobald die
+  KI-Prüfung einen Tropfen als eindeutigen Verstoß zurückhält; nach drei von Menschen bestätigten Verstößen folgt die
+  dauerhafte Sperre. Fragen: Ist die automatische vorläufige Sperre mit Art. 22 DSGVO vereinbar (Schutzmaßnahmen:
+  menschliche Prüfung in der Regel binnen 48 Stunden, Stellungnahme, Widerspruch)? Genügt das Verfahren Art. 23 DSA
+  (vorherige Warnung, Einzelfallprüfung) und muss es in den AGB stehen (Art. 14 DSA)? Was gilt für laufende
+  Bezahlmitgliedschaften während einer Sperre und nach einer dauerhaften Sperre (Erstattung anteiliger Beiträge)?
+- Das Betreiberkonto ist von automatischen Sperren und vom Zurückhalten ausgenommen. Ist diese Ausnahme mit der
+  sorgfältigen, objektiven und verhältnismäßigen Anwendung der Regeln (Art. 14 Abs. 4 DSA) vereinbar?
+
 ## Was sich im Code geändert hat (Art. 17 DSGVO)
 
 - Automatische Prüf-Einträge (`content_checks`) werden gelöscht, sobald ihr Text gelöscht wird: beim Löschen eines

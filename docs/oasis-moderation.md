@@ -69,6 +69,27 @@ FK references become null without deleting case history. Decided/closed cases pr
 from their last state change and after the current decision’s notice window; open/review/complaint cases never prune. ContentReport
 pruning waits until the case is gone. A null records_years setting disables pruning as on the other public forms.
 
+## Sperren (account locks and strikes)
+
+- `account_suspensions`: `provisional` starts at once when the automated check holds a Tropfen (`PublishPost`, again
+  in `ApplyContentVerdict`, which links the case); `suspension` from a decision "Konto gesperrt"; `ban` at
+  `oasis.moderation.strikes_for_ban` (3) confirmed violations. One active lock per account (`ended_at` null).
+- `account_strikes`: one per case with a violation outcome (`ApplyAccountConsequences` after `DecideCase` and
+  `ReviewComplaint`); "Keine Maßnahme" overturns the strike of that case, ends its lock and lifts a ban below the limit.
+- A violation outcome ends the provisional lock with result `confirmed` (the member may write again, the strike stays);
+  "Konto gesperrt" keeps the account locked until staff release it on `/moderation/sperren` (`LiftSuspension`; a ban
+  only by admins; nobody releases their own lock).
+- `EnsureNotSuspended` (web middleware) sends locked members to `/app/gesperrt` (`App\Livewire\Account\Suspended`):
+  accusation, text, strike count and a statement field (apology, explanation, objection) that staff read before
+  deciding. Settings (incl. account deletion), data export, membership/cancellation, complaints, logout and public
+  pages stay reachable. `User::canParticipate` is false while locked, so no Livewire action can post.
+- Mails: `AccountSuspendedNotice` (Art. 17 DSA statement) and `AccountReleasedNotice`.
+- Only the operator account (`User::isSuperAdmin`: admin role plus an address in `oasis.moderation.super_admins`,
+  env `OASIS_SUPER_ADMINS`) is never held or locked; moderators and other admins are. Only the operator account makes
+  someone an admin or changes an admin's role (`ChangeRole`).
+
+Tests: `tests/Feature/Moderation/SuspensionTest.php`.
+
 ## Eskalation (threat to life, child abuse)
 
 Two situations leave the normal queue (`App\Enums\Moderation\Escalation`). **Oasis never contacts an authority

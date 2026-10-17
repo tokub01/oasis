@@ -6,6 +6,7 @@ use App\Livewire\Moderation\ComplaintForm;
 use App\Livewire\Moderation\ComplaintReview;
 use App\Livewire\Moderation\Overview;
 use App\Livewire\Moderation\Roles;
+use App\Livewire\Moderation\Suspensions;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,6 +21,7 @@ Route::prefix('moderation')->name('moderation.')->middleware(['auth', 'verified'
     Route::get('/cases/{case}/beweise', EvidenceDownloadController::class)->name('cases.evidence');
     Route::livewire('/complaints/{complaint}', ComplaintReview::class)->name('complaints.show');
     Route::livewire('/roles', Roles::class)->name('roles.index');
+    Route::livewire('/sperren', Suspensions::class)->name('suspensions');
 });
 
 /*

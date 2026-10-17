@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Account\ExportAccountController;
 use App\Livewire\Account\Settings;
+use App\Livewire\Account\Suspended;
 use App\Livewire\Network\Source;
 use App\Livewire\Onboarding\Welcome;
 use App\Livewire\Privacy\Center;
@@ -16,6 +17,8 @@ Route::livewire('/app', Source::class)->middleware(['auth', 'verified'])->name('
 // Settings (incl. account deletion, GDPR Art. 17) stay reachable while a changed e-mail address is unverified, so the
 // member can correct a mistyped address or delete the account; every action still checks what it needs itself.
 Route::livewire('/app/einstellungen', Settings::class)->middleware('auth')->name('app.settings');
+// Locked accounts (docs/oasis-moderation.md, "Sperren"): accusation and statement; EnsureNotSuspended sends them here.
+Route::livewire('/app/gesperrt', Suspended::class)->middleware('auth')->name('app.suspended');
 // Privatsphäre-Center and the guided check (stage 13); the settings are enforced through PrivacySetting::allows().
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::livewire('/app/privatsphaere', Center::class)->name('app.privacy');

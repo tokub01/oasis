@@ -109,6 +109,11 @@ return [
         'hold_threshold' => 0.85,
         // Clearly insulting, hateful or threatening Tropfen are held until reviewed, already when they are sent.
         'hold_abuse_threshold' => 0.8,
+        // Confirmed violations (human decisions) after which an account is banned permanently.
+        'strikes_for_ban' => 3,
+        // Operator accounts (admin role plus one of these e-mail addresses): never held or locked automatically.
+        // All other admins and moderators are treated like members. Comma-separated.
+        'super_admins' => array_filter(array_map('trim', explode(',', (string) env('OASIS_SUPER_ADMINS', 'info@velwebsolutions.de')))),
     ],
 
     // Free trial length in days. Used in every "30 Tage testen" text.

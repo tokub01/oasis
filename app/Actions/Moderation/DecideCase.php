@@ -35,6 +35,7 @@ class DecideCase
             return $decision;
         });
         app(ReleaseHeldContent::class)->handle($decision);
+        app(ApplyAccountConsequences::class)->handle($decision);
         // External mail cannot roll back. Retain committed decisions for retry if transport fails.
         DB::afterCommit(fn () => app(NotifyDecision::class)->handle($decision));
 

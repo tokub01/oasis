@@ -168,6 +168,12 @@ class Compose extends Component
             default => 'Dein Tropfen ist da.',
         };
         $this->dispatch('post-published');
+        // A held Tropfen locks the account at once (SuspendAccount): show why instead of the feed.
+        if (auth()->user()->isSuspended()) {
+            $this->redirectRoute('app.suspended', navigate: true);
+
+            return;
+        }
         if ($context['carried']) {
             $this->redirectRoute('app.home', navigate: true);
         }

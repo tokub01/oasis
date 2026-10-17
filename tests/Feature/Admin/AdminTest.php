@@ -14,6 +14,7 @@ use App\Models\VoteParticipation;
 use App\Queries\Admin\AdminStats;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Livewire;
 use Tests\Support\NetworkFixtures as N;
 
@@ -73,34 +74,40 @@ it('aggregates network and chat metadata for the chosen period', function () {
         ->and($stats->members($until->subDays(30), $until)['registered'])->toBe(1);
 });
 
-it('publishes monthly transparency figures that replace the configured placeholders', function () {
+it('publishes the real membership figures of a month with the costs the admin enters', function () {
     $admin = staffUser(Role::Admin);
+    // Two real members paying monthly: Oase (5 €) and Solidar (3 €), so 8 € income and one carried Solidar seat.
+    foreach ([['oase', 500], ['solidar', 300]] as [$tier, $amount]) {
+        User::factory()->create()->subscriptions()->create(['type' => $tier, 'mollie_id' => 'sub_'.$tier, 'status' => 'active',
+            'rhythm' => 'monat', 'amount' => $amount, 'paid_until' => now()->addMonth()]);
+    }
     $this->actingAs($admin)->get(route('admin.transparency.index'))->assertOk()->assertSeeLivewire(TransparencyReports::class)
-        ->assertSee('Noch nichts veröffentlicht.');
-    $publish = fn (array $figures) => Livewire::test(TransparencyReports::class)->set($figures)->call('publish');
+        ->assertSee('Noch nichts veröffentlicht.')->assertSee('8 €');
+    $publish = fn (array $input) => Livewire::test(TransparencyReports::class)->set($input)->call('publish');
 
     $publish([
-        'month' => '2026-09', 'members' => 1234, 'sponsored_seats' => 12, 'income' => '6170',
-        'items' => [['label' => 'Server', 'amount' => '1000'], ['label' => 'Moderation', 'amount' => '4000'], ['label' => '', 'amount' => '']],
+        'month' => '2026-09',
+        'items' => [['label' => 'Server', 'amount' => '4'], ['label' => 'Moderation', 'amount' => '6'], ['label' => '', 'amount' => '']],
     ])->assertHasNoErrors()->assertSee('Die Zahlen sind auf der Transparenz-Seite veröffentlicht.');
 
     $report = TransparencyReport::sole();
-    expect($report->cost_items)->toBe(['Server' => 1000, 'Moderation' => 4000])->and($report->coverage())->toBe(123);
+    expect($report->members)->toBe(2)->and($report->sponsored_seats)->toBe(1)->and((float) $report->income)->toBe(8.0)
+        ->and($report->cost_items)->toBe(['Server' => 4, 'Moderation' => 6])->and($report->coverage())->toBe(80);
 
     auth()->logout();
     $this->get(route('oasis.transparenz'))->assertOk()
-        ->assertSee('September 2026')->assertSee('1.234')->assertSee('123 %')->assertSee('Moderation');
+        ->assertSee('September 2026')->assertSee('80 %')->assertSee('Moderation');
 
-    // Re-publishing the same month corrects it; future months and half-filled items are refused.
+    // Figures cannot be typed in (the component has no such fields); re-publishing a month corrects its costs;
+    // future months and half-filled items are refused.
     $this->actingAs($admin);
-    $publish(['month' => '2026-09', 'members' => 1, 'sponsored_seats' => 0, 'income' => 1, 'items' => [['label' => 'Server', 'amount' => 1]]]);
-    expect(TransparencyReport::count())->toBe(1)->and(TransparencyReport::sole()->members)->toBe(1);
-    $publish(['month' => now()->addMonth()->format('Y-m'), 'members' => 1, 'sponsored_seats' => 0, 'income' => 1, 'items' => [['label' => 'Server', 'amount' => 1]]])
-        ->assertHasErrors('month');
-    $publish(['month' => '2026-08', 'members' => 1, 'sponsored_seats' => 0, 'income' => 1, 'items' => [['label' => 'Server', 'amount' => '']]])
-        ->assertHasErrors('items.0.amount');
-    $publish(['month' => '2026-08', 'members' => 1, 'sponsored_seats' => 0, 'income' => 1, 'items' => [['label' => '', 'amount' => '']]])
-        ->assertHasErrors('items');
+    expect(fn () => Livewire::test(TransparencyReports::class)->set('members', 99999))->toThrow(PublicPropertyNotFoundException::class);
+    $publish(['month' => '2026-09', 'items' => [['label' => 'Server', 'amount' => 1]]]);
+    expect(TransparencyReport::count())->toBe(1)->and(TransparencyReport::sole()->members)->toBe(2)
+        ->and(TransparencyReport::sole()->cost_items)->toBe(['Server' => 1]);
+    $publish(['month' => now()->addMonth()->format('Y-m'), 'items' => [['label' => 'Server', 'amount' => 1]]])->assertHasErrors('month');
+    $publish(['month' => '2026-08', 'items' => [['label' => 'Server', 'amount' => '']]])->assertHasErrors('items.0.amount');
+    $publish(['month' => '2026-08', 'items' => [['label' => '', 'amount' => '']]])->assertHasErrors('items');
     expect(TransparencyReport::count())->toBe(1);
     // A moderator without the admin role cannot publish, even with a component opened earlier.
     $page = Livewire::test(TransparencyReports::class);

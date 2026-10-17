@@ -192,29 +192,12 @@ return [
     'demo_pages' => (bool) env('OASIS_DEMO_PAGES', true),
 
     /*
-     * Transparenz page. Every null value renders "Veröffentlichen wir ab dem Start".
+     * Transparenz page. Members, carried seats and income always come from the real memberships
+     * (App\Queries\Membership\MembershipStats); only the costs are entered by an admin each month.
      */
     'transparency' => [
-        // Month the numbers refer to, as display text, e.g. 'Oktober 2026'.
-        'as_of' => null,
-        // Paying members (integer).
-        'members' => null,
-        // Running costs and income per month in euro. If 'costs' is null, the sum of
-        // 'cost_items' is used once every item has an amount. Coverage (income / costs)
-        // is computed in the view and hidden while either value is missing.
-        'costs' => null,
-        'income' => null,
-        // Sponsored Solidar and Paten seats (integer).
-        'sponsored_seats' => null,
-        // Cost items: label => amount in euro per month (null = not published yet).
-        'cost_items' => [
-            'Server und Speicher' => null,
-            'Entwicklung und Werkzeuge' => null,
-            'Moderation' => null,
-            'Zahlungsgebühren' => null,
-            'Rücklage' => null,
-        ],
-        // Member votes are real records now (admin area, App\Models\Vote); see docs/oasis-admin.md.
+        // Cost items offered in the admin form until the first report sets its own.
+        'cost_items' => ['Server und Speicher', 'Entwicklung und Werkzeuge', 'Moderation', 'Zahlungsgebühren', 'Rücklage'],
     ],
 
     /*

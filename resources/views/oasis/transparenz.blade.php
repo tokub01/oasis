@@ -1,9 +1,9 @@
 {{--
     Transparenz: route oasis.transparenz, template Transparenz.dc.html.
-    Variables: $transparency from App\Queries\Admin\PublicTransparency::data() – the newest report admins published
-    in the admin area, else config('oasis.transparency'), plus the real member votes. A null value renders
-    "Veröffentlichen wir ab dem Start"; coverage is computed from income/costs and hidden while either is missing, so
-    no number is ever invented.
+    Variables: $transparency from App\Queries\Admin\PublicTransparency::data() – the newest monthly report (real
+    membership figures plus the costs admins entered), else today's live figures, plus the real member votes. A null
+    value renders "Veröffentlichen wir ab dem Start"; coverage is computed from income/costs and hidden while either is
+    missing, so no number is ever invented.
 --}}
 @extends('layouts.oasis', [
     'title' => 'Transparenz',

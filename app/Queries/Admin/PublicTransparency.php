@@ -4,14 +4,19 @@ namespace App\Queries\Admin;
 
 use App\Models\TransparencyReport;
 use App\Models\Vote;
+use App\Models\VoteOption;
+use App\Queries\Membership\MembershipStats;
 
 /**
- * Data of the public Transparenz page. The newest published TransparencyReport wins; without one the page falls
- * back to `config('oasis.transparency')` (null values render "Veröffentlichen wir ab dem Start"). Votes come from
- * the database: running ones without results, ended ones with the result.
+ * Data of the public Transparenz page, real figures only. The newest published TransparencyReport wins (a monthly
+ * snapshot of the memberships plus the costs an admin entered); until the first one, the page shows today's live
+ * figures and no costs (rendered as "Veröffentlichen wir ab dem Start"). Votes come from the database: running ones
+ * without results, ended ones with the result.
  */
 class PublicTransparency
 {
+    public function __construct(private readonly MembershipStats $membership) {}
+
     /**
      * @return array{as_of: string|null, members: int|null, sponsored_seats: int|null, income: float|null,
      *     costs: float|null, cost_items: array<string, float|null>, votes: list<array<string, mixed>>}
@@ -19,17 +24,18 @@ class PublicTransparency
     public function data(): array
     {
         $report = TransparencyReport::orderByDesc('month')->first();
-        $config = config('oasis.transparency');
+        $month = $report?->month;
+        $month?->locale('de');
 
         $figures = $report === null ? [
-            'as_of' => $config['as_of'],
-            'members' => $config['members'],
-            'sponsored_seats' => $config['sponsored_seats'],
-            'income' => $config['income'],
-            'costs' => $config['costs'],
-            'cost_items' => $config['cost_items'],
+            'as_of' => 'heute, '.now('Europe/Berlin')->locale('de')->isoFormat('D. MMMM YYYY'),
+            'members' => $this->membership->activeMembersCount(),
+            'sponsored_seats' => $this->membership->sponsoredSeats(),
+            'income' => $this->membership->monthlyRecurringRevenue(),
+            'costs' => null,
+            'cost_items' => array_fill_keys(config('oasis.transparency.cost_items'), null),
         ] : [
-            'as_of' => $report->month->locale('de')->isoFormat('MMMM YYYY'),
+            'as_of' => $month?->isoFormat('MMMM YYYY'),
             'members' => $report->members,
             'sponsored_seats' => $report->sponsored_seats,
             'income' => (float) $report->income,
@@ -43,14 +49,19 @@ class PublicTransparency
     /** @return list<array{title: string, open: bool, ends: string, options: list<string>, result: string|null}> */
     private function votes(): array
     {
-        return Vote::where('starts_at', '<=', now())->with('options')->orderByDesc('ends_at')->limit(10)->get()
-            ->map(fn (Vote $vote) => [
-                'title' => $vote->title,
-                'open' => $vote->isOpen(),
-                'ends' => $vote->ends_at->locale('de')->isoFormat('D. MMMM YYYY'),
-                'options' => $vote->options->pluck('label')->all(),
-                'result' => $vote->hasEnded() ? $this->result($vote) : null,
-            ])->all();
+        return array_values(Vote::where('starts_at', '<=', now())->with('options')->orderByDesc('ends_at')->limit(10)->get()
+            ->map(function (Vote $vote): array {
+                $ends = $vote->ends_at;
+                $ends->locale('de');
+
+                return [
+                    'title' => $vote->title,
+                    'open' => $vote->isOpen(),
+                    'ends' => $ends->isoFormat('D. MMMM YYYY'),
+                    'options' => array_values($vote->options->map(fn (VoteOption $option): string => $option->label)->all()),
+                    'result' => $vote->hasEnded() ? $this->result($vote) : null,
+                ];
+            })->all());
     }
 
     private function result(Vote $vote): string

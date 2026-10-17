@@ -1,6 +1,7 @@
 {{--
     Publish the monthly figures of the public Transparenz page, component App\Livewire\Admin\TransparencyReports
-    (route admin.transparency.index). Variables: $reports (published, newest first); the form is the component state.
+    (route admin.transparency.index). Variables: $live (current members, carried seats, income from the real
+    memberships), $reports (published, newest first); the form is the component state.
 --}}
 @php($euro = fn ($value) => \App\Support\OasisFormat::euro((float) $value))
 
@@ -10,8 +11,8 @@
         <h1 class="o-h2 m-0 text-night">Transparenz-Zahlen veröffentlichen</h1>
         <p class="m-0 max-w-[48em] text-ink-2">
             Die neuesten Zahlen erscheinen sofort auf der <a href="{{ route('oasis.transparenz') }}" wire:navigate class="text-night underline underline-offset-4">Transparenz-Seite</a>.
-            Mitglieder und Einnahmen sind mit den aktuellen Werten aus den Mitgliedschaften vorausgefüllt – bitte mit der Buchhaltung abgleichen.
-            Einen Monat erneut zu veröffentlichen, korrigiert ihn.
+            Mitglieder, getragene Plätze und Einnahmen übernimmt Oasis beim Veröffentlichen automatisch aus den echten Mitgliedschaften.
+            Du trägst nur die Kosten des Monats ein. Einen Monat erneut zu veröffentlichen, korrigiert ihn.
         </p>
     </div>
 
@@ -20,10 +21,12 @@
     <form wire:submit="publish" class="flex flex-col gap-5 rounded-[24px] bg-paper p-6">
         <div class="grid gap-4 md:grid-cols-4">
             <x-oasis.field name="month" type="month" label="Monat" wire:model="month" required />
-            <x-oasis.field name="members" type="number" label="zahlende Mitglieder" wire:model="members" min="0" required />
-            <x-oasis.field name="sponsored_seats" type="number" label="Solidar- und Patenplätze" wire:model="sponsored_seats" min="0" required />
-            <x-oasis.field name="income" type="number" label="Einnahmen (€)" wire:model="income" min="0" step="0.01" required />
         </div>
+        <dl class="m-0 grid gap-4 rounded-2xl bg-sand p-4 md:grid-cols-3" aria-label="Werden automatisch übernommen">
+            <div><dt class="text-sm text-muted">zahlende Mitglieder</dt><dd class="m-0 text-lg font-extrabold">{{ number_format($live['members'], 0, ',', '.') }}</dd></div>
+            <div><dt class="text-sm text-muted">Solidar- und Patenplätze</dt><dd class="m-0 text-lg font-extrabold">{{ number_format($live['sponsored_seats'], 0, ',', '.') }}</dd></div>
+            <div><dt class="text-sm text-muted">Einnahmen im Monat</dt><dd class="m-0 text-lg font-extrabold">{{ $euro($live['income']) }}</dd></div>
+        </dl>
         <fieldset class="m-0 flex flex-col gap-3 border-none p-0">
             <legend class="mb-2 text-[15px] font-bold">Kosten im Monat (leere Zeilen werden ignoriert)</legend>
             @foreach ($items as $index => $item)

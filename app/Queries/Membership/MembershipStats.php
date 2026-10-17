@@ -6,6 +6,7 @@ use App\Models\GiftMembership;
 use App\Models\Subscription;
 use App\Models\User;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Read-only aggregate statistics queries for Stage 6 admin module.
@@ -91,9 +92,7 @@ class MembershipStats
         $result = array_fill_keys($tiers, 0);
 
         // Subscriptions
-        $activeSubs = Subscription::query()
-            ->whereIn('status', ['active', 'canceled'])->where('paid_until', '>', now())->where(fn ($query) => $query->whereNull('ends_at')->orWhere('ends_at', '>', now()))
-            ->get();
+        $activeSubs = $this->activeSubscriptions()->get();
 
         foreach ($activeSubs as $sub) {
             $tier = $sub->type;
@@ -121,8 +120,7 @@ class MembershipStats
      */
     public function activeMembersCount(): int
     {
-        $subCount = Subscription::query()
-            ->whereIn('status', ['active', 'canceled'])->where('paid_until', '>', now())->where(fn ($query) => $query->whereNull('ends_at')->orWhere('ends_at', '>', now()))
+        $subCount = $this->activeSubscriptions()
             ->distinct('user_id')
             ->count('user_id');
 
@@ -132,6 +130,30 @@ class MembershipStats
             ->count('redeemed_by_user_id');
 
         return $subCount + $giftCount;
+    }
+
+    /**
+     * Seats carried by others: active Solidar subscriptions (supported by higher contributions) and active gift
+     * memberships (paid by someone else). Shown as "getragene Solidar- und Patenplätze" on the Transparenz page.
+     */
+    public function sponsoredSeats(): int
+    {
+        $solidar = $this->activeSubscriptions()->where('type', 'solidar')->distinct('user_id')->count('user_id');
+        $gifts = GiftMembership::query()->where('expires_at', '>', now())
+            ->distinct('redeemed_by_user_id')->count('redeemed_by_user_id');
+
+        return $solidar + $gifts;
+    }
+
+    /**
+     * Subscriptions that currently grant membership: paid up and not ended (a cancelled one runs until its end).
+     *
+     * @return Builder<Subscription>
+     */
+    private function activeSubscriptions(): Builder
+    {
+        return Subscription::query()
+            ->whereIn('status', ['active', 'canceled'])->where('paid_until', '>', now())->where(fn ($query) => $query->whereNull('ends_at')->orWhere('ends_at', '>', now()));
     }
 
     /**

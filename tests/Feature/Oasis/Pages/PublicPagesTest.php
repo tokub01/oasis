@@ -196,22 +196,15 @@ it('renders operator, contact, founder and service placeholders from changed con
     $this->get(route('oasis.preise'))->assertOk()->assertSee('4.321 Mitglieder');
 });
 
-it('does not invent transparency figures and calculates published coverage from configured costs', function () {
-    config([
-        'oasis.transparency.members' => null, 'oasis.transparency.costs' => null,
-        'oasis.transparency.income' => null, 'oasis.transparency.sponsored_seats' => null,
-        'oasis.transparency.cost_items' => ['Hosting' => null],
-    ]);
-    $this->get(route('oasis.transparenz'))->assertOk()->assertSee('Veröffentlichen wir ab dem Start')
-        ->assertDontSee('60 %')->assertDontSee('35 %')->assertDontSee('Antwortmöglichkeiten');
+it('shows only real transparency figures: live memberships and no costs before the first report', function () {
+    config(['oasis.transparency.cost_items' => ['Hosting']]);
+    User::factory()->create()->subscriptions()->create(['type' => 'oase', 'mollie_id' => 'sub_live', 'status' => 'active',
+        'rhythm' => 'monat', 'amount' => 500, 'paid_until' => now()->addMonth()]);
 
-    config([
-        'oasis.transparency.as_of' => 'Configured month', 'oasis.transparency.members' => 1234,
-        'oasis.transparency.cost_items' => ['Hosting' => 200, 'Moderation' => 300],
-        'oasis.transparency.income' => 375,
-    ]);
-    $this->get(route('oasis.transparenz'))->assertOk()->assertSee('Configured month')->assertSee('1.234')
-        ->assertSee('500 €')->assertSee('375 €')->assertSee('75 %');
+    $this->get(route('oasis.transparenz'))->assertOk()
+        ->assertSee('heute, '.now('Europe/Berlin')->locale('de')->isoFormat('D. MMMM YYYY'))
+        ->assertSee('5 €')->assertSee('Hosting')->assertSee('Veröffentlichen wir ab dem Start')
+        ->assertDontSee('%</', false)->assertDontSee('Antwortmöglichkeiten');
 });
 
 it('marks the active main-navigation link on each matching page', function ($page) {

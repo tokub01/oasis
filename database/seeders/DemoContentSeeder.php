@@ -14,7 +14,6 @@ use App\Models\ModerationCase;
 use App\Models\Oasis;
 use App\Models\Post;
 use App\Models\Reaction;
-use App\Models\TransparencyReport;
 use App\Models\User;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Seeder;
@@ -26,7 +25,7 @@ use RuntimeException;
 /**
  * Local demo content so the app can be tried out without an empty feed: sample members (emails end in
  * `@demo.oasis.tld`), the four oases from the design, Tropfen with replies, carries, reactions and a few generated
- * images, one transparency report and two votes. Every existing account follows the sample members and oases.
+ * images and two votes. No transparency report: those figures come only from real memberships. Every existing account follows the sample members and oases.
  *
  * Sample members sign in with their e-mail or username and the password `oasis-demo-2026` (self::PASSWORD).
  * Run: `sail artisan db:seed --class=DemoContentSeeder`. Refuses to run in production: the figures and people are
@@ -235,16 +234,10 @@ class DemoContentSeeder extends Seeder
 
     private function governance(): void
     {
-        if (! TransparencyReport::exists()) {
-            TransparencyReport::create([
-                'month' => now()->subMonth()->startOfMonth(), 'members' => 1240, 'sponsored_seats' => 86, 'income' => 6380,
-                'cost_items' => ['Server und Speicher' => 640, 'Entwicklung und Werkzeuge' => 2900, 'Moderation' => 1800, 'Zahlungsgebühren' => 210, 'Rücklage' => 500],
-            ]);
-        }
         $admin = User::where('role', 'admin')->first() ?? User::first();
         $votes = app(ManageVotes::class);
         $votes->create($admin, [
-            'title' => 'Wohin mit dem Überschuss aus dem September?', 'description' => "Im September sind 330 € mehr hereingekommen als hinausgegangen.\nWofür sollen wir sie verwenden?",
+            'title' => 'Wohin mit einem Überschuss?', 'description' => "Wenn in einem Monat mehr hereinkommt als hinausgeht:\nWofür sollen wir es verwenden?",
             'starts_at' => now()->subDays(2), 'ends_at' => now()->addDays(12), 'options' => ['Mehr Patenplätze', 'Eine Rücklage', 'Neue Funktionen'],
         ]);
         $ended = $votes->create($admin, [

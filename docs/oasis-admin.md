@@ -27,11 +27,13 @@ All modules show sums only – never lists of people and never content.
 
 ## Transparency reports
 
-`/admin/transparenz` publishes the figures of one month (`transparency_reports`, unique per month; publishing a
-month again corrects it): paying members, sponsored seats, income and cost items (label → euro). The form is
-prefilled with the live paying-member count and MRR and the cost labels of the previous report – admins check them
-against the books before publishing. The public page shows the newest report; without any report it falls back to
-`config('oasis.transparency')`, where null renders "Veröffentlichen wir ab dem Start". Coverage = income / costs.
+`/admin/transparenz` publishes one month (`transparency_reports`, unique per month; publishing a month again
+corrects it). Only real figures appear: paying members, carried seats (active Solidar subscriptions plus active gift
+memberships) and income (MRR) are taken from the memberships at the moment of publishing
+(`App\Queries\Membership\MembershipStats`) and cannot be typed in; the admin enters only the cost items
+(label → euro), prefilled with the labels of the previous report or `config('oasis.transparency.cost_items')`.
+The public page shows the newest report; before the first one it shows today's live figures and no costs
+("Veröffentlichen wir ab dem Start"). Coverage = income / costs. The demo seeder creates no report.
 
 ## Member votes
 

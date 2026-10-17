@@ -17,7 +17,9 @@ class OasisRole extends Command
     /** Reject unknown accounts and role values without changing data. */
     public function handle(ChangeRole $action): int
     {
-        $role = Role::tryFrom((string) $this->argument('role'));
+        /** @var string $roleName */
+        $roleName = $this->argument('role');
+        $role = Role::tryFrom($roleName);
         $user = User::where('email', $this->argument('email'))->first();
         if (! $role || ! $user) {
             $this->error('Konto oder Rolle ungültig. Erlaubt sind member, moderator und admin.');

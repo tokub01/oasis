@@ -26,9 +26,11 @@ class PublicTransparency
         $report = TransparencyReport::orderByDesc('month')->first();
         $month = $report?->month;
         $month?->locale('de');
+        $today = now('Europe/Berlin');
+        $today->locale('de');
 
         $figures = $report === null ? [
-            'as_of' => 'heute, '.now('Europe/Berlin')->locale('de')->isoFormat('D. MMMM YYYY'),
+            'as_of' => 'heute, '.$today->isoFormat('D. MMMM YYYY'),
             'members' => $this->membership->activeMembersCount(),
             'sponsored_seats' => $this->membership->sponsoredSeats(),
             'income' => $this->membership->monthlyRecurringRevenue(),

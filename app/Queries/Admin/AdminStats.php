@@ -66,7 +66,11 @@ class AdminStats
         ];
     }
 
-    /** Metadata counts only – the server cannot read chat content. @return array{identities: int, conversations: int, stored_messages: int, messages_period: int} */
+    /**
+     * Metadata counts only – the server cannot read chat content.
+     *
+     * @return array{identities: int, conversations: int, stored_messages: int, messages_period: int}
+     */
     public function chat(CarbonImmutable $from, CarbonImmutable $until): array
     {
         return [
@@ -96,7 +100,9 @@ class AdminStats
     {
         $start = ($now ?? CarbonImmutable::now())->startOfWeek()->subWeeks(self::WEEKS - 1);
         $byWeek = fn ($time) => CarbonImmutable::parse($time)->format('o-W');
+        /** @var array<string, int> $registered */
         $registered = User::where('created_at', '>=', $start)->pluck('created_at')->countBy($byWeek)->all();
+        /** @var array<string, int> $posts */
         $posts = Post::where('created_at', '>=', $start)->pluck('created_at')->countBy($byWeek)->all();
 
         return collect(range(0, self::WEEKS - 1))->map(function (int $offset) use ($start, $registered, $posts) {

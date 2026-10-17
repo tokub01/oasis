@@ -30,6 +30,8 @@ class WaitlistEntry extends Model
      * Unconfirmed sign-ups older than `oasis.privacy.unconfirmed_waitlist_days` are deleted by the daily
      * `model:prune` run (double opt-in never completed, so there is no consent to keep the address).
      * Nothing is deleted while that period is not set (null).
+     *
+     * @return Builder<static>
      */
     public function prunable(): Builder
     {

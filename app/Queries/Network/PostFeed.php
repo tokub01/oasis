@@ -6,9 +6,9 @@ use App\Enums\Network\PostKind;
 use App\Models\Oasis;
 use App\Models\Post;
 use App\Models\User;
-use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\CursorPaginator;
 
 /**
  * Chronological lists of Tropfen – no ranking, no injected recommendations ("Ein Feed, der aufhört").
@@ -19,7 +19,11 @@ class PostFeed
 {
     public const PER_PAGE = 20;
 
-    /** "Quelle": own Tropfen plus those of followed people and oases; replies from followed people are bundled under their origin Tropfen. */
+    /**
+     * "Quelle": own Tropfen plus those of followed people and oases; replies from followed people are bundled under their origin Tropfen.
+     *
+     * @return CursorPaginator<int, Post>
+     */
     public function source(User $viewer): CursorPaginator
     {
         $people = $viewer->following()->where('followable_type', (new User)->getMorphClass())->select('followable_id');
@@ -36,26 +40,42 @@ class PostFeed
         return $paginator;
     }
 
-    /** Tropfen of one person (profile page), without replies. */
+    /**
+     * Tropfen of one person (profile page), without replies.
+     *
+     * @return CursorPaginator<int, Post>
+     */
     public function byAuthor(User $author, ?User $viewer): CursorPaginator
     {
         return $this->paginate($viewer, Post::query()->where('user_id', $author->id)->whereNull('reply_to_id'));
     }
 
-    /** Tropfen in one oasis, without replies. */
+    /**
+     * Tropfen in one oasis, without replies.
+     *
+     * @return CursorPaginator<int, Post>
+     */
     public function inOasis(Oasis $oasis, ?User $viewer): CursorPaginator
     {
         return $this->paginate($viewer, Post::query()->where('oasis_id', $oasis->id)->whereNull('reply_to_id'));
     }
 
-    /** Public Tropfen of public profiles for "Entdecken" (guests and members). */
+    /**
+     * Public Tropfen of public profiles for "Entdecken" (guests and members).
+     *
+     * @return CursorPaginator<int, Post>
+     */
     public function discover(?User $viewer): CursorPaginator
     {
         return $this->paginate(null, Post::query()->whereNull('reply_to_id')
             ->whereHas('author.profile', fn (Builder $profile) => $profile->where('visibility', 'public')), $viewer);
     }
 
-    /** Search: Tropfen (also replies) whose text contains the term, newest first. LIKE wildcards are escaped. */
+    /**
+     * Search: Tropfen (also replies) whose text contains the term, newest first. LIKE wildcards are escaped.
+     *
+     * @return CursorPaginator<int, Post>
+     */
     public function matching(string $term, ?User $viewer): CursorPaginator
     {
         return $this->paginate($viewer, Post::query()->where('body', 'like', '%'.self::escapeLike($term).'%'));
@@ -64,6 +84,8 @@ class PostFeed
     /**
      * Tropfen carrying a #Thema, newest first. Matched as a whole word, case-insensitive, so "#garten" finds neither
      * "#gartenzaun" nor an e-mail-like "a#garten".
+     *
+     * @return CursorPaginator<int, Post>
      */
     public function tagged(string $tag, ?User $viewer): CursorPaginator
     {
@@ -88,6 +110,7 @@ class PostFeed
     /**
      * @param  Builder<Post>  $query
      * @param  User|null  $reactor  account whose own reaction state is shown (defaults to the visibility viewer)
+     * @return CursorPaginator<int, Post>
      */
     private function paginate(?User $viewer, Builder $query, ?User $reactor = null): CursorPaginator
     {
@@ -97,7 +120,12 @@ class PostFeed
             ->orderByDesc('id')->cursorPaginate(self::PER_PAGE);
     }
 
-    /** Exclude posts from blocked users (bidirectional) and muted users (for this viewer). */
+    /**
+     * Exclude posts from blocked users (bidirectional) and muted users (for this viewer).
+     *
+     * @param  Builder<Post>  $query
+     * @return Builder<Post>
+     */
     private function filterSafety(Builder $query, ?User $viewer): Builder
     {
         if ($viewer === null) {

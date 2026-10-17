@@ -18,6 +18,8 @@ trait PrunedAfterRecordRetention
 
     /**
      * Records older than the configured retention period, or no records at all while it is not set.
+     *
+     * @return Builder<static>
      */
     public function prunable(): Builder
     {

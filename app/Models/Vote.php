@@ -61,11 +61,15 @@ class Vote extends Model
         $query->where('ends_at', '<=', now());
     }
 
-    /** The winning option(s) after the end; several on a tie, none without votes. @return list<string> */
+    /**
+     * The winning option(s) after the end; several on a tie, none without votes.
+     *
+     * @return list<string>
+     */
     public function winners(): array
     {
         $max = $this->options->max('votes_count');
 
-        return $max > 0 ? $this->options->where('votes_count', $max)->pluck('label')->values()->all() : [];
+        return $max > 0 ? array_values($this->options->where('votes_count', $max)->map(fn (VoteOption $option): string => $option->label)->all()) : [];
     }
 }

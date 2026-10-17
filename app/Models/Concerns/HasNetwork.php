@@ -30,13 +30,21 @@ trait HasNetwork
         return $this->profile ?? new Profile(['user_id' => $this->id]);
     }
 
-    /** Follows this account made (of people and oases). @return HasMany<Follow, $this> */
+    /**
+     * Follows this account made (of people and oases).
+     *
+     * @return HasMany<Follow, $this>
+     */
     public function following(): HasMany
     {
         return $this->hasMany(Follow::class, 'follower_id');
     }
 
-    /** Follows of this account: its "Karawane". @return MorphMany<Follow, $this> */
+    /**
+     * Follows of this account: its "Karawane".
+     *
+     * @return MorphMany<Follow, $this>
+     */
     public function followers(): MorphMany
     {
         return $this->morphMany(Follow::class, 'followable');

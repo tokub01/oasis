@@ -76,9 +76,9 @@ class CryptoPayload
      */
     public static function bindingValid(array $bundle): bool
     {
-        return sodium_crypto_sign_verify_detached(self::decode($bundle['binding']),
-            self::canonical('oasis-chat/key-binding/v1', [self::decode($bundle['encryption']), self::decode($bundle['signing'])]),
-            self::decode($bundle['signing']));
+        return sodium_crypto_sign_verify_detached(self::validatedBytes($bundle['binding']),
+            self::canonical('oasis-chat/key-binding/v1', [self::validatedBytes($bundle['encryption']), self::validatedBytes($bundle['signing'])]),
+            self::validatedBytes($bundle['signing']));
     }
 
     /**
@@ -90,11 +90,11 @@ class CryptoPayload
      */
     public static function grantValid(array $grant, array $ownerKeys, array $recipientKeys): bool
     {
-        return sodium_crypto_sign_verify_detached(self::decode($grant['signature']),
-            self::canonical('oasis-chat/key-grant/v1', [(string) $grant['v'], $grant['conversation_id'],
-                (string) $grant['key_version'], $grant['recipient_id'], $grant['granter_id'],
-                self::decode($recipientKeys['encryption']), self::decode($grant['wrapped_key'])]),
-            self::decode($ownerKeys['signing']));
+        return sodium_crypto_sign_verify_detached(self::validatedBytes($grant['signature']),
+            self::canonical('oasis-chat/key-grant/v1', [(string) $grant['v'], (string) $grant['conversation_id'],
+                (string) $grant['key_version'], (string) $grant['recipient_id'], (string) $grant['granter_id'],
+                self::validatedBytes($recipientKeys['encryption']), self::validatedBytes($grant['wrapped_key'])]),
+            self::validatedBytes($ownerKeys['signing']));
     }
 
     /**
@@ -105,12 +105,12 @@ class CryptoPayload
      */
     public static function messageValid(array $envelope, array $senderKeys): bool
     {
-        $ad = self::canonical('oasis-chat/message-ad/v1', [(string) $envelope['v'], $envelope['conversation_id'],
-            (string) $envelope['key_version'], $envelope['sender_id'], (string) strtotime($envelope['expires_at'])]);
+        $ad = self::canonical('oasis-chat/message-ad/v1', [(string) $envelope['v'], (string) $envelope['conversation_id'],
+            (string) $envelope['key_version'], (string) $envelope['sender_id'], (string) strtotime($envelope['expires_at'])]);
 
-        return sodium_crypto_sign_verify_detached(self::decode($envelope['signature']),
-            self::canonical('oasis-chat/message-signature/v1', [self::decode($envelope['nonce']), self::decode($envelope['ciphertext']), $ad]),
-            self::decode($senderKeys['signing']));
+        return sodium_crypto_sign_verify_detached(self::validatedBytes($envelope['signature']),
+            self::canonical('oasis-chat/message-signature/v1', [self::validatedBytes($envelope['nonce']), self::validatedBytes($envelope['ciphertext']), $ad]),
+            self::validatedBytes($senderKeys['signing']));
     }
 
     /**

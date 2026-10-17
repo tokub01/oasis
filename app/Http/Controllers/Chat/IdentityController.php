@@ -21,7 +21,10 @@ class IdentityController extends Controller
     /** Validate cryptographic public data before delegating atomic identity replacement. */
     public function update(IdentityRequest $request, SaveIdentity $save): JsonResponse
     {
-        return response()->json(['data' => $this->data($save->handle($request->user(), $request->validated()))]);
+        /** @var array{locked_identity: array<string, mixed>, public_keys: array<string, string>} $input */
+        $input = $request->validated();
+
+        return response()->json(['data' => $this->data($save->handle($request->user(), $input))]);
     }
 
     /**

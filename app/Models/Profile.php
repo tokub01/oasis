@@ -35,7 +35,11 @@ class Profile extends Model
         return ['visibility' => Visibility::class, 'avatar_color' => AvatarColor::class];
     }
 
-    /** The account this profile belongs to (moderation links to the profile by username). */
+    /**
+     * The account this profile belongs to (moderation links to the profile by username).
+     *
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

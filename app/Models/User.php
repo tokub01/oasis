@@ -112,7 +112,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function canParticipate(): bool
     {
-        if ($this->role?->isStaff()) {
+        if ($this->role->isStaff()) {
             return true;
         }
 

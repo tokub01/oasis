@@ -5,6 +5,7 @@ namespace App\Support\Moderation;
 use App\Ai\Agents\ContentCheck;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Laravel\Ai\Responses\StructuredAgentResponse;
 use Throwable;
 
 /**
@@ -39,6 +40,7 @@ class ContentAssessor
         }
 
         try {
+            /** @var StructuredAgentResponse $response */
             $response = (new ContentCheck)->prompt(
                 '<text>'.$text.'</text>',
                 provider: config('oasis.moderation.provider'),

@@ -26,7 +26,11 @@ class KeyGrantController extends Controller
     /** Complete grant batches are signed for the current recipients and current pending key. */
     public function store(GrantRequest $request, Conversation $conversation, ConversationKeys $keys): JsonResponse
     {
-        return response()->json(['data' => $keys->distribute($conversation, $request->user(), $request->validated())->apiData()]);
+        /** @var array{key_version: int|numeric-string, grants: list<array<string, mixed>>} $input */
+        $input = $request->validated();
+        $input['key_version'] = (int) $input['key_version'];
+
+        return response()->json(['data' => $keys->distribute($conversation, $request->user(), $input)->apiData()]);
     }
 
     /** Mark a fully distributed version ready; optimistic version check detects intervening changes. */

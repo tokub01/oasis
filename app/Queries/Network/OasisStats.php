@@ -42,7 +42,9 @@ class OasisStats
         $start = $now->startOfWeek()->subWeeks(self::WEEKS - 1);
         $week = fn ($time) => CarbonImmutable::parse($time)->format('o-W');
 
+        /** @var array<string, int> $joined */
         $joined = $oasis->members()->wherePivot('joined_at', '>=', $start)->pluck('oasis_members.joined_at')->countBy($week)->all();
+        /** @var array<string, int> $posts */
         $posts = Post::where('oasis_id', $oasis->id)->where('created_at', '>=', $start)->pluck('created_at')->countBy($week)->all();
 
         return collect(range(0, self::WEEKS - 1))->map(function (int $offset) use ($start, $joined, $posts) {

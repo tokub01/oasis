@@ -19,7 +19,7 @@ class ConfirmationController extends Controller
     public const FORMS = ['gruendung', 'kuendigen', 'widerrufen', 'melden', 'gemeinsam'];
 
     /**
-     * @param  string  $form  One of {@see self::FORMS}, set as route default.
+     * @param  value-of<self::FORMS>  $form  One of {@see self::FORMS}, set as route default.
      */
     public function __invoke(string $form): View
     {

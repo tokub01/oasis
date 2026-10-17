@@ -18,7 +18,7 @@ final class ContentVerdict
     ];
 
     /**
-     * @param  array<string, float>  $scores  category => 0..1
+     * @param  non-empty-array<string, float>  $scores  category => 0..1
      * @param  string  $source  'ai' (language model) or 'wordlist' (fallback)
      */
     public function __construct(
@@ -74,7 +74,7 @@ final class ContentVerdict
         return $this->shouldHold() || $this->scores['threat'] >= (float) config('oasis.moderation.report_threshold');
     }
 
-    /** @return array{scores: array<string, float>, reason: string, source: string} */
+    /** @return array{scores: non-empty-array<string, float>, reason: string, source: string} */
     public function toArray(): array
     {
         return ['scores' => $this->scores, 'reason' => $this->reason, 'source' => $this->source];

@@ -28,6 +28,7 @@ use Illuminate\Support\Carbon;
  * @property Visibility $visibility
  * @property PostKind $kind
  * @property Carbon|null $removed_from_oasis_at
+ * @property bool $has_more_replies
  * @property Carbon|null $held_at set while the automated check holds it for human review (stage 10)
  * @property Carbon $created_at
  * @property User $author

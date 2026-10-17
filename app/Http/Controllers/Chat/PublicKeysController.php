@@ -43,8 +43,8 @@ class PublicKeysController extends Controller
     {
         $identities = ChatIdentity::whereIn('user_id', $users->pluck('id'))->get()->keyBy('user_id');
 
-        return $users->map(fn ($user) => ['id' => (string) $user->id, 'username' => $user->username,
+        return array_values($users->map(fn (User $user) => ['id' => (string) $user->id, 'username' => $user->username,
             'display_name' => $user->display_name, 'public_keys' => $identities[$user->id]->public_keys ?? null,
-            'key_changed_at' => ($identities[$user->id] ?? null)?->key_changed_at?->toISOString()])->all();
+            'key_changed_at' => ($identities[$user->id] ?? null)?->key_changed_at?->toISOString()])->all());
     }
 }

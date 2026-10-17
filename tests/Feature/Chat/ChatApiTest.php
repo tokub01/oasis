@@ -250,6 +250,20 @@ it('activates only a complete valid owner-signed batch for the current version',
     Event::assertDispatched(KeyRotated::class, fn ($event) => $event->broadcastWith()['rotation_required'] === false);
 });
 
+it('accepts a numeric string batch version without changing signed grant fields', function () {
+    $this->conversation->update(['rotation_required' => true]);
+    ConversationKeyGrant::query()->delete();
+    $grants = [F::grant($this->conversation, $this->owner, $this->ownerIdentity, $this->owner),
+        F::grant($this->conversation, $this->owner, $this->ownerIdentity, $this->member)];
+
+    $this->postJson($this->base.'/key-grants', ['key_version' => '1', 'grants' => $grants])->assertOk();
+
+    expect(ConversationKeyGrant::where('conversation_id', $this->conversation->id)->count())->toBe(2);
+    expect(ConversationKeyGrant::where('recipient_id', $this->member->id)->sole()->grant)->toEqual($grants[1]);
+    expect($this->conversation->fresh()->rotation_required)->toBeTrue();
+    Event::assertNotDispatched(KeyRotated::class);
+});
+
 it('changes lifetime only for future messages', function () {
     $envelope = F::envelope($this->conversation, $this->owner, $this->ownerIdentity);
     $this->postJson($this->base.'/messages', ['envelope' => $envelope])->assertCreated();

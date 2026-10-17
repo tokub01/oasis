@@ -221,3 +221,13 @@ it('offers signed-in members the way into the app instead of login and trial', f
     $this->actingAs(User::factory()->create())->get(route('oasis.home'))->assertOk()
         ->assertSee('>Zur App<', false)->assertDontSee('href="'.route('login').'"', false);
 });
+
+it('explains privacy and security with the same providers as the privacy policy, never invented ones', function () {
+    config(['oasis.privacy.hosting' => 'Configured Hosting GmbH', 'oasis.privacy.mail_provider' => null]);
+
+    $this->get(route('oasis.sicherheit'))->assertOk()
+        ->assertSee('Datenschutz &amp; Sicherheit', false)->assertSee('Ende-zu-Ende verschlüsselt')
+        ->assertSee('Configured Hosting GmbH')->assertSee('legen wir vor dem Start fest')
+        ->assertSee(config('oasis.privacy.ai_provider'))->assertSee(route('oasis.datenschutz'), false);
+    $this->get(route('oasis.home'))->assertSee(route('oasis.sicherheit'), false);
+});

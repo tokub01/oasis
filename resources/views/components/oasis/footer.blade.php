@@ -10,6 +10,7 @@
             ['Funktionen', route('oasis.funktionen')],
             ['Preise', route('oasis.preise')],
             ['Transparenz', route('oasis.transparenz')],
+            ['Datenschutz & Sicherheit', route('oasis.sicherheit')],
             ['Manifest', route('oasis.manifest')],
         ],
         // Signed-in members get the way into the app instead of trial and login.

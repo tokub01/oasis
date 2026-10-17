@@ -301,3 +301,25 @@ test("modules['help-search']: FAQ filtering with minimal DOM", () => {
 });
 
 
+
+test("modules['reveal-image']: the covered image is only requested after the tap", () => {
+    const { modules } = loadOasisScript();
+    const image = { dataset: { src: "/tropfen/1/bilder/1" }, hidden: true, src: "" };
+    const cover = { removed: false, remove() { this.removed = true; } };
+    let onClick = null;
+    const reveal = { addEventListener: (type, handler) => { onClick = handler; } };
+    const root = {
+        style: { removed: [], removeProperty(name) { this.removed.push(name); } },
+        querySelector: (selector) => ({ "[data-reveal]": reveal, "img[data-src]": image, "[data-cover]": cover })[selector],
+    };
+
+    modules["reveal-image"](root);
+    assert.equal(image.src, "", "nothing is loaded before the tap");
+
+    let prevented = false;
+    onClick({ preventDefault: () => { prevented = true; } });
+    assert.equal(prevented, true);
+    assert.equal(image.src, "/tropfen/1/bilder/1");
+    assert.equal(image.hidden, false);
+    assert.equal(cover.removed, true);
+});

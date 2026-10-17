@@ -30,7 +30,7 @@ it('downloads only the authenticated users allowlisted data without secrets', fu
         'email_verified_at', 'terms_accepted_at', 'trial_ends_at', 'created_at', 'updated_at']);
     expect($data['privatsphaere'])->toMatchArray(['profile_audience' => 'following', 'mentions_audience' => 'nobody', 'search_engines' => false]);
     expect(array_keys($data['privatsphaere']))->toBe(['profile_audience', 'default_post_visibility', 'follower_count_audience',
-        'location_audience', 'oases_audience', 'mentions_audience', 'replies_audience', 'carry_audience', 'chat_invites_audience',
+        'location_audience', 'oases_audience', 'mentions_audience', 'replies_audience', 'carry_audience', 'chat_invites_audience', 'images_audience',
         'searchable', 'search_engines', 'login_alerts', 'chat_email', 'chat_push', 'verborgene_woerter']);
     expect($json)->not->toContain('private-secret', 'private-codes', $other->username);
 });

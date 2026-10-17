@@ -256,6 +256,20 @@ modules.push = (root) => {
 
     render();
 };
+// Markup: [data-oasis="reveal-image"] figure with an <img data-src hidden> and a [data-cover] holding the
+// [data-reveal] link. The image is only requested when the member taps "Bild anzeigen" (setting
+// "Wessen Bilder siehst du sofort?"); without JavaScript the link simply opens the image.
+modules["reveal-image"] = (root) => {
+    root.querySelector("[data-reveal]").addEventListener("click", (event) => {
+        event.preventDefault();
+        const image = root.querySelector("img[data-src]");
+        image.src = image.dataset.src;
+        image.hidden = false;
+        root.style.removeProperty("aspect-ratio");
+        root.querySelector("[data-cover]").remove();
+    });
+};
+
 // Markup: [data-oasis="back"] button in the app header (installed app only). Goes back within Oasis; when the app
 // was opened directly on this page (e.g. from a push), there is nothing to go back to, so it opens the Quelle.
 modules.back = (root) => {

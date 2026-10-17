@@ -2,6 +2,7 @@
 
 namespace App\Models\Concerns;
 
+use App\Enums\Privacy\Audience;
 use App\Models\Follow;
 use App\Models\Invitation;
 use App\Models\Oasis;
@@ -81,6 +82,9 @@ trait HasNetwork
      */
     protected ?array $mutualFollowUserIdsCache = null;
 
+    /** @var array<int>|null ids of the users this user follows, cached per request */
+    protected ?array $followedUserIdsCache = null;
+
     /**
      * Whether this account and the other user mutually follow each other.
      */
@@ -120,5 +124,31 @@ trait HasNetwork
         }
 
         return $this->mutualFollowUserIdsCache;
+    }
+
+    /**
+     * Return (and cache on this model instance) the IDs of the users this user follows.
+     *
+     * @return array<int>
+     */
+    public function followedUserIds(): array
+    {
+        return $this->followedUserIdsCache ??= Follow::query()->where('follower_id', $this->id)
+            ->where('followable_type', (new User)->getMorphClass())
+            ->pluck('followable_id')->map(fn ($id): int => (int) $id)->all();
+    }
+
+    /** Whether images of $author show at once for this member (setting images_audience); otherwise they stay covered. */
+    public function showsImagesOf(User $author): bool
+    {
+        if ($author->id === $this->id) {
+            return true;
+        }
+
+        return match ($this->privacy()->images_audience) {
+            Audience::Following => in_array($author->id, $this->followedUserIds(), true),
+            Audience::Nobody => false,
+            default => true,
+        };
     }
 }

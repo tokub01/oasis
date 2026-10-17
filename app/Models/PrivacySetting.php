@@ -26,6 +26,7 @@ use InvalidArgumentException;
  * @property Audience $replies_audience who may answer the member's Tropfen
  * @property Audience $carry_audience who may carry the member's Tropfen further
  * @property Audience $chat_invites_audience who may start a chat with the member or add them to one
+ * @property Audience $images_audience whose images the member sees at once; all others stay covered until tapped
  * @property bool $searchable found by name and username in the Oasis search
  * @property bool $search_engines public profile and Tropfen may be indexed by search engines
  * @property bool $login_alerts mail when someone signs in from a browser or system not seen before
@@ -45,6 +46,7 @@ class PrivacySetting extends Model
         'replies_audience' => [Audience::Members, Audience::Following, Audience::Nobody],
         'carry_audience' => [Audience::Members, Audience::Following, Audience::Nobody],
         'chat_invites_audience' => [Audience::Members, Audience::Following, Audience::Nobody],
+        'images_audience' => [Audience::Members, Audience::Following, Audience::Nobody],
     ];
 
     /**
@@ -58,6 +60,7 @@ class PrivacySetting extends Model
         'location_audience' => ['members', 'following', 'nobody'],
         'oases_audience' => ['members', 'following', 'nobody'],
         'chat_invites_audience' => ['following', 'nobody'],
+        'images_audience' => ['following', 'nobody'],
         'default_post_visibility' => ['members'],
         'search_engines' => [false],
     ];
@@ -65,7 +68,7 @@ class PrivacySetting extends Model
     /** The strictest common value per limited setting, used when a stored value is outside MINOR_CHOICES. */
     public const MINOR_DEFAULTS = [
         'profile_audience' => 'members', 'follower_count_audience' => 'members', 'location_audience' => 'members', 'oases_audience' => 'members',
-        'chat_invites_audience' => 'following', 'default_post_visibility' => 'members', 'search_engines' => false,
+        'chat_invites_audience' => 'following', 'images_audience' => 'following', 'default_post_visibility' => 'members', 'search_engines' => false,
     ];
 
     /** @var array<int, bool> Follow results only for explicitly checked viewer IDs. */
@@ -74,7 +77,7 @@ class PrivacySetting extends Model
     /** The account is never mass-assigned: rows are created through $user->privacySetting() (UpdatePrivacySetting). */
     protected $fillable = [
         'profile_audience', 'default_post_visibility', 'follower_count_audience', 'location_audience', 'oases_audience',
-        'mentions_audience', 'replies_audience', 'carry_audience', 'chat_invites_audience', 'searchable',
+        'mentions_audience', 'replies_audience', 'carry_audience', 'chat_invites_audience', 'images_audience', 'searchable',
         'search_engines', 'login_alerts', 'chat_email', 'chat_push', 'hidden_words',
     ];
 
@@ -83,7 +86,7 @@ class PrivacySetting extends Model
         'profile_audience' => 'members', 'default_post_visibility' => 'members', 'follower_count_audience' => 'members',
         'location_audience' => 'members', 'oases_audience' => 'members',
         'mentions_audience' => 'members', 'replies_audience' => 'members', 'carry_audience' => 'members',
-        'chat_invites_audience' => 'members', 'searchable' => true, 'search_engines' => false, 'login_alerts' => true,
+        'chat_invites_audience' => 'members', 'images_audience' => 'following', 'searchable' => true, 'search_engines' => false, 'login_alerts' => true,
         'chat_email' => false, 'chat_push' => false,
     ];
 
@@ -95,7 +98,7 @@ class PrivacySetting extends Model
             'follower_count_audience' => Audience::class, 'location_audience' => Audience::class,
             'oases_audience' => Audience::class, 'mentions_audience' => Audience::class,
             'replies_audience' => Audience::class, 'carry_audience' => Audience::class,
-            'chat_invites_audience' => Audience::class, 'searchable' => 'boolean', 'search_engines' => 'boolean',
+            'chat_invites_audience' => Audience::class, 'images_audience' => Audience::class, 'searchable' => 'boolean', 'search_engines' => 'boolean',
             'login_alerts' => 'boolean', 'chat_email' => 'boolean', 'chat_push' => 'boolean', 'hidden_words' => 'array', 'user_id' => 'integer',
         ];
     }

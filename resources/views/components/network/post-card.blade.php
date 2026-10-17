@@ -155,9 +155,24 @@
     @elseif ($post->images->isNotEmpty())
         <div @class(['grid gap-2', 'grid-cols-2' => $post->images->count() > 1])>
             @foreach ($post->images as $image)
-                <img wire:key="post-card-1-{{ $post->id }}-{{ $image->id }}" src="{{ route('network.images.show', [$post, $image->id]) }}" alt="{{ $image->alt }}"
-                     width="{{ $image->width }}" height="{{ $image->height }}" loading="lazy"
-                     class="h-auto w-full rounded-2xl bg-dune object-cover">
+                @if (! $viewer || $viewer->showsImagesOf($post->author))
+                    <img wire:key="post-card-1-{{ $post->id }}-{{ $image->id }}" src="{{ route('network.images.show', [$post, $image->id]) }}" alt="{{ $image->alt }}"
+                         width="{{ $image->width }}" height="{{ $image->height }}" loading="lazy"
+                         class="h-auto w-full rounded-2xl bg-dune object-cover">
+                @else
+                    {{-- Covered by the viewer's setting "Wessen Bilder siehst du sofort?": not even loaded until tapped
+                         (module reveal-image in oasis.js); without JS the link opens the image. --}}
+                    <figure wire:key="post-card-1-{{ $post->id }}-{{ $image->id }}" wire:ignore data-oasis="reveal-image"
+                            class="relative m-0 overflow-hidden rounded-2xl bg-dune" style="aspect-ratio: {{ $image->width }} / {{ $image->height }}">
+                        <img data-src="{{ route('network.images.show', [$post, $image->id]) }}" alt="{{ $image->alt }}" width="{{ $image->width }}" height="{{ $image->height }}"
+                             hidden class="h-auto w-full object-cover">
+                        <div data-cover class="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3 text-center text-sm">
+                            <x-oasis.icon name="eye-off" :size="22" class="text-night" />
+                            <a href="{{ route('network.images.show', [$post, $image->id]) }}" data-reveal class="o-btn o-btn-sm o-btn-dark">Bild anzeigen</a>
+                            <a href="{{ route('app.privacy') }}#titel-interaktionen" wire:navigate class="o-link text-xs text-ink-2">Einstellung ändern</a>
+                        </div>
+                    </figure>
+                @endif
             @endforeach
         </div>
     @endif

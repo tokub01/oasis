@@ -4,8 +4,11 @@ namespace App\Livewire\Network;
 
 use App\Actions\Network\ManageFollows;
 use App\Models\Oasis;
+use App\Models\User;
 use App\Queries\Network\PostFeed;
+use App\Support\Chat\ChatReach;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Locked;
 
@@ -14,6 +17,12 @@ class OasisShow extends NetworkPage
 {
     #[Locked]
     public int $oasisId;
+
+    /** Name filter of the member list, which only members of the oasis see. */
+    public string $memberQuery = '';
+
+    /** How many members the list shows at once; the filter finds everyone else. */
+    public const MEMBER_LIST_LIMIT = 12;
 
     /** Resolve the slug using the existing route model binding. */
     public function mount(Oasis $oasis): void
@@ -45,13 +54,33 @@ class OasisShow extends NetworkPage
     {
         $oasis = Oasis::withCount('members')->findOrFail($this->oasisId);
         abort_unless(Gate::allows('view', $oasis), 404);
+        $isMember = $oasis->isMember(auth()->user());
+        $members = $isMember ? $this->members($oasis) : collect();
 
         return $this->page('livewire.network.oasis-show', ['oasis' => $oasis,
             'hosts' => $oasis->hosts()->orderBy('display_name')->get(),
             'posts' => app(PostFeed::class)->inOasis($oasis, auth()->user()),
-            'isMember' => $oasis->isMember(auth()->user()), 'isHost' => $oasis->isHost(auth()->user()),
+            'isMember' => $isMember, 'isHost' => $oasis->isHost(auth()->user()),
+            'members' => $members, 'writable' => ChatReach::writableIds(auth()->user(), $members),
         ], $oasis->name, 'oasen', true,
             // An oasis shows Tropfen of many people; some do not want search engines, so the page is never indexed.
             noindex: true);
+    }
+
+    /**
+     * Other members of the oasis, without anybody blocked either way, filtered by name.
+     *
+     * @return Collection<int, User>
+     */
+    private function members(Oasis $oasis): Collection
+    {
+        $viewer = auth()->user();
+        $query = trim($this->memberQuery);
+
+        return $oasis->members()->whereKeyNot($viewer->id)->whereNotIn('users.id', $viewer->blockedUserIds())
+            ->when($query !== '', fn ($members) => $members->where(fn ($match) => $match
+                ->where('display_name', 'like', '%'.addcslashes($query, '%_\\').'%')
+                ->orWhere('username', 'like', '%'.addcslashes(mb_strtolower($query), '%_\\').'%')))
+            ->with(['privacySetting', 'profile'])->orderBy('display_name')->limit(self::MEMBER_LIST_LIMIT)->get();
     }
 }

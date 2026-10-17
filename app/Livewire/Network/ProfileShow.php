@@ -6,6 +6,7 @@ use App\Actions\Network\ManageFollows;
 use App\Actions\Safety\ManageMute;
 use App\Models\User;
 use App\Queries\Network\PostFeed;
+use App\Support\Chat\ChatReach;
 use App\Support\DemoProfiles;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
@@ -92,6 +93,7 @@ class ProfileShow extends NetworkPage
             'showLocation' => $member->privacy()->allows('location_audience', auth()->user()),
             'oases' => $member->privacy()->allows('oases_audience', auth()->user())
                 ? $member->oases()->orderBy('name')->get()->filter->isVisibleTo(auth()->user()) : null,
-            'following' => auth()->user()?->follows($member) ?? false], $member->display_name.' (@'.$member->username.')', 'profil', true, noindex: ! $member->privacy()->indexable());
+            'following' => auth()->user()?->follows($member) ?? false,
+            'canWrite' => ChatReach::writableIds(auth()->user(), collect([$member])) !== []], $member->display_name.' (@'.$member->username.')', 'profil', true, noindex: ! $member->privacy()->indexable());
     }
 }

@@ -182,3 +182,14 @@ The exact-username picker omits accounts that reject the searcher's invitation, 
 accounts. `searchable` controls the Oasis people search; it does not override the separate chat invitation setting.
 Bidirectional blocks continue to win above a permissive audience. See `tests/Feature/Chat/ChatPrivacyTest.php` and
 the opt-in real Reverb test in `tests/e2e/chat-reverb.e2e.mjs` (instructions in `oasis-chat-client.md`).
+
+## Schreiben aus Oasen und Profilen
+
+`App\Support\Chat\ChatReach` decides where a "Schreiben" button appears: the other person has set up the chat, nobody
+blocked anybody, their "Wer darf dir schreiben?" (`chat_invites_audience`) allows the writer, and the writer may
+participate. Oasis pages show members of the oasis a member list with a name filter (`OasisShow::$memberQuery`,
+12 at a time) and the button; profiles show it next to "Folgen". The button opens `/app/nachrichten#neu/{username}`,
+which preselects the person in the new-chat screen (`ui/route.js`, `NewConversation#open`). The chat checks
+everything again when the chat is created.
+
+Tests: `tests/Feature/Chat/ChatReachTest.php`.

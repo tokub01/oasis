@@ -59,6 +59,8 @@ test('parseRoute maps hashes to screens and rejects odd ids', () => {
     assert.deepEqual(parseRoute(''), { name: 'list' });
     assert.deepEqual(parseRoute('#'), { name: 'list' });
     assert.deepEqual(parseRoute('#neu'), { name: 'new' });
+    assert.deepEqual(parseRoute('#neu/mira_sol'), { name: 'new', username: 'mira_sol' });
+    assert.deepEqual(parseRoute('#neu/<script>'), { name: 'list' });
     assert.deepEqual(parseRoute('#c/12'), { name: 'conversation', id: '12' });
     assert.deepEqual(parseRoute('#c/12/info'), { name: 'details', id: '12' });
     assert.deepEqual(parseRoute('#c/0'), { name: 'list' });

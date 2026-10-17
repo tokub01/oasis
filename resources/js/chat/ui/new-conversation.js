@@ -38,11 +38,16 @@ export class NewConversation {
         });
     }
 
-    open() {
+    /** @param {string|undefined} username preselected person from a "Schreiben" button ("#neu/{username}") */
+    open(username) {
         this.form.reset();
         this.selected = [];
         showError(this.error, '');
         this.renderSelection();
+        if (username) {
+            this.form.elements.username.value = username;
+            this.addFromInput();
+        }
     }
 
     get type() {

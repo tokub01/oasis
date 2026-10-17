@@ -39,6 +39,9 @@
                                         <button type="submit" wire:loading.attr="disabled" class="o-btn o-btn-md o-btn-primary">Folgen</button>
                                     </form>
                                 @endif
+                                @if ($canWrite)
+                                    <a href="{{ \App\Support\Chat\ChatReach::startUrl($member) }}" class="o-btn o-btn-md o-btn-outline">Schreiben</a>
+                                @endif
 
                                 @if (auth()->user()->hasMuted($member))
                                     <form wire:submit="unmute">

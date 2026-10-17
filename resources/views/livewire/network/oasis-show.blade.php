@@ -84,6 +84,34 @@
                 @endforeach
             </x-network.side-card>
 
+            @if ($isMember)
+                {{-- Members write to each other: "Schreiben" where their chat setting allows it (App\Support\Chat\ChatReach). --}}
+                <x-network.side-card title="Mitglieder">
+                    <label for="oasis-member-search" class="sr-only">Mitglieder nach Namen suchen</label>
+                    <input id="oasis-member-search" type="search" wire:model.live.debounce.300ms="memberQuery" maxlength="60"
+                           placeholder="Namen suchen …" class="o-input min-h-11 py-2">
+                    <ul class="m-0 flex list-none flex-col gap-3 p-0">
+                        @forelse ($members as $person)
+                            <li wire:key="oasis-member-{{ $person->id }}" class="flex items-center justify-between gap-2">
+                                <a wire:navigate href="{{ route('oasis.profil', $person->username) }}" class="flex min-w-0 items-center gap-3 text-ink no-underline">
+                                    <x-network.avatar :user="$person" :size="36" />
+                                    <span class="flex min-w-0 flex-col leading-tight">
+                                        <span class="truncate font-bold text-night">{{ $person->display_name }}</span>
+                                        <span class="truncate text-sm text-muted">{{ '@'.$person->username }}</span>
+                                    </span>
+                                </a>
+                                @if (in_array($person->id, $writable, true))
+                                    <a href="{{ \App\Support\Chat\ChatReach::startUrl($person) }}" class="o-btn o-btn-sm o-btn-outline flex-none" aria-label="{{ $person->display_name }} schreiben">Schreiben</a>
+                                @endif
+                            </li>
+                        @empty
+                            <li class="text-sm text-muted">{{ trim($memberQuery) === '' ? 'Außer dir ist hier noch niemand.' : 'Niemand mit diesem Namen.' }}</li>
+                        @endforelse
+                    </ul>
+                    <p class="m-0 text-xs text-muted">„Schreiben“ erscheint, wenn die Person den Chat eingerichtet hat und Nachrichten von dir annimmt.</p>
+                </x-network.side-card>
+            @endif
+
             @if ($isHost)
                 <x-network.side-card title="Du bist Gastgeber:in" tone="night">
                     <p class="m-0 text-[15px] text-on-night-2">Bearbeite Texte und Rollen, oder sieh nach, wie es der Oase geht.</p>

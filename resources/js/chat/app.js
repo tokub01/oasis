@@ -178,7 +178,7 @@ export function start(root) {
         ctx.show(target.name);
         ({
             list: () => list.open(),
-            new: () => create.open(),
+            new: () => create.open(target.username),
             conversation: () => view.open(target.id),
             details: () => details.open(target.id),
         })[target.name]();

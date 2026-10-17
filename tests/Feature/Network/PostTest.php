@@ -107,9 +107,9 @@ it('shows reaction and reply counts only to the author and lets members react on
     NetworkActions::post('react', $post->id, $reader)->assertHasNoErrors();
     NetworkActions::post('react', $post->id);
     expect(Reaction::count())->toBe(1);
-    $this->get(route('network.posts.show', $post))->assertDontSee('Nur für dich sichtbar')->assertSee('Reagiert');
+    $this->get(route('network.posts.show', $post))->assertDontSee('Nur du siehst diese Zahlen')->assertSee('Reagiert');
 
-    $this->actingAs($author)->get(route('network.posts.show', $post))->assertSee('Nur für dich sichtbar:')->assertSee('1 Reaktion,');
+    $this->actingAs($author)->get(route('network.posts.show', $post))->assertSee('Nur du siehst diese Zahlen:')->assertSee('1 Reaktion,');
 
     NetworkActions::post('unreact', $post->id, $reader);
     expect(Reaction::count())->toBe(0);

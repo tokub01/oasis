@@ -11,7 +11,7 @@
 @endif
 <ul>
     @if ($suspension->type === \App\Models\AccountSuspension::PROVISIONAL)
-        <li>Erkannt hat das ein automatisiertes Verfahren (Sprachmodell). Ob wirklich ein Verstoß vorliegt, entscheidet ein Mensch aus unserem Moderationsteam, in der Regel innerhalb von 48 Stunden. Bis dahin ist dein Konto gesperrt.</li>
+        <li>Erkannt hat das ein automatisiertes Verfahren (Sprachmodell). Ob wirklich ein Verstoß vorliegt, entscheidet ein Mensch aus unserem Moderationsteam, in der Regel innerhalb von {{ config('oasis.moderation.review_hours') }} Stunden. Bis dahin ist dein Konto gesperrt.</li>
     @endif
     <li>Bestätigte Verstöße bisher: {{ $strikes }} von {{ $limit }}. Nach {{ $limit }} bestätigten Verstößen sperren wir ein Konto dauerhaft.</li>
     <li>Du kannst dich äußern – dich entschuldigen, den Zusammenhang erklären oder widersprechen: <a href="{{ route('app.suspended') }}">{{ route('app.suspended') }}</a>. Das Moderationsteam liest es vor seiner Entscheidung.</li>

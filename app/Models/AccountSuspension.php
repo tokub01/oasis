@@ -67,6 +67,28 @@ class AccountSuspension extends Model
         $query->whereNull('ended_at');
     }
 
+    /** Whole hours since the lock started. */
+    public function waitingHours(): int
+    {
+        return (int) floor($this->started_at->diffInMinutes(now()) / 60);
+    }
+
+    /**
+     * Against the review promise (`oasis.moderation.review_hours`): ok, soon (half of it gone) or overdue.
+     *
+     * @return 'ok'|'soon'|'overdue'
+     */
+    public function deadlineState(): string
+    {
+        $limit = (int) config('oasis.moderation.review_hours');
+
+        return match (true) {
+            $this->waitingHours() >= $limit => 'overdue',
+            $this->waitingHours() >= intdiv($limit, 2) => 'soon',
+            default => 'ok',
+        };
+    }
+
     /** German label for staff and the member. */
     public function label(): string
     {

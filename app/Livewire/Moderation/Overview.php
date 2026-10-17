@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Moderation;
 
+use App\Models\AccountSuspension;
 use App\Queries\Moderation\QueueOverview;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
@@ -21,6 +22,7 @@ class Overview extends Component
         return view('livewire.moderation.overview', [
             'figures' => $overview->figures(auth()->user()),
             'activity' => $overview->recentActivity(),
+            'waitingLocks' => AccountSuspension::active()->where('type', AccountSuspension::PROVISIONAL)->oldest('started_at')->get(),
         ])->layout('layouts.staff', ['title' => 'Warteschlange', 'active' => 'queue']);
     }
 }

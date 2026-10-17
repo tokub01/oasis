@@ -16,6 +16,13 @@
                 <div class="flex flex-col gap-0.5">
                     <h2 class="m-0 text-lg font-extrabold text-night">{{ $suspension->user->display_name }} <span class="font-normal text-muted">{{ '@'.$suspension->user->username }}</span></h2>
                     <p class="m-0 text-sm text-ink-2">{{ $suspension->label() }} · seit {{ $suspension->started_at->timezone('Europe/Berlin')->format('d.m.Y, H:i') }} Uhr · Verstöße {{ $suspension->user->activeStrikeCount() }} von {{ $limit }}</p>
+                    @if ($suspension->type === \App\Models\AccountSuspension::PROVISIONAL)
+                        @php($state = $suspension->deadlineState())
+                        <p @class(['m-0 mt-1 self-start rounded-full px-3 py-0.5 text-xs font-bold',
+                            'bg-dune text-night' => $state === 'ok', 'bg-sun/30 text-night' => $state === 'soon', 'bg-rose-100 text-rose-900' => $state === 'overdue'])>
+                            Wartet seit {{ $suspension->waitingHours() }} Std. von höchstens {{ config('oasis.moderation.review_hours') }}@if ($state === 'overdue') – Frist überschritten @endif
+                        </p>
+                    @endif
                 </div>
                 <div class="flex flex-wrap gap-2">
                     @if ($suspension->moderationCase)

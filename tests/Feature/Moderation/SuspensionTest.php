@@ -7,6 +7,7 @@ use App\Actions\Moderation\DecideCase;
 use App\Ai\Agents\ContentCheck as ContentCheckAgent;
 use App\Enums\Role;
 use App\Livewire\Account\Suspended;
+use App\Livewire\Moderation\Overview;
 use App\Livewire\Moderation\Suspensions;
 use App\Mail\Moderation\AccountReleasedNotice;
 use App\Mail\Moderation\AccountSuspendedNotice;
@@ -152,4 +153,16 @@ it('lets only the operator account make someone an admin', function () {
     app(ChangeRole::class)->handle($member, Role::Admin, $operator);
     expect($member->fresh()->role)->toBe(Role::Admin);
     expect(fn () => app(ChangeRole::class)->handle($member, Role::Member, $admin))->toThrow(Exception::class);
+});
+
+it('shows how long provisional locks have been waiting against the review promise', function () {
+    insultBy(N::member());
+    $moderator = lockStaff();
+
+    Livewire::actingAs($moderator)->test(Overview::class)
+        ->assertSee('1 vorläufige Sperre wartet auf eine Entscheidung')->assertSee('zugesagt sind höchstens 48 Std.')->assertDontSee('Frist überschritten');
+
+    $this->travel(49)->hours();
+    Livewire::actingAs($moderator)->test(Suspensions::class)->assertSee('Wartet seit 49 Std. von höchstens 48')->assertSee('Frist überschritten');
+    expect(AccountSuspension::sole()->deadlineState())->toBe('overdue');
 });

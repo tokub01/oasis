@@ -140,7 +140,7 @@
         {{-- Held by the automated check (docs/oasis-auto-moderation.md); only the author and staff see the Tropfen. --}}
         <div role="note" class="flex flex-col gap-1.5 rounded-2xl border border-sun/40 bg-dune px-4 py-3 text-sm">
             <p class="m-0 font-bold text-night">Zurückgehalten und dem Moderationsteam gemeldet</p>
-            <p class="m-0">Unsere automatische Prüfung hat in diesem Tropfen möglicherweise {{ $post->holdReason() }} erkannt. Bis ein Mensch aus dem Moderationsteam ihn geprüft hat, siehst nur du ihn – in der Regel innerhalb von 48 Stunden.</p>
+            <p class="m-0">Unsere automatische Prüfung hat in diesem Tropfen möglicherweise {{ $post->holdReason() }} erkannt. Bis ein Mensch aus dem Moderationsteam ihn geprüft hat, siehst nur du ihn – in der Regel innerhalb von {{ config('oasis.moderation.review_hours') }} Stunden.</p>
             @if (filled($post->contentCheck?->reason))
                 <p class="m-0 text-ink-2">Begründung der Prüfung: „{{ $post->contentCheck->reason }}“</p>
             @endif
@@ -202,13 +202,13 @@
                 @else
                     Noch hat niemand geantwortet
                 @endif
-                <span class="text-xs font-normal text-muted">(nur für dich sichtbar · {{ $post->reactions_count }} {{ $post->reactions_count === 1 ? 'Reaktion' : 'Reaktionen' }})</span>
+                <span class="text-xs font-normal text-muted">(nur du siehst diese Zahlen · {{ $post->reactions_count }} {{ $post->reactions_count === 1 ? 'Reaktion' : 'Reaktionen' }})</span>
             </span>
         </p>
     @elseif ($viewer && $viewer->can('viewStats', $post))
         <p class="m-0 flex items-center gap-2 rounded-2xl bg-sand px-4 py-2.5 text-[15px]">
             <x-oasis.icon name="eye-off" :size="18" class="text-night" />
-            <span><b>Nur für dich sichtbar:</b> {{ $post->reactions_count }} {{ $post->reactions_count === 1 ? 'Reaktion' : 'Reaktionen' }}, {{ $post->replies_count }} {{ $post->replies_count === 1 ? 'Antwort' : 'Antworten' }}</span>
+            <span><b>Nur du siehst diese Zahlen:</b> {{ $post->reactions_count }} {{ $post->reactions_count === 1 ? 'Reaktion' : 'Reaktionen' }}, {{ $post->replies_count }} {{ $post->replies_count === 1 ? 'Antwort' : 'Antworten' }}</span>
         </p>
     @endif
 

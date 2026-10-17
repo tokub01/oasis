@@ -6,6 +6,7 @@
       $figures   QueueOverview::figures (active, unassigned, urgent, mine, complaints, decided_week, oldest_waiting,
                  median_seconds)
       $activity  Collection<ModerationEvent> with actor, newest first
+      $waitingLocks  Collection<AccountSuspension> provisional locks waiting for a decision, oldest first
 --}}
 @php
     $median = $figures['median_seconds'] === null ? '–'
@@ -22,6 +23,27 @@
 @endphp
 
 <div class="flex flex-col gap-8">
+    {{-- Provisional locks against the review promise: locked members wait for a person. --}}
+    @if ($waitingLocks->isNotEmpty())
+        @php
+            $oldest = $waitingLocks->first();
+            $state = $oldest->deadlineState();
+            $limit = (int) config('oasis.moderation.review_hours');
+        @endphp
+        <a href="{{ route('moderation.suspensions') }}" wire:navigate @class([
+            'flex flex-wrap items-center justify-between gap-3 rounded-[20px] px-5 py-4 no-underline',
+            'bg-dune text-ink' => $state === 'ok',
+            'bg-sun/20 text-ink' => $state === 'soon',
+            'bg-rose-100 text-rose-900' => $state === 'overdue',
+        ])>
+            <span class="flex flex-col gap-0.5">
+                <strong class="text-night">{{ $waitingLocks->count() }} {{ $waitingLocks->count() === 1 ? 'vorläufige Sperre wartet' : 'vorläufige Sperren warten' }} auf eine Entscheidung</strong>
+                <span class="text-sm">Die älteste wartet seit {{ $oldest->waitingHours() }} Std. – zugesagt sind höchstens {{ $limit }} Std.@if ($state === 'overdue') <strong>Frist überschritten.</strong>@endif</span>
+            </span>
+            <span class="o-btn o-btn-sm o-btn-dark">Zu den Sperren</span>
+        </a>
+    @endif
+
     <div class="flex flex-wrap items-end justify-between gap-4">
         <div class="flex flex-col gap-1">
             <h1 class="o-h2 m-0 text-night">Moderation</h1>

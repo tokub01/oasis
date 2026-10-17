@@ -7,7 +7,7 @@
 möglicherweise {{ $reason }} erkannt und ihn dem Moderationsteam gemeldet. Bis ein Mensch aus unserem Moderationsteam ihn geprüft hat, siehst nur du ihn:
 <a href="{{ $postUrl }}">{{ $postUrl }}</a></p>
 <ul>
-    <li>Die Einschätzung kam von einem automatisierten Verfahren (Sprachmodell). Entscheiden wird ein Mensch, in der Regel innerhalb von 48 Stunden.</li>
+    <li>Die Einschätzung kam von einem automatisierten Verfahren (Sprachmodell). Entscheiden wird ein Mensch, in der Regel innerhalb von {{ config('oasis.moderation.review_hours') }} Stunden.</li>
     <li>Grundlage sind unsere <a href="{{ route('oasis.regeln') }}">Community-Regeln</a>.</li>
     <li>Ist alles in Ordnung, ist der Tropfen danach wieder für alle sichtbar. Andernfalls bekommst du eine begründete Entscheidung und kannst dich beschweren.</li>
 </ul>

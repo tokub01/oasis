@@ -121,7 +121,7 @@
                 <h2 id="leise-titel" class="o-h2-s text-night">Gesehen werden ohne Wettrennen.</h2>
                 <p class="max-w-[32em] text-lg leading-[1.6] text-ink-2">Deine Karawane sind die Menschen, die dir folgen. Wie viele auf einen Tropfen reagiert haben, siehst nur du. So zählt, was gesagt wird, und nicht, wie laut.</p>
             </div>
-            <figure aria-label="Beispiel: Reaktionen sind nur für dich sichtbar" class="flex w-full max-w-[560px] flex-col gap-3 justify-self-center lg:order-first rounded-[28px] bg-dune p-[clamp(24px,3vw,40px)]">
+            <figure aria-label="Beispiel: Nur du siehst, wie viele reagiert haben" class="flex w-full max-w-[560px] flex-col gap-3 justify-self-center lg:order-first rounded-[28px] bg-dune p-[clamp(24px,3vw,40px)]">
                 <div class="flex flex-col gap-3 rounded-[20px] bg-paper p-[18px]">
                     <div class="flex items-center gap-3">
                         <div aria-hidden="true" class="flex size-10 flex-none items-center justify-center rounded-[20px] bg-sun text-sm font-extrabold text-sun-ink">DU</div>
@@ -130,7 +130,7 @@
                     <p class="text-[17px] leading-normal">Erster Tag ohne Wecker seit Wochen. Ich hab vergessen, wie leise ein Sonntag sein kann.</p>
                     <div class="flex items-center gap-2.5 rounded-[14px] bg-sand px-3.5 py-3">
                         <x-oasis.icon name="lock" :size="18" :stroke="1.9" class="text-spring-text" />
-                        <span class="text-[15px] text-ink"><b>Nur für dich sichtbar:</b> 14 Reaktionen, 3 Antworten</span>
+                        <span class="text-[15px] text-ink"><b>Nur du siehst diese Zahlen:</b> 14 Reaktionen, 3 Antworten</span>
                     </div>
                 </div>
             </figure>

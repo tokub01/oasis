@@ -111,6 +111,8 @@ return [
         'hold_abuse_threshold' => 0.8,
         // Confirmed violations (human decisions) after which an account is banned permanently.
         'strikes_for_ban' => 3,
+        // Promise to members: a person reviews a provisional lock within this many hours (texts, waiting display).
+        'review_hours' => 48,
         // Operator accounts (admin role plus one of these e-mail addresses): Tropfen are held and reported like
         // everyone's, strikes are counted, but the account is never locked or banned (it appoints the admins).
         // All other admins and moderators are treated like members. Comma-separated.

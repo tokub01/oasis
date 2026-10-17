@@ -11,7 +11,7 @@
                 <h1 class="o-display m-0 text-[clamp(30px,6vw,40px)] leading-[1.1] text-night">{{ $ban ? 'Dein Konto ist dauerhaft gesperrt' : 'Dein Konto ist vorübergehend gesperrt' }}</h1>
                 <p class="m-0 text-ink-2">Seit {{ $suspension->started_at->timezone('Europe/Berlin')->format('d.m.Y, H:i') }} Uhr.
                     @if ($suspension->type === \App\Models\AccountSuspension::PROVISIONAL)
-                        Ein Mensch aus dem Moderationsteam prüft das, in der Regel innerhalb von 48 Stunden. Bis dahin kannst du nichts schreiben und Oasis nicht lesen.
+                        Ein Mensch aus dem Moderationsteam prüft das, in der Regel innerhalb von {{ config('oasis.moderation.review_hours') }} Stunden. Bis dahin kannst du nichts schreiben und Oasis nicht lesen.
                     @elseif ($ban)
                         Du kannst Oasis nicht mehr nutzen.
                     @else

@@ -3,7 +3,7 @@
     @if ($sent)
         <section aria-labelledby="danke-titel" class="flex flex-col gap-4 rounded-[24px] bg-paper p-6">
             <h1 id="danke-titel" class="o-h2 m-0 text-night">Danke, dass du das meldest.</h1>
-            <p class="m-0 text-[17px] text-ink-2">Du hast richtig gehandelt. Unser Moderationsteam schaut sich das an, in der Regel innerhalb von 48 Stunden, und schreibt dir per E-Mail, was dabei herauskommt.</p>
+            <p class="m-0 text-[17px] text-ink-2">Du hast richtig gehandelt. Unser Moderationsteam schaut sich das an, in der Regel innerhalb von {{ config('oasis.moderation.review_hours') }} Stunden, und schreibt dir per E-Mail, was dabei herauskommt.</p>
             <p class="m-0 text-[17px] text-ink-2"><strong>Die gemeldete Person erfährt nicht, wer gemeldet hat.</strong> Wenn du sie nicht mehr sehen willst, kannst du sie auf ihrem Profil blockieren oder stumm schalten.</p>
             <x-oasis.support-contacts />
             <a href="{{ route('app.home') }}" wire:navigate class="o-btn o-btn-md o-btn-dark self-start">Zurück zur Quelle</a>

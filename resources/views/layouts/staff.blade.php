@@ -11,6 +11,8 @@
 @php
     $user = auth()->user();
     $active ??= null;
+    // Provisional locks waiting for a person (count at "Sperren"); see moderation start page for the oldest one.
+    $waitingLocks = \App\Models\AccountSuspension::active()->where('type', \App\Models\AccountSuspension::PROVISIONAL)->count();
     $nav = [
         'queue' => ['Warteschlange', route('moderation.index'), true],
         'suspensions' => ['Sperren', route('moderation.suspensions'), true],
@@ -51,7 +53,7 @@
                                'inline-flex min-h-11 items-center text-base no-underline',
                                'font-extrabold text-on-night underline decoration-sun decoration-2 underline-offset-8' => $active === $key,
                                'font-semibold text-on-night-2' => $active !== $key,
-                           ])>{{ $label }}</a>
+                           ])>{{ $label }}@if ($key === 'suspensions' && $waitingLocks > 0)<span class="ml-1.5 rounded-full bg-sun px-1.5 text-xs font-extrabold text-sun-ink">{{ $waitingLocks }}<span class="sr-only"> warten auf Entscheidung</span></span>@endif</a>
                     @endif
                 @endforeach
                 <a href="{{ route('app.home') }}" wire:navigate class="inline-flex min-h-11 items-center text-base font-semibold text-on-night-2 no-underline">Zur App</a>

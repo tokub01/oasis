@@ -10,7 +10,7 @@
     "display": "standalone",
     "orientation": "any",
     "background_color": "#F4EDE1",
-    "theme_color": "#0E2B2F",
+    "theme_color": "#FBF8F2",
     "categories": ["social"],
     "icons": [
         { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },

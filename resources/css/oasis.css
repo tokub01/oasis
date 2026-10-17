@@ -67,6 +67,41 @@
         line-height: 1.6;
         /* Long German compounds and addresses must never push the page sideways. */
         overflow-wrap: break-word;
+        /* No grey flash on tap (Android, iOS); buttons and links have their own focus and pressed styles. */
+        -webkit-tap-highlight-color: transparent;
+        /* iOS must not enlarge text on rotation. */
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+
+    /* No double-tap zoom delay on controls. */
+    a,
+    button,
+    summary,
+    label,
+    input,
+    select,
+    textarea {
+        touch-action: manipulation;
+    }
+
+    /* Only in the installed app (docs/oasis-pwa.md), e.g. the back button. */
+    .o-standalone-only {
+        display: none;
+    }
+
+    @media (display-mode: standalone) {
+        .o-standalone-only {
+            display: flex;
+        }
+    }
+
+    /* New-Tropfen composer on phones: options appear once the member starts writing (see compose.blade.php). */
+    @media (max-width: 639px) {
+        /* !important: this base-layer rule must win over the display utilities (flex) and .o-btn of the extras. */
+        .o-compose:not(:focus-within):not(:has(textarea:not(:placeholder-shown))):not(:has(details[open])) > .o-compose-extra {
+            display: none !important;
+        }
     }
 
     /* Down to 320 px: hyphenate (lang="de") instead of cutting words like "Verbraucherstreitbeilegung". Wider screens

@@ -17,6 +17,18 @@ store apps; `config('oasis.apps')` stays `null` so the site never announces them
 - `x-oasis.install-app` (Hinweise einstellen) shows the install button where the browser offers one
   (`beforeinstallprompt`), the steps for iPhone/iPad, or "läuft schon als App".
 
+## App-Hülle auf Handys
+
+- `viewport-fit=cover` in all layouts; the app header, bottom bar and content use `env(safe-area-inset-*)` (notch,
+  home indicator, landscape sides). The theme colour follows the top bar (`$themeColor` of the PWA partial).
+- Phones: sticky header with search, a hints bell (unread dot) and "Mehr"; below 380px only the logo sign. The bottom
+  bar uses short labels where needed (`Chats`).
+- Installed app only (`@media (display-mode: standalone)`, class `.o-standalone-only`): a back button below the main
+  sections (module `back`), since an installed iPhone app has no browser back button.
+- Module `offline`: a status line while the device has no connection.
+- New-Tropfen composer below 640px (`.o-compose`): only the text field until it is focused or filled, so the feed is
+  visible on the first screen.
+
 ## Push-Hinweise
 
 Implemented without a package on PHP's OpenSSL (`App\Support\Notifications\WebPush`):

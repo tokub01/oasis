@@ -21,6 +21,16 @@ it('links the manifest on public, member and staff pages', function () {
     $this->actingAs(N::member())->get(route('notifications.settings'))->assertOk()->assertSee('rel="manifest"', false);
 });
 
+it('fits the app shell to phones: safe areas, hints bell, short labels, back button off the main sections', function () {
+    $member = N::member();
+
+    $this->actingAs($member)->get(route('app.home'))->assertOk()
+        ->assertSee('viewport-fit=cover', false)->assertSee('<meta name="theme-color" content="#FBF8F2">', false)
+        ->assertSee('aria-label="Hinweise"', false)->assertSee('Chats')->assertSee('o-compose', false)
+        ->assertDontSee('data-oasis="back"', false);
+    $this->get(route('notifications.settings'))->assertOk()->assertSee('data-oasis="back"', false);
+});
+
 it('serves an offline page that does not depend on the account', function () {
     $this->get(route('oasis.offline'))->assertOk()->assertSee('Keine Verbindung')->assertSee('noindex', false);
 });

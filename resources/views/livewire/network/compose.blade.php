@@ -2,17 +2,19 @@
     Reactive post composer. Locked context IDs, validated text/files/alts, and a bounded live tone preview.
     Inline (quick reply inside a Tropfen card) it draws no card of its own and puts audience and button in one row.
     The audience options are shortened here; the enum label stays complete for the Privatsphäre-Center.
+    New Tropfen (.o-compose): below 640px only the text field shows until it is focused or filled, so the feed is
+    visible on the first screen; the options (.o-compose-extra) appear with the first tap (CSS only, oasis.css).
 --}}
 @php
     $id = $this->getId();
     $bodyLabel = $reply ? 'Deine Antwort' : ($carried ? 'Deine Worte dazu' : ($oasis ? 'Dein Tropfen in '.$oasis->name : 'Dein Tropfen'));
     $submitLabel = $reply ? 'Antworten' : ($carried ? 'Weitertragen' : 'Tropfen teilen');
 @endphp
-<form wire:submit="publish" @class(['flex flex-col gap-4', 'border-t border-paper-line pt-4' => $inline, 'rounded-[24px] bg-paper p-5' => ! $inline])>
+<form wire:submit="publish" @class(['flex flex-col gap-4', 'o-compose' => ! $inline && ! $reply && ! $carried, 'border-t border-paper-line pt-4' => $inline, 'rounded-[24px] bg-paper p-5' => ! $inline])>
     <p role="status" aria-live="polite" class="m-0 font-bold text-spring-text empty:sr-only">{{ $status }}</p>
     <div class="flex flex-col gap-1.5">
         <label for="body-{{ $id }}" @class(['o-label', 'sr-only' => $inline])>{{ $bodyLabel }}</label>
-        <textarea id="body-{{ $id }}" wire:model.live.debounce.300ms="body" placeholder="{{ $reply ? 'Antworten …' : '' }}" rows="3" maxlength="{{ \App\Models\Post::MAX_LENGTH }}"
+        <textarea id="body-{{ $id }}" wire:model.live.debounce.300ms="body" placeholder="{{ $reply ? 'Antworten …' : ($carried ? '' : 'Was möchtest du teilen?') }}" rows="3" maxlength="{{ \App\Models\Post::MAX_LENGTH }}"
             class="o-input" aria-describedby="body-error-{{ $id }}" aria-invalid="{{ $errors->has('body') ? 'true' : 'false' }}"></textarea>
         <p id="body-error-{{ $id }}" class="o-error m-0">@error('body'){{ $message }}@enderror</p>
     </div>
@@ -34,7 +36,7 @@
     @endif
     @if ($showImages)
         {{-- Open while images are chosen or have errors: otherwise a Livewire update closes it and hides the hint. --}}
-        <details class="rounded-2xl border border-dune-line" @if (count($images) > 0 || $errors->has('images') || $errors->has('images.*') || $errors->has('alts.*')) open @endif>
+        <details class="o-compose-extra rounded-2xl border border-dune-line" @if (count($images) > 0 || $errors->has('images') || $errors->has('images.*') || $errors->has('alts.*')) open @endif>
             <summary class="flex min-h-11 cursor-pointer flex-wrap items-center gap-x-2 px-4 py-2 font-bold text-night">
                 <x-oasis.icon name="plus" :size="18" />
                 <span class="whitespace-nowrap">Bilder hinzufügen</span>
@@ -58,7 +60,7 @@
             </div>
         </details>
     @endif
-    <div @class(['flex flex-col gap-4', 'sm:flex-row sm:items-end' => $reply, 'sm:grid sm:grid-cols-2' => ! $reply])>
+    <div @class(['o-compose-extra flex flex-col gap-4', 'sm:flex-row sm:items-end' => $reply, 'sm:grid sm:grid-cols-2' => ! $reply])>
         <div @class(['flex flex-col gap-1.5', 'sm:flex-1' => $reply])>
             <label for="visibility-{{ $id }}" class="o-label">Wer darf lesen?</label>
             <select id="visibility-{{ $id }}" wire:model="visibility" class="o-input font-normal" aria-describedby="visibility-hint-{{ $id }}">
@@ -82,10 +84,10 @@
             <button wire:loading.attr="disabled" type="submit" class="o-btn o-btn-md o-btn-dark">{{ $submitLabel }}</button>
         @endif
     </div>
-    <p id="visibility-hint-{{ $id }}" class="m-0 -mt-2 text-sm text-muted">Öffentlich heißt: auch ohne Konto lesbar.</p>
+    <p id="visibility-hint-{{ $id }}" class="o-compose-extra m-0 -mt-2 text-sm text-muted">Öffentlich heißt: auch ohne Konto lesbar.</p>
     @error('visibility')<p class="o-error m-0">{{ $message }}</p>@enderror
     @error('kind')<p class="o-error m-0">{{ $message }}</p>@enderror
     @unless ($reply)
-        <button wire:loading.attr="disabled" type="submit" class="o-btn o-btn-md o-btn-dark self-start">{{ $submitLabel }}</button>
+        <button wire:loading.attr="disabled" type="submit" class="o-compose-extra o-btn o-btn-md o-btn-dark self-start">{{ $submitLabel }}</button>
     @endunless
 </form>

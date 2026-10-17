@@ -256,6 +256,28 @@ modules.push = (root) => {
 
     render();
 };
+// Markup: [data-oasis="back"] button in the app header (installed app only). Goes back within Oasis; when the app
+// was opened directly on this page (e.g. from a push), there is nothing to go back to, so it opens the Quelle.
+modules.back = (root) => {
+    root.addEventListener("click", () => {
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            window.location.assign("/app");
+        }
+    });
+};
+
+// Markup: [data-oasis="offline"] status line in the app layout, shown while the device has no connection.
+// One pair of window listeners for all pages; the module only sets the state of a freshly rendered line.
+const showConnection = () => {
+    document.querySelectorAll("[data-oasis='offline']").forEach((line) => {
+        line.hidden = navigator.onLine;
+    });
+};
+window.addEventListener("online", showConnection);
+window.addEventListener("offline", showConnection);
+modules.offline = showConnection;
 // --- /Installierbare App und Push-Hinweise ----------------------------------
 
 // Livewire's SPA navigation (wire:navigate) swaps the page without re-running this script, so modules start on

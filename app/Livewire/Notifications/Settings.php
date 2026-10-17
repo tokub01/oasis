@@ -4,12 +4,15 @@ namespace App\Livewire\Notifications;
 
 use App\Enums\Notifications\NoticeKind;
 use App\Models\Notifications\NotificationPreference;
+use App\Support\Notifications\WebPush;
 use Illuminate\Contracts\View\View;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
  * Hint settings on /app/hinweise/einstellungen (route notifications.settings): one switch per hint kind, the optional
- * daily email summary (off until switched on), quiet hours and a pause (no hint mails or pushes, hints still collect).
+ * daily email summary (off until switched on), quiet hours and a pause (no hint mails or pushes, hints still collect),
+ * plus the browsers with push hints (switched on in the browser by the `push` module, docs/oasis-pwa.md).
  *
  * Opening the page never writes: a member without a preference row sees the defaults, and the row is created on save.
  */
@@ -82,13 +85,26 @@ class Settings extends Component
         $this->status = 'Die Pause ist beendet.';
     }
 
+    /** Switch push hints off for one of the own browsers (e.g. a lost phone). */
+    public function removePush(int $id): void
+    {
+        auth()->user()->pushSubscriptions()->whereKey($id)->delete();
+        $this->status = 'Das Gerät bekommt keine Push-Hinweise mehr.';
+    }
+
+    /** The push module switched this browser on or off: re-render the device list. */
+    #[On('push-changed')]
+    public function pushChanged(): void {}
+
     /** One switch per hint kind plus the e-mail summary, in the member layout. */
     public function render(): View
     {
         $preference = NotificationPreference::where('user_id', auth()->id())->first();
 
         return view('livewire.notifications.settings', ['kindCases' => NoticeKind::cases(),
-            'pausedUntil' => $preference?->isPaused() ? $preference->paused_until : null, 'pauseDays' => self::PAUSE_DAYS])
+            'pausedUntil' => $preference?->isPaused() ? $preference->paused_until : null, 'pauseDays' => self::PAUSE_DAYS,
+            'pushKey' => WebPush::enabled() ? config('oasis.push.public_key') : null,
+            'pushDevices' => auth()->user()->pushSubscriptions()->latest('id')->get()])
             ->layout('layouts.app', ['title' => 'Hinweise einstellen', 'active' => 'hinweise', 'wide' => true]);
     }
 }

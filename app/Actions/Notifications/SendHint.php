@@ -3,6 +3,7 @@
 namespace App\Actions\Notifications;
 
 use App\Enums\Notifications\NoticeKind;
+use App\Jobs\Notifications\SendPushHint;
 use App\Models\Notifications\NotificationPreference;
 use App\Models\Post;
 use App\Models\User;
@@ -49,6 +50,8 @@ class SendHint
                 'post_id' => $post?->id,
                 'excerpt' => $post === null ? '' : Str::substr($post->body, 0, 120),
             ] + $ids));
+            // After commit: the push must not announce a hint that a rollback removed again.
+            SendPushHint::dispatch($recipient->id)->afterCommit();
         });
     }
 }

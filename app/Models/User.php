@@ -6,6 +6,7 @@ use App\Enums\Role;
 use App\Models\Concerns\HasNetwork;
 use App\Models\Concerns\HasPrivacy;
 use App\Models\Concerns\HasSafety;
+use App\Models\Notifications\PushSubscription;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -162,6 +163,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class)->latest('id');
+    }
+
+    /**
+     * Browsers that receive push hints (docs/oasis-pwa.md).
+     *
+     * @return HasMany<PushSubscription, $this>
+     */
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
     }
 
     /** Whether a Mollie customer has been created for this account. */

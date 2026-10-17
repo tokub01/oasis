@@ -1,4 +1,5 @@
-{{-- Hint settings, component App\Livewire\Notifications\Settings. Variables: $kindCases (NoticeKind[]), $pausedUntil (Carbon|null), $pauseDays (list<int>). --}}
+{{-- Hint settings, component App\Livewire\Notifications\Settings. Variables: $kindCases (NoticeKind[]), $pausedUntil (Carbon|null), $pauseDays (list<int>),
+     $pushKey (VAPID public key, null = push off), $pushDevices (Collection<PushSubscription>). --}}
 <div>
 <x-network.columns label="Deine Wahl">
     <x-network.page-header eyebrow="Hinweise" title="Hinweise einstellen">Du entscheidest, was in deiner Hinweis-Liste landet und ob du eine E-Mail bekommst.</x-network.page-header>
@@ -61,6 +62,33 @@
                 @endforeach
             </div>
         @endif
+    </section>
+    <section aria-labelledby="push-titel" class="flex flex-col gap-3 rounded-[24px] bg-paper p-6">
+        <h2 id="push-titel" class="m-0 text-xl font-extrabold text-night">Push-Hinweise</h2>
+        @if ($pushKey)
+            <p class="m-0 text-ink-2">Ein kurzer Hinweis auf dem Sperrbildschirm, wenn es Neues gibt – ohne Namen und ohne Texte, höchstens alle fünf Minuten und nie in deiner Ruhezeit oder Pause.</p>
+            <div wire:ignore data-oasis="push" data-key="{{ $pushKey }}" data-store="{{ route('notifications.push.store') }}" data-destroy="{{ route('notifications.push.destroy') }}" class="flex flex-col gap-2">
+                <p data-push-state role="status" class="m-0 text-sm text-muted">Push-Hinweise brauchen JavaScript und einen aktuellen Browser.</p>
+                <button type="button" data-push-toggle hidden class="o-btn o-btn-md o-btn-dark self-start">Auf diesem Gerät einschalten</button>
+            </div>
+            @if ($pushDevices->isNotEmpty())
+                <h3 class="m-0 mt-2 text-base font-extrabold text-night">Geräte mit Push-Hinweisen</h3>
+                <ul class="m-0 flex list-none flex-col gap-2 p-0">
+                    @foreach ($pushDevices as $device)
+                        <li wire:key="push-{{ $device->id }}" class="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-sand px-4 py-2">
+                            <span>{{ $device->device }} <span class="text-sm text-muted">· seit {{ $device->created_at->timezone('Europe/Berlin')->format('d.m.Y') }}</span></span>
+                            <button type="button" wire:click="removePush({{ $device->id }})" wire:loading.attr="disabled" class="o-btn o-btn-sm o-btn-outline">Entfernen</button>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        @else
+            <p class="m-0 text-ink-2">Push-Hinweise sind auf Oasis noch nicht eingerichtet. Deine Hinweise findest du jederzeit in der App.</p>
+        @endif
+    </section>
+    <section aria-labelledby="app-titel" class="flex flex-col gap-3 rounded-[24px] bg-paper p-6">
+        <h2 id="app-titel" class="m-0 text-xl font-extrabold text-night">Oasis als App</h2>
+        <x-oasis.install-app />
     </section>
     <x-slot:aside><x-network.side-card title="In deinem Tempo" tone="dune">
         <p class="m-0 text-ink-2">Die E-Mail-Zusammenfassung ist standardmäßig aus. Gelesene Hinweise bleiben bis zu 90 Tage in deiner Liste.</p>

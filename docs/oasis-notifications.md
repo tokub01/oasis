@@ -85,7 +85,7 @@ during either. Effects:
 - no hint mails: `oasis:notification-digest` runs hourly from 18:00 to 23:59 and sends each member the summary once,
   in the first run outside quiet hours and pause; without a checkpoint nothing is lost (the first summary covers up to
   seven days);
-- no push hints (stage PWA);
+- no push hints (`SendPushHint`, see `docs/oasis-pwa.md`);
 - during a pause the unread dot in the navigation stays off; hints still collect in the inbox;
 - account, security and moderation mails are always sent.
 

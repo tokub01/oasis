@@ -57,6 +57,7 @@
     <meta name="robots" content="noindex, nofollow">
     <title>{{ isset($title) ? $title.' · Oasis' : 'Oasis' }}</title>
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    @include('layouts.partials.pwa')
     <link rel="preload" href="{{ asset('fonts/manrope-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/oasis.js'])
     @livewireStyles

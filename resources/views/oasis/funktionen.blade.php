@@ -6,13 +6,14 @@
 ])
 
 @php
-    // Open placeholders such as "[iOS und Android]" are not shown: the phone card only appears once real apps exist.
+    // Open placeholders such as "[iOS und Android]" are not shown: store apps are only named once they exist. Until
+    // then the phone card describes the installable web app (docs/oasis-pwa.md), which exists today.
     $apps = config('oasis.apps');
 
     $devices = array_values(array_filter([
         filled($apps) && ! \Illuminate\Support\Str::is('[*]', $apps)
             ? ['icon' => 'phone', 'title' => 'Fürs Handy', 'text' => 'Als App für '.$apps.', gebaut für kurze Momente zwischendurch.']
-            : null,
+            : ['icon' => 'phone', 'title' => 'Fürs Handy', 'text' => 'Als Web-App auf dem Startbildschirm von Android und iPhone, ohne App-Store'.(\App\Support\Notifications\WebPush::enabled() ? ' und mit Push-Hinweisen.' : '.')],
         ['icon' => 'monitor', 'title' => 'Am Rechner', 'text' => 'Im Browser auf '.config('oasis.domain').', mit Platz für längere Gespräche.'],
         ['icon' => 'users', 'title' => 'Für Gäste lesbar', 'text' => 'Öffentliche Tropfen lassen sich teilen und ohne Konto lesen.'],
     ]));

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Notifications\DigestUnsubscribeController;
+use App\Http\Controllers\Notifications\PushSubscriptionController;
 use App\Livewire\Notifications\Inbox;
 use App\Livewire\Notifications\Settings;
 use Illuminate\Support\Facades\Route;
@@ -10,6 +11,9 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'verified'])->prefix('app/hinweise')->name('notifications.')->group(function (): void {
     Route::livewire('/', Inbox::class)->name('index');
     Route::livewire('/einstellungen', Settings::class)->name('settings');
+    // Push hints for this browser (resources/js/oasis.js, module push); JSON, CSRF via the X-CSRF-TOKEN header.
+    Route::post('/push', [PushSubscriptionController::class, 'store'])->middleware('throttle:10,1')->name('push.store');
+    Route::post('/push/aus', [PushSubscriptionController::class, 'destroy'])->middleware('throttle:10,1')->name('push.destroy');
 });
 
 // Switch the daily summary off from the mail without signing in (signed links; one-click POST per RFC 8058 without

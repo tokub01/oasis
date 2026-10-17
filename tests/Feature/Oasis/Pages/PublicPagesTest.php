@@ -203,7 +203,7 @@ it('hides open [placeholder] values instead of showing them on public pages', fu
         ->assertDontSee('[DEIN NAME]')->assertDontSee('[Gründer-Text]')->assertDontSee('[FOTO]')
         ->assertDontSee('[AGB / Satzung]')->assertDontSee('Wer dahinter steht')
         ->assertSee('Wird festgeschrieben:')->assertSee(config('oasis.mail.press'));
-    $this->get(route('oasis.funktionen'))->assertOk()->assertDontSee('[iOS und Android]')->assertDontSee('Fürs Handy');
+    $this->get(route('oasis.funktionen'))->assertOk()->assertDontSee('[iOS und Android]')->assertDontSee('Als App für')->assertSee('Als Web-App auf dem Startbildschirm');
     $this->get(route('oasis.hilfe'))->assertOk()->assertDontSee('[SERVERSTANDORT')
         ->assertDontSee('Wo werden meine Daten gespeichert?');
 });

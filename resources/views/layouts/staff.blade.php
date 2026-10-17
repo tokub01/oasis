@@ -29,6 +29,7 @@
     <meta name="robots" content="noindex, nofollow">
     <title>{{ isset($title) ? $title.' · Moderation' : 'Moderation' }} · Oasis</title>
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    @include('layouts.partials.pwa')
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/oasis.js'])
     @livewireStyles
 </head>

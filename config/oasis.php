@@ -245,6 +245,17 @@ return [
     ],
 
     /*
+     * Push hints (docs/oasis-pwa.md). Without both keys push is off: no button, no sending.
+     * Create a pair with `php artisan oasis:push-keys`; changing it invalidates every browser subscription.
+     */
+    'push' => [
+        'public_key' => env('OASIS_VAPID_PUBLIC'),
+        'private_key' => env('OASIS_VAPID_PRIVATE'),
+        // Contact for push services (RFC 8292) in case Oasis' pushes cause trouble.
+        'subject' => 'mailto:'.env('OASIS_MAIL_CONTACT', 'info@velwebsolutions.de'),
+    ],
+
+    /*
      * Account retention policies after trial or cancellation.
      */
     'retention' => [

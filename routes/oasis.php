@@ -33,6 +33,7 @@ Route::name('oasis.')->group(function () {
     Route::view('/sicherheit', 'oasis.sicherheit')->name('sicherheit');
     Route::get('/.well-known/security.txt', SecurityTxtController::class)->name('security-txt');
     Route::view('/hilfe', 'oasis.hilfe')->name('hilfe');
+    Route::view('/offline', 'oasis.offline')->name('offline');
 
     /*
      * Pages behind feature flags (oasis.checkout_enabled, oasis.demo_pages).

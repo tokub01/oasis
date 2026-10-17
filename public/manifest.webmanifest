@@ -1,0 +1,25 @@
+{
+    "id": "/app",
+    "name": "Oasis",
+    "short_name": "Oasis",
+    "description": "Das werbefreie soziale Netzwerk. Getragen von Mitgliedern, nicht von Werbekunden.",
+    "lang": "de",
+    "dir": "ltr",
+    "start_url": "/app",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "any",
+    "background_color": "#F4EDE1",
+    "theme_color": "#0E2B2F",
+    "categories": ["social"],
+    "icons": [
+        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+        { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+        { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ],
+    "shortcuts": [
+        { "name": "Quelle", "short_name": "Quelle", "url": "/app", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+        { "name": "Hinweise", "short_name": "Hinweise", "url": "/app/hinweise", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+        { "name": "Nachrichten", "short_name": "Chat", "url": "/app/nachrichten", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+    ]
+}

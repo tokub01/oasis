@@ -99,6 +99,8 @@ class ExportAccount
             'eingeschraenkt' => User::whereIn('id', $user->restrictedUserIds())->pluck('username')->values()->all(),
             'bekannte_geraete' => $user->knownDevices()->orderBy('label')->get()
                 ->map(fn ($device) => ['geraet' => $device->label, 'zuletzt' => $device->last_seen_at->toIso8601String()])->values()->all(),
+            'push_geraete' => $user->pushSubscriptions()->orderBy('id')->get()
+                ->map(fn ($device) => ['geraet' => $device->device, 'seit' => $device->created_at->toIso8601String()])->values()->all(),
             'hinweise' => 'Verschlüsselte Chat-Nachrichten sind nicht enthalten: Sie liegen nur verschlüsselt auf unserem Server und lassen sich nur in deinem Browser lesen.',
         ];
     }

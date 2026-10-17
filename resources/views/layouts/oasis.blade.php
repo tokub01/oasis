@@ -35,6 +35,7 @@
     <meta name="twitter:image" content="{{ asset('images/og-oasis.png') }}">
 
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    @include('layouts.partials.pwa')
     <link rel="preload" href="{{ asset('fonts/manrope-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="{{ asset('fonts/fraunces-latin-full-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
 

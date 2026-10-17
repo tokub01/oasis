@@ -12,10 +12,13 @@ use Mollie\Api\Http\Requests\CreateCustomerRequest;
 use Mollie\Api\Http\Requests\CreatePaymentRefundRequest;
 use Mollie\Api\Http\Requests\CreatePaymentRequest;
 use Mollie\Api\Http\Requests\CreateSubscriptionRequest;
+use Mollie\Api\Http\Requests\GetCustomerRequest;
+use Mollie\Api\Http\Requests\GetPaginatedCustomerPaymentsRequest;
 use Mollie\Api\Http\Requests\GetPaginatedSubscriptionPaymentsRequest;
 use Mollie\Api\Http\Requests\GetPaymentRequest;
 use Mollie\Api\Http\Requests\GetSubscriptionRequest;
 use Mollie\Api\Http\Requests\UpdateSubscriptionRequest;
+use Mollie\Api\Resources\Customer;
 use Mollie\Api\Resources\Payment;
 use Mollie\Laravel\Facades\Mollie;
 
@@ -110,5 +113,67 @@ class MollieGateway
     public function refund(string $payment, int $amount): void
     {
         $this->send(CreatePaymentRefundRequest::for($payment, new Money('EUR', number_format($amount / 100, 2, '.', '')), 'Oasis Erstattung'), 'oasis-refund-'.$payment);
+    }
+
+    /**
+     * One payment as Mollie knows it, for the admin payment search (read only).
+     *
+     * @return array{id: string, status: string, amount: string, currency: string, refunded: string|null, method: string|null, description: string|null, created: string|null, paid: string|null, customer: string|null, subscription: string|null, sequence: string|null, dashboard: string|null}
+     */
+    public function lookupPayment(string $id): array
+    {
+        return $this->summary($this->send(new GetPaymentRequest($id)));
+    }
+
+    /**
+     * The newest payments of one Mollie customer, newest first (admin payment search, read only).
+     *
+     * @return list<array{id: string, status: string, amount: string, currency: string, refunded: string|null, method: string|null, description: string|null, created: string|null, paid: string|null, customer: string|null, subscription: string|null, sequence: string|null, dashboard: string|null}>
+     */
+    public function customerPayments(string $customer, int $limit = 50): array
+    {
+        $payments = [];
+        foreach ($this->send(new GetPaginatedCustomerPaymentsRequest($customer, limit: $limit)) as $payment) {
+            $payments[] = $this->summary($payment);
+        }
+
+        return $payments;
+    }
+
+    /**
+     * Name, e-mail and dashboard link of one Mollie customer (admin payment search, read only).
+     *
+     * @return array{id: string, name: string|null, email: string|null, created: string|null, dashboard: string|null}
+     */
+    public function lookupCustomer(string $id): array
+    {
+        /** @var Customer $customer */
+        $customer = $this->send(new GetCustomerRequest($id));
+
+        return ['id' => $customer->id, 'name' => $customer->name, 'email' => $customer->email,
+            'created' => $customer->createdAt, 'dashboard' => self::dashboardLink($customer->_links->dashboard->href ?? null)];
+    }
+
+    /**
+     * The fields the admin search shows; the dashboard link comes from Mollie itself.
+     *
+     * @return array{id: string, status: string, amount: string, currency: string, refunded: string|null, method: string|null, description: string|null, created: string|null, paid: string|null, customer: string|null, subscription: string|null, sequence: string|null, dashboard: string|null}
+     */
+    private function summary(Payment $payment): array
+    {
+        return [
+            'id' => $payment->id, 'status' => $payment->status,
+            'amount' => $payment->amount->value, 'currency' => $payment->amount->currency,
+            'refunded' => $payment->amountRefunded->value ?? null, 'method' => $payment->method,
+            'description' => $payment->description, 'created' => $payment->createdAt, 'paid' => $payment->paidAt,
+            'customer' => $payment->customerId, 'subscription' => $payment->subscriptionId,
+            'sequence' => $payment->sequenceType, 'dashboard' => self::dashboardLink($payment->_links->dashboard->href ?? null),
+        ];
+    }
+
+    /** Only Mollie's own https links become clickable in the admin area. */
+    private static function dashboardLink(?string $href): ?string
+    {
+        return $href !== null && preg_match('#^https://([a-z0-9-]+\.)*mollie\.com/#', $href) === 1 ? $href : null;
     }
 }

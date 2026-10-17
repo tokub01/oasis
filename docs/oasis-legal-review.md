@@ -31,6 +31,7 @@ Alle Werte stehen in `config/oasis.php`. Bitte jeden einzeln bestätigen oder ä
 | `privacy.server_log_days` | 7 Tage | Für Sicherheitsauswertung ausreichend; kurze Frist entspricht Art. 5 Abs. 1 lit. c, e DSGVO und gängiger Aufsichtspraxis. | Stimmt die Logrotation auf dem IONOS-Server damit überein? |
 | `privacy.unconfirmed_waitlist_days` | 14 Tage | Genug Zeit für verspätete Bestätigungsmails; danach kein Zweck mehr. | – |
 | `privacy.confirmed_waitlist_months` | 6 Monate nach Start | Zweck „Nachrichten rund um den Start“ ist danach erfüllt. | Startdatum `OASIS_LAUNCH_DATE` setzen. |
+| `privacy.payment_records_years` | 8 Jahre ab Ende des Kalenderjahres | § 147 Abs. 3 AO (Buchungsbelege seit 2025: 8 Jahre), § 257 HGB. | Mit Steuerberatung bestätigen; Rechnungen und Bücher ggf. länger (10 Jahre). |
 | `privacy.records_years` | 3 Jahre | Regelverjährung (§§ 195, 199 BGB) für Ansprüche, die Kündigungen, Widerrufe, Meldungen und Moderationsentscheidungen belegen müssen. | Gilt für Kündigungen, Widerrufe, Meldungen, Organisationsanfragen, Chat-Meldungen und Moderationsfälle. Für Organisationsanfragen ggf. kürzer (z. B. 1 Jahr). |
 | `privacy.mail_provider` | IONOS SE, Server in Deutschland | Gleicher Anbieter wie das Hosting, keine Übermittlung in Drittländer. Bisher war Amazon SES geplant. | **Entscheidung:** IONOS oder Amazon SES? Muss zu `MAIL_*` in der Produktiv-`.env` passen; AV-Vertrag abschließen. |
 | `server_location` (Hilfe) | IONOS in Deutschland, Bilder bei AWS Frankfurt | Kurzfassung von Abschnitt 17 der Datenschutzerklärung. | Echten Serverstandort bestätigen. |
@@ -42,12 +43,10 @@ Alle Werte stehen in `config/oasis.php`. Bitte jeden einzeln bestätigen oder ä
 
 Diese Punkte sind keine Formulierungsfragen. Ohne sie wären einzelne Aussagen der Texte falsch.
 
-1. **Zahlungsbelege überleben die Kontolöschung nicht.** `membership_payments.user_id` löscht per Fremdschlüssel mit
-   dem Konto. Die Datenschutzerklärung (Abschnitt 9) sagt aber zu, Belege nach § 147 AO und § 257 HGB aufzubewahren.
-   Es gibt zwei Möglichkeiten:
-   - die Buchhaltung stützt sich vollständig auf die Mollie-Abrechnungen und eigene Rechnungsexporte (dann Abschnitt 9
-     entsprechend formulieren);
-   - `user_id` wird auf `nullOnDelete` umgestellt und die Belegdaten bleiben gesperrt erhalten.
+1. **Erledigt: Zahlungsbelege überleben die Kontolöschung.** `membership_payments.user_id` wird beim Löschen auf
+   `null` gesetzt; Rechnungsdaten und Mollie-IDs bleiben, gesperrt für alles außer Buchhaltung und die Admin-
+   Zahlungssuche (`/admin/zahlungen`, docs/oasis-admin.md). Nach `payment_records_years` werden sie automatisch
+   gelöscht. Zu prüfen: ob die Admin-Suche als Zugriff auf gesperrte Daten so zulässig ist (Art. 18 DSGVO analog).
 2. **Automatische Löschung abgelaufener Konten ist ausgeschaltet.** AGB § 13 und Datenschutzerklärung Abschnitt 18
    sagen zu, ein Konto 30 Tage nach Test- oder Mitgliedschaftsende zu löschen. Das geschieht nur mit
    `OASIS_RETENTION_AUTO_DELETE=true` in der Produktiv-`.env`. Der Befehl löscht seit diesem Stand genauso wie die

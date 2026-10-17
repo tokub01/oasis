@@ -4,7 +4,7 @@
 
 `routes/admin.php`, prefix `/admin`, names `admin.*`, middleware `auth`, `verified`, `staff` (role + confirmed 2FA,
 otherwise redirect to 2FA setup) and `can:administrate` (gate in `GovernanceServiceProvider`: admins with confirmed
-2FA, same rule as role management). The staff layout shows "Statistik" and "Abstimmungen" to admins.
+2FA, same rule as role management). The staff layout shows "Statistik", "Abstimmungen" and "Zahlungen" to admins.
 The first admin is made with `sail artisan oasis:role <email> admin`.
 
 ## Statistics modules
@@ -22,7 +22,26 @@ The first admin is made with `sail artisan oasis:role <email> admin`.
 - chat: metadata counts only (identities, conversations, stored ciphertexts, messages in the period);
 - moderation: open/in-review cases plus `TransparencyQuery::forPeriod` (notices, decisions, complaints, median time).
 
-All modules show sums only – never lists of people and never content.
+All statistics modules show sums only – never lists of people and never content. The payment search below is the one
+admin page with personal data, limited to payments.
+
+## Payment search
+
+`/admin/zahlungen` (`admin.payments`, `App\Livewire\Admin\Payments`) serves bookkeeping and questions about payments:
+
+- Searches `membership_payments` by name or e-mail (invoice snapshot or account), username, record number (`#12`),
+  Mollie payment id (`tr_…`) or customer id (`cst_…`), with a status filter (incl. "Erstattet").
+- "Zahlung bei Mollie prüfen" / "Alle Zahlungen der Person bei Mollie" and "Direkt bei Mollie suchen" (for a typed
+  `tr_…`/`cst_…` without a local record) call Mollie read-only through `MollieGateway::lookupPayment`,
+  `lookupCustomer` and `customerPayments`. The "Im Mollie-Dashboard öffnen" link is Mollie's own `_links.dashboard`;
+  only `https://…mollie.com/` links are shown.
+- Every lookup is logged (`Admin Mollie lookup`: admin id, kind, Mollie id – no names or e-mail addresses). Mollie
+  errors become a German message; details stay in the log.
+
+Payment records outlive deleted accounts as accounting documents (§ 147 AO, § 257 HGB): `membership_payments.user_id`
+is set to null, the invoice snapshot and `mollie_customer_id` stay. `MembershipPayment::prunable` removes paid records
+`oasis.privacy.payment_records_years` (8) after the end of their calendar year and unpaid checkout attempts after 90
+days.
 
 ## Transparency reports (removed)
 

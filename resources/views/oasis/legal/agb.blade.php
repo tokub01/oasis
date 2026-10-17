@@ -43,7 +43,9 @@
             <h2 class="m-0 text-[20px] font-extrabold text-night">§ 6 Zahlung</h2>
             <p class="m-0">Auf der Website kannst du per SEPA-Lastschrift, PayPal oder Karte bezahlen. Monatsbeiträge werden jeweils zu Beginn des bezahlten Monats, Jahresbeiträge zu Beginn des vereinbarten Jahres fällig. Den ersten Zahlungstermin und die weiteren Abrechnungstermine teilen wir dir vor der Bestellung mit.</p>
             <p class="m-0">Eine SEPA-Lastschrift setzt dein gesondertes Mandat voraus. Betrag und Einzugstermin kündigen wir vor dem Einzug an. Gesetzliche Erstattungsrechte gegenüber deiner Bank bleiben unberührt. Bei PayPal und Kartenzahlung gelten für die Zahlungsabwicklung ergänzend die Bedingungen des jeweiligen Zahlungsdienstes.</p>
-            <p class="m-0">In den Apps sind auch Käufe über den App Store oder Google Play vorgesehen. Für solche Käufe gelten ergänzend die Bedingungen des jeweiligen Stores, insbesondere zu Abrechnung und Aboverwaltung. Vor dem Kauf wird angezeigt, wer dein Vertragspartner ist. Zwingende Verbraucherrechte werden dadurch nicht eingeschränkt.</p>
+            @if (config('oasis.apps'))
+                <p class="m-0">In den Apps sind auch Käufe über den App Store oder Google Play möglich. Für solche Käufe gelten ergänzend die Bedingungen des jeweiligen Stores, insbesondere zu Abrechnung und Aboverwaltung. Vor dem Kauf wird angezeigt, wer dein Vertragspartner ist. Zwingende Verbraucherrechte werden dadurch nicht eingeschränkt.</p>
+            @endif
         </section>
         <section class="flex flex-col gap-[6px]">
             <h2 class="m-0 text-[20px] font-extrabold text-night">§ 7 Laufzeit und Kündigung</h2>

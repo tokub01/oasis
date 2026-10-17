@@ -66,11 +66,12 @@ return [
     /*
      * "Wer dahinter steht" on the Manifest page.
      */
+    // Draft texts pending the founder's approval (docs/oasis-legal-review.md).
     'founder' => [
-        'name' => '[DEIN NAME]',
+        'name' => 'Tobias Kubina',
         // Public URL or asset path of a photo; null shows a dashed photo placeholder.
         'photo' => null,
-        'text' => '[Gründer-Text]',
+        'text' => 'Ich habe Oasis gegründet, weil ich ein soziales Netzwerk wollte, in dem es um Menschen geht und nicht um Werbung. Oasis lebt allein von den Beiträgen seiner Mitglieder: Es gibt keine Werbung, kein Werbeprofil und keinen Verkauf von Daten. Ich entwickle und betreibe Oasis von Krefeld aus und freue mich über jede Frage und jeden Vorschlag.',
     ],
 
     // Launch date as Y-m-d (e.g. "2027-03-01"); null = not announced yet, pages say "bald".
@@ -111,15 +112,16 @@ return [
     'group_start_days' => 7,
     // Promised support reply time in working days (Hilfe).
     'support_reply_days' => 2,
-    // Native apps as display text (Funktionen).
-    'apps' => '[iOS und Android]',
-    // Name of the document that contains the promises, e.g. "AGB" or "Satzung" (Manifest, Transparenz).
-    'statutes' => '[AGB / Satzung]',
+    // Native apps as display text (Funktionen, AGB § 6), e.g. "iOS und Android". null = no apps yet: the phone card
+    // and the app store paragraph stay hidden, so the site never announces apps that do not exist (UWG).
+    'apps' => null,
+    // Name of the document that contains the promises (Manifest). The promises go into AGB § 10.
+    'statutes' => 'AGB',
     // Set to true only once the promises (no ads, no ad profile, no data sale, changes only with member
     // consent) are actually written into that document. Until then the site says "Wird festgeschrieben" (UWG).
     'promises_codified' => (bool) env('OASIS_PROMISES_CODIFIED', false),
-    // Hosting and service providers incl. region, as one sentence (Hilfe, Datenschutz).
-    'server_location' => '[SERVERSTANDORT UND DIENSTLEISTER]',
+    // Hosting and service providers incl. region, as one sentence (Hilfe). Must match oasis.privacy below.
+    'server_location' => 'Auf Servern von IONOS in Deutschland; hochgeladene Bilder liegen verschlüsselt bei Amazon Web Services in Frankfurt am Main',
 
     /*
      * Facts for the privacy policy (Datenschutzerklärung). A null value renders "[noch festzulegen]" so an open
@@ -128,8 +130,9 @@ return [
     'privacy' => [
         // Hosting provider incl. address and server location (taken over from velwebsolutions.de; verify for Oasis).
         'hosting' => 'IONOS SE, Elgendorfer Str. 57, 56410 Montabaur, Server in Deutschland',
-        // Provider that sends the confirmation mails, incl. region. Planned: Amazon SES via SMTP (see PROMPT.md).
-        'mail_provider' => null,
+        // Provider that sends and receives mails, incl. region. Draft: IONOS like the hosting, so no mail leaves the EU
+        // (docs/oasis-legal-review.md). Must match MAIL_* in the production .env.
+        'mail_provider' => 'IONOS SE, Elgendorfer Str. 57, 56410 Montabaur, Server in Deutschland',
         // Automated content check (stage 10): only the text is sent. Verify DPA and retention terms before launch.
         // Storage of uploaded images (S3, eu-central-1). Verify against the signed AWS DPA before launch.
         'media_storage' => 'Amazon Web Services EMEA SARL, 38 Avenue John F. Kennedy, L-1855 Luxemburg, Rechenzentrum in Frankfurt am Main (Muttergesellschaft: Amazon.com, Inc., USA)',
@@ -137,14 +140,15 @@ return [
         // Realtime delivery of encrypted chat messages runs on our own server via Laravel Reverb (null = no third-party provider).
         'realtime_provider' => null,
         // Days after which web server log files (IP address, time, URL, browser) are deleted.
-        'server_log_days' => null,
+        'server_log_days' => 7,
         // Days after which unconfirmed waitlist entries are deleted.
-        'unconfirmed_waitlist_days' => null,
+        'unconfirmed_waitlist_days' => 14,
         // Months after launch after which confirmed waitlist entries are deleted (purpose: launch news).
-        'confirmed_waitlist_months' => null,
+        'confirmed_waitlist_months' => 6,
         // Years for which cancellations, withdrawals, content reports and organisation requests are kept as proof.
         // Enforced automatically: models using PrunedAfterRecordRetention are deleted by the daily model:prune.
-        'records_years' => null,
+        // Three years = regular limitation period (§§ 195, 199 BGB) for claims these records may have to prove.
+        'records_years' => 3,
         // Competent data protection supervisory authority for the operator (Krefeld, NRW).
         'authority' => 'Landesbeauftragte für Datenschutz und Informationsfreiheit Nordrhein-Westfalen, Kavalleriestraße 2–4, 40213 Düsseldorf',
         // Date of the current version, shown as "Stand".
@@ -191,24 +195,4 @@ return [
     // Set to false in production if the samples should not be public.
     'demo_pages' => (bool) env('OASIS_DEMO_PAGES', true),
 
-    /*
-     * Draft building blocks of the legal pages (Datenschutz, AGB, Widerrufsbelehrung).
-     * Placeholders only: the final texts must be written or reviewed by a lawyer before launch.
-     */
-    'legal' => [
-        // Generic placeholder for paragraphs that still need a text.
-        'text' => '[Text]',
-        // Data subject rights listed in the privacy policy (Art. 15–21 and 77 GDPR).
-        'privacy_rights' => '[Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit, Widerspruch, Beschwerde bei einer Aufsichtsbehörde]',
-        // Categories of personal data named in the privacy policy.
-        'privacy_data' => '[Kontodaten, Inhalte, Zahlungsdaten, technische Daten]',
-        // Contract term and notice periods for the AGB.
-        'contract_term' => '[Monatlich kündbar; Jahresbeitrag zum Ende des Jahres, danach monatlich kündbar]',
-        // The promises the AGB must contain (see promises_codified).
-        'promises' => '[Keine Werbung, kein Werbeprofil, kein Datenverkauf; Änderung nur mit Zustimmung der Mitglieder]',
-        // Price and billing section of the AGB.
-        'prices' => '[Stufen, Abrechnung, Preisgarantie für Gründungsmitglieder]',
-        // Withdrawal instructions based on the statutory model.
-        'withdrawal' => '[Widerrufsbelehrung nach dem gesetzlichen Muster, angepasst auf digitale Dienstleistungen]',
-    ],
 ];

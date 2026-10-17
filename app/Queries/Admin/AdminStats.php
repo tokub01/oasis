@@ -5,6 +5,7 @@ namespace App\Queries\Admin;
 use App\Enums\Moderation\CaseStatus;
 use App\Models\ChatIdentity;
 use App\Models\Conversation;
+use App\Models\MembershipPayment;
 use App\Models\Message;
 use App\Models\ModerationCase;
 use App\Models\Oasis;
@@ -27,6 +28,23 @@ class AdminStats
         private readonly MembershipStats $membership,
         private readonly TransparencyQuery $moderation,
     ) {}
+
+    /**
+     * Money received in one calendar month (German time, 1st 00:00 to the last day 24:00): paid, not refunded, without
+     * the 1-euro confirmation when a member changes the payment method. Gross amounts as Mollie received them, before
+     * Mollie's fees; amounts in cents.
+     *
+     * @return array{cents: int, payments: int}
+     */
+    public function revenue(CarbonImmutable $month): array
+    {
+        $from = $month->setTimezone('Europe/Berlin')->startOfMonth();
+        $paid = MembershipPayment::where('status', 'paid')->where('refunded', false)->where('kind', '!=', 'mandate')
+            ->where('paid_at', '>=', $from->setTimezone(config('app.timezone')))
+            ->where('paid_at', '<', $from->addMonth()->setTimezone(config('app.timezone')));
+
+        return ['cents' => (int) (clone $paid)->sum('amount'), 'payments' => (clone $paid)->count()];
+    }
 
     /**
      * @return array{registered: int, verified: int, trials_active: int, paying: int, by_tier: array<string, int>,

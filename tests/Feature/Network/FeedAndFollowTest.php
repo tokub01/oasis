@@ -76,7 +76,7 @@ it('shows profiles to guests only when public and falls back to sample profiles'
     $hidden = N::member();
     $public = N::member();
     $public->profile()->create(['bio' => 'Ich fotografiere.', 'location' => 'Leipzig']);
-    $public->privacySetting()->create(['profile_audience' => 'everyone']);
+    $public->privacySetting()->create(['profile_audience' => 'everyone', 'location_audience' => 'everyone']);
     N::post($public, ['body' => 'Öffentlicher Tropfen']);
     N::post($public, ['body' => 'Geheimer Tropfen', 'visibility' => 'members']);
 

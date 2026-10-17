@@ -2,7 +2,10 @@
 
 namespace App\Livewire\Privacy;
 
+use App\Actions\Privacy\LimitPastPosts;
+use App\Enums\Network\Visibility;
 use App\Livewire\Privacy\Concerns\SavesPrivacySettings;
+use App\Models\Post;
 use App\Support\Privacy\PrivacyOptions;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
@@ -16,10 +19,31 @@ class Center extends Component
 {
     use SavesPrivacySettings;
 
-    /** All sections with their settings, in the member layout. */
+    /** "Frühere Tropfen begrenzen": all public Tropfen of the member become members-only (asked for in the browser). */
+    public function limitPastPosts(LimitPastPosts $limit): void
+    {
+        $count = $limit->handle(auth()->user());
+        $this->status = match ($count) {
+            0 => 'Du hattest keine öffentlichen Tropfen.',
+            1 => 'Ein Tropfen ist jetzt nur noch für Mitglieder sichtbar.',
+            default => $count.' Tropfen sind jetzt nur noch für Mitglieder sichtbar.',
+        };
+    }
+
+    /** All sections with their settings and the further controls, in the member layout. */
     public function render(): View
     {
-        return view('livewire.privacy.center', ['sections' => PrivacyOptions::SECTIONS, 'steps' => count(PrivacyOptions::SECTIONS)])
+        $member = auth()->user();
+
+        return view('livewire.privacy.center', [
+            'sections' => PrivacyOptions::SECTIONS,
+            'steps' => count(PrivacyOptions::SECTIONS),
+            'publicPosts' => Post::where('user_id', $member->id)->where('visibility', Visibility::Public->value)->count(),
+            'hiddenWords' => count($member->privacy()->hiddenWords()),
+            'restricted' => count($member->restrictedUserIds()),
+            'blocked' => $member->blocks()->count(),
+            'muted' => count($member->mutedUserIds()),
+        ])
             ->layout('layouts.app', ['title' => 'Privatsphäre', 'active' => 'privatsphaere', 'wide' => true]);
     }
 }

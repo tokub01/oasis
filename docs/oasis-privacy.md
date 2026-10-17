@@ -14,16 +14,23 @@ Every change is saved at once; the server enforces every setting, the pages only
 | `profile_audience` | Alle · Mitglieder · Menschen, denen du folgst | Mitglieder | profile page, Entdecken |
 | `default_post_visibility` | Öffentlich · Nur Mitglieder | Nur Mitglieder | composer preselection |
 | `follower_count_audience` | Alle · Mitglieder · Folge ich · Niemand | Mitglieder | Karawane size on the profile |
+| `location_audience` | Alle · Mitglieder · Folge ich · Niemand | Mitglieder | location on the profile |
+| `oases_audience` | Alle · Mitglieder · Folge ich · Niemand | Mitglieder | oasis list on the profile |
 | `mentions_audience` | Mitglieder · Folge ich · Niemand | Mitglieder | mention hint and profile link |
 | `replies_audience` | Mitglieder · Folge ich · Niemand | Mitglieder | `PostPolicy::reply` |
 | `carry_audience` | Mitglieder · Folge ich · Niemand | Mitglieder | `PostPolicy::carry` |
 | `chat_invites_audience` | Mitglieder · Folge ich · Niemand | Mitglieder | starting or joining chats |
 | `searchable` | ja/nein | ja | Oasis people search |
 | `search_engines` | ja/nein | nein | `noindex` on public profile and Tropfen pages |
+| `login_alerts` | ja/nein | ja | `RecordLoginDevice` mails on a browser/system not seen before |
+| `hidden_words` | up to 50 words (own page) | none | see "Further controls" |
 
 Defaults follow privacy by default (GDPR Art. 25). The migration carried over existing profiles: a public profile
 stayed public, its new Tropfen stayed public by default and it stayed visible to search engines until the member
 changes it.
+
+`location_audience` and `oases_audience` were added later with the members-only default, also for existing public
+profiles: guests no longer see the location and the oasis list until the member opens them up.
 
 ## The rule
 
@@ -34,6 +41,23 @@ changes it.
 - "Karawane" (followers) is deliberately not an audience: anyone can follow without consent, so it would not protect.
 - Blocks are not part of the rule and are checked separately – a block always wins.
 
+## Further controls
+
+Modelled on the controls large networks offer, limited to what Oasis actually does (no ads, no face recognition):
+
+| Control | Page | Effect, enforced in |
+|---|---|---|
+| Frühere Tropfen begrenzen | center, card | all own public Tropfen become members-only (`LimitPastPosts`) |
+| Verborgene Wörter | `/app/privatsphaere/woerter` (`app.privacy.words`) | Tropfen with a word disappear from the member's own lists – own Tropfen stay (`PostFeed::filterSafety`); replies with a word under the member's Tropfen are seen only by their writer (`PostFeed::withoutHiddenReplies`, `Post::isVisibleTo`); no hints with a word (`SendHint::allowed`) |
+| Einschränken | ⋯ menu of a Tropfen, profile, `/app/sicherheit` | replies of the restricted person under the member's Tropfen are seen only by that person; no hints from them (`User::hidesReplyFrom`, `SendHint::allowed`). Table `restrictions`. |
+| Geräte und Anmeldungen | `/app/privatsphaere/geraete` (`app.privacy.devices`) | lists the member's sessions (database session driver) with browser, system and a shortened IP; signs out one or all other devices and renews the remember-me token (`EndSessions`); lists known devices for login alerts |
+| Anmelde-Warnung | setting `login_alerts` | `RecordLoginDevice` (on `Login`) stores browser and system in `known_devices` – no IP – and mails `LoginAlert` for a new one; the first device of an account is stored silently. Unused devices are pruned after a year. |
+
+Words match case-insensitively anywhere in the text (MySQL collation for queries, `mb_strtolower` in PHP), like the
+search. Whoever wrote a hidden reply keeps seeing it, so nobody learns that they were restricted or filtered. Staff
+still open every Tropfen from a moderation case. Hidden words, restrictions and known devices are part of the data
+export and are deleted with the account.
+
 ## Pieces
 
 | Piece | Role |
@@ -42,9 +66,13 @@ changes it.
 | `App\Support\Privacy\PrivacyOptions` | titles, explanations, choices and validation per setting; one source for both pages |
 | `App\Actions\Privacy\UpdatePrivacySetting` | stores one setting, rejects unknown keys and values outside the choices |
 | `App\Livewire\Privacy\Center`, `Checkup` | the two pages; shared saving in `Concerns\SavesPrivacySettings` |
+| `App\Livewire\Privacy\HiddenWords`, `Devices` | hidden words; sessions and known devices |
+| `App\Actions\Privacy\UpdateHiddenWords`, `LimitPastPosts`, `EndSessions` | the further controls |
+| `App\Actions\Safety\ManageRestriction`, `App\Models\Restriction` | restricting accounts |
+| `App\Listeners\Privacy\RecordLoginDevice`, `App\Models\KnownDevice`, `App\Mail\Privacy\LoginAlert`, `App\Support\Privacy\DeviceLabel` | login alerts |
 
-Tests: `tests/Feature/Privacy` (pages, saving, refused values, the audience matrix) plus the enforcement tests in the
-network, search and chat areas.
+Tests: `tests/Feature/Privacy` (pages, saving, refused values, the audience matrix, `PrivacyControlsTest` for the
+further controls) plus the enforcement tests in the network, search and chat areas.
 
 ## Live E2E against the running app
 

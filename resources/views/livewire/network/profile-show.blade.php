@@ -7,9 +7,10 @@
       $member     User
       $profile    Profile (stored or default)
       $posts      CursorPaginator<Post>  PostFeed::byAuthor
-      $followers  int
-      $oases      Collection<Oasis>  oases the member belongs to that the viewer may see
-      $following  bool  whether the viewer follows this member
+      $followers     int|null  Karawane size, null when its audience excludes the viewer
+      $showLocation  bool  whether the location audience includes the viewer
+      $oases         Collection<Oasis>|null  oases the viewer may see; null when the oases audience excludes the viewer
+      $following     bool  whether the viewer follows this member
 --}}
 @php($isMe = auth()->id() === $member->id)
 
@@ -50,6 +51,16 @@
                                     </form>
                                 @endif
 
+                                @if (auth()->user()->hasRestricted($member))
+                                    <form wire:submit="unrestrictUser({{ $member->id }})">
+                                        <button type="submit" wire:loading.attr="disabled" class="o-btn o-btn-md o-btn-outline">Nicht mehr einschränken</button>
+                                    </form>
+                                @else
+                                    <form wire:submit="restrictUser({{ $member->id }})">
+                                        <button type="submit" wire:loading.attr="disabled" class="o-btn o-btn-md o-btn-outline">Einschränken</button>
+                                    </form>
+                                @endif
+
                                 <form wire:submit="blockUser({{ $member->id }})">
                                     <button type="submit" wire:loading.attr="disabled" class="o-btn o-btn-md o-btn-outline text-muted">Blockieren</button>
                                 </form>
@@ -66,7 +77,7 @@
                     <p class="m-0 text-[17px] whitespace-pre-line">{{ $profile->bio }}</p>
                 @endif
                 <p class="m-0 flex flex-wrap gap-x-5 gap-y-1 text-ink-2">
-                    @if ($profile->location)
+                    @if ($showLocation && $profile->location)
                         <span class="inline-flex items-center gap-1.5"><x-oasis.icon name="map-pin" :size="18" /> {{ $profile->location }}</span>
                     @endif
                     @if ($followers !== null)
@@ -82,6 +93,7 @@
         </section>
 
         <x-slot:aside>
+            @if ($oases !== null)
             <x-network.side-card title="Oasen">
                 @forelse ($oases as $oasis)
                     <a wire:key="profile-show-1-{{ $oasis->id }}" wire:navigate href="{{ route('network.oases.show', $oasis) }}" class="flex items-center gap-3 rounded-2xl px-1 py-1 text-ink no-underline hover:bg-sand">
@@ -95,6 +107,7 @@
                     <p class="m-0 text-[15px] text-ink-2">Noch in keiner Oase.</p>
                 @endforelse
             </x-network.side-card>
+            @endif
 
             @if ($isMe)
                 <x-network.side-card title="Nur für dich" tone="night">

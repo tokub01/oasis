@@ -177,6 +177,22 @@ test('Privatsphäre-Center: every setting and audience is saved via Livewire and
             settle(sub, 'follower_count_audience');
         });
 
+        // Location and oasis list on the profile, each with its own audience (fixture: "Ort-<run>", "Oase <run>").
+        for (const [key, marker] of [['location_audience', `Ort-${run.slice(0, 12)}`], ['oases_audience', `Oase ${run.slice(0, 12)}`]]) {
+            await t.test(key, async (sub) => {
+                for (const audience of ['everyone', 'members', 'following', 'nobody']) {
+                    await setPrivacy(key, audience);
+                    for (const viewer of VIEWERS) {
+                        const page = await b[viewer].page(profileUrl);
+                        check(key, audience, viewer, `${marker} auf dem Profil`, allowed(audience, viewer),
+                            page.status === 200 && page.html.includes(marker));
+                    }
+                }
+                await setPrivacy(key, 'members');
+                settle(sub, key);
+            });
+        }
+
         await t.test('mentions_audience', async (sub) => {
             const link = new RegExp(`href="[^"]*/profil/${escape(owner.username)}">@${escape(owner.username)}</a>`);
             for (const audience of ['members', 'following', 'nobody']) {

@@ -72,9 +72,10 @@ class ExportAccount
                 'farbe' => $profile->avatar_color->value,
             ],
             'privatsphaere' => $user->privacy()->only([
-                'profile_audience', 'default_post_visibility', 'follower_count_audience', 'mentions_audience',
-                'replies_audience', 'carry_audience', 'chat_invites_audience', 'searchable', 'search_engines',
-            ]),
+                'profile_audience', 'default_post_visibility', 'follower_count_audience', 'location_audience',
+                'oases_audience', 'mentions_audience', 'replies_audience', 'carry_audience', 'chat_invites_audience',
+                'searchable', 'search_engines', 'login_alerts',
+            ]) + ['verborgene_woerter' => $user->privacy()->hiddenWords()],
             'tropfen' => $posts->map(fn (Post $post) => [
                 'id' => $post->id,
                 'text' => $post->body,
@@ -91,6 +92,9 @@ class ExportAccount
             ],
             'oasen' => $oases->map(fn ($oasis) => ['name' => $oasis->name, 'rolle' => $oasis->pivot->getAttribute('role')])->values()->all(),
             'gemerkt' => $user->bookmarks()->pluck('post_id')->values()->all(),
+            'eingeschraenkt' => User::whereIn('id', $user->restrictedUserIds())->pluck('username')->values()->all(),
+            'bekannte_geraete' => $user->knownDevices()->orderBy('label')->get()
+                ->map(fn ($device) => ['geraet' => $device->label, 'zuletzt' => $device->last_seen_at->toIso8601String()])->values()->all(),
             'hinweise' => 'Verschlüsselte Chat-Nachrichten sind nicht enthalten: Sie liegen nur verschlüsselt auf unserem Server und lassen sich nur in deinem Browser lesen.',
         ];
     }

@@ -59,6 +59,7 @@
             <h2 class="{{ $h2 }}">5. Dein Konto</h2>
             <p class="m-0">Für dein Konto speichern wir Anzeigename, Benutzername, E-Mail-Adresse, Geburtsdatum, dein Passwort nur als sicheren Hash, den Zeitpunkt deiner Zustimmung zu AGB und Community-Regeln, das Ende deines Tests, ob deine E-Mail-Adresse bestätigt ist und, wenn du sie einschaltest, die Daten der Zwei-Faktor-Anmeldung (verschlüsselt). Wir brauchen diese Daten, um den Vertrag mit dir zu erfüllen (Art. 6 Abs. 1 lit. b DSGVO); das Geburtsdatum brauchen wir, um das Mindestalter von 16 Jahren zu prüfen.</p>
             <p class="m-0">Wir schicken dir die E-Mails, die zum Konto gehören: die Bestätigung deiner Adresse, einen Link zum Zurücksetzen des Passworts (60 Minuten gültig) und eine Erinnerung kurz vor dem Ende deines Tests.</p>
+            <p class="m-0">Zum Schutz deines Kontos merken wir uns, mit welchem Browser und System du dich anmeldest (zum Beispiel „Firefox auf Windows“) und wann zuletzt – ohne IP-Adresse. Meldet sich jemand mit einem Gerät an, das wir bei dir noch nicht kennen, schicken wir dir eine E-Mail, solange du das nicht abschaltest. Ein Gerät, mit dem du dich ein Jahr lang nicht angemeldet hast, vergessen wir automatisch. Unter „Geräte und Anmeldungen“ siehst du außerdem deine laufenden Sitzungen mit Browser, System und gekürzter IP-Adresse und kannst sie beenden. Rechtsgrundlage ist unser berechtigtes Interesse, Konten vor fremdem Zugriff zu schützen (Art. 6 Abs. 1 lit. f, Art. 32 DSGVO).</p>
             <p class="{{ $required }}">Pflichtangaben sind alle Felder der Registrierung. Ohne sie können wir kein Konto anlegen. Du kannst alle Daten in den Einstellungen herunterladen und dein Konto dort jederzeit selbst löschen (siehe Abschnitt 18).</p>
         </section>
 
@@ -69,7 +70,7 @@
                 <li>Profil: deine freiwillige Beschreibung, deinen Ort und deine Profilfarbe.</li>
                 <li>Tropfen: Text, Zeitpunkt, die gewählte Sichtbarkeit und gegebenenfalls die Oase, die Antwort oder das Weitertragen, zu dem der Tropfen gehört. Hochgeladene Bilder speichern wir mit ihrer Bildbeschreibung und Größe; Standort- und Kameradaten in der Bilddatei entfernen wir beim Hochladen.</li>
                 <li>Was du mit anderen teilst: wem und welchen Oasen du folgst, Reaktionen auf Tropfen, deine Mitgliedschaften und Rollen in Oasen und von dir verschickte Einladungen.</li>
-                <li>Was nur du siehst: gemerkte Tropfen, stummgeschaltete und blockierte Personen.</li>
+                <li>Was nur du siehst: gemerkte Tropfen, stummgeschaltete, eingeschränkte und blockierte Personen und deine verborgenen Wörter. Niemand erfährt, dass du jemanden eingeschränkt hast oder welche Wörter du verbirgst.</li>
                 <li>Abstimmungen der Gemeinschaft: nur dass du teilgenommen hast und an welchem Tag – nie, wofür du gestimmt hast.</li>
             </ul>
             <p class="m-0">Rechtsgrundlage ist der Vertrag mit dir (Art. 6 Abs. 1 lit. b DSGVO). Deine Statistik berechnen wir nur aus diesen Daten (zum Beispiel Antworten und Reaktionen); wir erfassen nicht, wer welche Tropfen liest. Einen Tropfen kannst du jederzeit löschen; dann löschen wir ihn mit seinen Bildern sofort. Antworten anderer auf ihn bleiben als deren Inhalte bestehen und zeigen „Tropfen nicht mehr verfügbar“.</p>
@@ -78,7 +79,7 @@
 
         <section class="flex flex-col gap-[6px]">
             <h2 class="{{ $h2 }}">7. Wer was sieht: deine Privatsphäre-Einstellungen</h2>
-            <p class="m-0">In den Privatsphäre-Einstellungen bestimmst du, wer dein Profil sieht, wer deine Tropfen standardmäßig liest, wer die Größe deiner Karawane sieht, wer dich erwähnen, dir antworten, deine Tropfen weitertragen und dir schreiben darf. Ab Werk ist das jeweils „Alle Mitglieder“ (Datenschutz durch Voreinstellung, Art. 25 Abs. 2 DSGVO). Einzelne Tropfen kannst du beim Schreiben öffentlich machen; öffentliche Tropfen kann jede Person ohne Konto über ihren Link lesen.</p>
+            <p class="m-0">In den Privatsphäre-Einstellungen bestimmst du, wer dein Profil sieht, wer deine Tropfen standardmäßig liest, wer die Größe deiner Karawane, deinen Ort und deine Oasen sieht, wer dich erwähnen, dir antworten, deine Tropfen weitertragen und dir schreiben darf. Ab Werk ist das jeweils „Alle Mitglieder“ (Datenschutz durch Voreinstellung, Art. 25 Abs. 2 DSGVO). Einzelne Tropfen kannst du beim Schreiben öffentlich machen; öffentliche Tropfen kann jede Person ohne Konto über ihren Link lesen. Mit „Frühere Tropfen begrenzen“ machst du alle öffentlichen Tropfen auf einmal wieder nur für Mitglieder sichtbar.</p>
             <p class="m-0">Andere Mitglieder finden dich in der Oasis-Suche über deinen Namen oder Benutzernamen, solange du das nicht ausschaltest. Suchmaschinen dürfen dein Profil nur aufnehmen, wenn du das ausdrücklich einschaltest und dein Profil für alle sichtbar ist; ab Werk ist das aus. Was einmal in einer Suchmaschine steht, verschwindet dort erst, wenn die Suchmaschine ihren Index aktualisiert.</p>
         </section>
 
@@ -156,7 +157,7 @@
 
         <section class="flex flex-col gap-[6px]">
             <h2 class="{{ $h2 }}">18. Ende deines Kontos und Löschung</h2>
-            <p class="m-0">Löschst du dein Konto in den Einstellungen, löschen wir sofort dein Konto mit Profil, Tropfen, Bildern, Reaktionen, Verbindungen, Hinweisen, Einstellungen und Chat-Schlüsseln sowie die automatischen Einschätzungen deiner Texte. Oasen, in denen du die einzige Gastgeber:in bist, übernimmt das am längsten dabei gewesene Mitglied; eine Oase ohne andere Mitglieder schließen wir. Läuft noch eine bezahlte Mitgliedschaft, kündigst du sie zuerst – sonst würden weiter Beiträge eingezogen.</p>
+            <p class="m-0">Löschst du dein Konto in den Einstellungen, löschen wir sofort dein Konto mit Profil, Tropfen, Bildern, Reaktionen, Verbindungen, Hinweisen, Einstellungen, bekannten Geräten und Chat-Schlüsseln sowie die automatischen Einschätzungen deiner Texte. Oasen, in denen du die einzige Gastgeber:in bist, übernimmt das am längsten dabei gewesene Mitglied; eine Oase ohne andere Mitglieder schließen wir. Läuft noch eine bezahlte Mitgliedschaft, kündigst du sie zuerst – sonst würden weiter Beiträge eingezogen.</p>
             <p class="m-0">Endet dein Test oder deine Mitgliedschaft, ohne dass du weitermachst, kannst du deine Daten noch {{ config('oasis.retention_days') }} Tage herunterladen. Danach löschen wir dein Konto genauso automatisch.</p>
             <p class="m-0">Nicht sofort gelöscht wird nur, was wir aus einem der oben genannten Gründe aufbewahren müssen: Zahlungsbelege (Abschnitt 9), Erklärungen und Meldungen (Abschnitte 10, 12 und 13) und Moderationsunterlagen (Abschnitt 14) – jeweils nur für die genannte Frist. Sicherungskopien überschreiben wir regelmäßig; bis dahin nutzen wir sie nur, um nach einem Ausfall Daten wiederherzustellen.</p>
         </section>

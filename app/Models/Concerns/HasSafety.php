@@ -6,13 +6,14 @@ use App\Models\Block;
 use App\Models\Bookmark;
 use App\Models\Mute;
 use App\Models\Post;
+use App\Models\Restriction;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Safety relations and checks for accounts: bidirectional blocks,
- * unidirectional mutes, and private bookmarks.
+ * unidirectional mutes, restrictions and private bookmarks.
  */
 trait HasSafety
 {
@@ -21,6 +22,9 @@ trait HasSafety
 
     /** @var array<int>|null Memoized unidirectional muted IDs for request performance. */
     protected ?array $safetyMutedUserIds = null;
+
+    /** @var array<int>|null Memoized IDs of accounts this account restricted. */
+    protected ?array $safetyRestrictedUserIds = null;
 
     /**
      * Blocks initiated by this account.
@@ -50,6 +54,48 @@ trait HasSafety
     public function mutes(): HasMany
     {
         return $this->hasMany(Mute::class, 'user_id');
+    }
+
+    /**
+     * Restrictions placed by this account.
+     *
+     * @return HasMany<Restriction, $this>
+     */
+    public function restrictions(): HasMany
+    {
+        return $this->hasMany(Restriction::class, 'user_id');
+    }
+
+    /**
+     * IDs of accounts this account restricted.
+     *
+     * @return array<int>
+     */
+    public function restrictedUserIds(): array
+    {
+        return $this->safetyRestrictedUserIds ??= Restriction::query()
+            ->where('user_id', $this->id)
+            ->pluck('restricted_user_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    /**
+     * Determine whether this user has restricted another account.
+     */
+    public function hasRestricted(User $other): bool
+    {
+        return in_array($other->id, $this->restrictedUserIds(), true);
+    }
+
+    /**
+     * Whether a reply under one of this account's Tropfen is hidden from everyone but its author: it comes from a
+     * restricted account or contains one of this account's hidden words.
+     */
+    public function hidesReplyFrom(Post $reply): bool
+    {
+        return $reply->user_id !== $this->id
+            && (in_array($reply->user_id, $this->restrictedUserIds(), true) || $this->privacy()->hides($reply->body));
     }
 
     /**
@@ -167,5 +213,6 @@ trait HasSafety
     {
         $this->safetyBlockedUserIds = null;
         $this->safetyMutedUserIds = null;
+        $this->safetyRestrictedUserIds = null;
     }
 }

@@ -7,7 +7,9 @@ use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Http\Responses\NeutralPasswordResetLinkResponse;
+use App\Listeners\Privacy\RecordLoginDevice;
 use App\Models\User;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
@@ -75,6 +77,8 @@ class FortifyServiceProvider extends ServiceProvider
 
             return Limit::perMinute(5)->by((is_string($login) ? Str::lower(trim($login)) : '').'|'.$request->ip());
         });
+        // Login alerts (Privatsphäre → Geräte): remember browser and system of every sign-in.
+        Event::listen(Login::class, RecordLoginDevice::class);
         // Fortify has no reset-link limiter setting; matching also covers cached routes.
         Event::listen(RouteMatched::class, function (RouteMatched $event): void {
             if ($event->route->getName() === 'password.email') {

@@ -5,6 +5,8 @@ use App\Livewire\Account\Settings;
 use App\Livewire\Network\Source;
 use App\Livewire\Privacy\Center;
 use App\Livewire\Privacy\Checkup;
+use App\Livewire\Privacy\Devices;
+use App\Livewire\Privacy\HiddenWords;
 use Illuminate\Support\Facades\Route;
 
 /* Account routes use web sessions/CSRF via routes/web.php; only verified users enter the app. */
@@ -17,6 +19,8 @@ Route::livewire('/app/einstellungen', Settings::class)->middleware('auth')->name
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::livewire('/app/privatsphaere', Center::class)->name('app.privacy');
     Route::livewire('/app/privatsphaere/check', Checkup::class)->name('app.privacy.check');
+    Route::livewire('/app/privatsphaere/woerter', HiddenWords::class)->name('app.privacy.words');
+    Route::livewire('/app/privatsphaere/geraete', Devices::class)->name('app.privacy.devices');
 });
 // Encrypted chat page; all chat data comes from the JSON API in routes/chat.php.
 Route::view('/app/nachrichten', 'app.chat.index')->middleware(['auth', 'verified'])->name('app.chat');

@@ -88,7 +88,10 @@ class ProfileShow extends NetworkPage
 
         return $this->page('livewire.network.profile-show', ['member' => $member, 'profile' => $member->profileOrDefault(),
             'posts' => app(PostFeed::class)->byAuthor($member, auth()->user()),
-            'followers' => $member->privacy()->allows('follower_count_audience', auth()->user()) ? $member->followers()->count() : null, 'oases' => $member->oases()->orderBy('name')->get()->filter->isVisibleTo(auth()->user()),
+            'followers' => $member->privacy()->allows('follower_count_audience', auth()->user()) ? $member->followers()->count() : null,
+            'showLocation' => $member->privacy()->allows('location_audience', auth()->user()),
+            'oases' => $member->privacy()->allows('oases_audience', auth()->user())
+                ? $member->oases()->orderBy('name')->get()->filter->isVisibleTo(auth()->user()) : null,
             'following' => auth()->user()?->follows($member) ?? false], $member->display_name.' (@'.$member->username.')', 'profil', true, noindex: ! $member->privacy()->indexable());
     }
 }

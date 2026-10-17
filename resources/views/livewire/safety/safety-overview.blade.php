@@ -4,7 +4,8 @@
 
     Variables:
       $blockedUsers  Collection<User>  accounts blocked by the viewer
-      $mutedUsers    Collection<User>  accounts muted by the viewer
+      $mutedUsers       Collection<User>  accounts muted by the viewer
+      $restrictedUsers  Collection<User>  accounts restricted by the viewer
 --}}
 <div class="flex flex-col gap-6">
     @if ($status !== '')
@@ -18,7 +19,7 @@
             <div class="flex flex-col gap-2">
                 <p class="o-eyebrow m-0">Privatsphäre</p>
                 <h1 class="o-h2 m-0 text-night">Sicherheit</h1>
-                <p class="m-0 text-muted">Hier verwaltest du Personen, die du blockiert oder stummgeschaltet hast. Beide Einstellungen wirken leise – niemand wird benachrichtigt.</p>
+                <p class="m-0 text-muted">Hier verwaltest du Personen, die du blockiert, stummgeschaltet oder eingeschränkt hast. Alles wirkt leise – niemand wird benachrichtigt.</p>
             </div>
 
             {{-- Blockierte Personen --}}
@@ -76,6 +77,34 @@
                     <p class="m-0 border-t border-dune-line pt-4 text-[15px] text-muted">Du hast aktuell niemanden stummgeschaltet.</p>
                 @endforelse
             </section>
+
+            {{-- Eingeschränkte Personen --}}
+            <section id="eingeschraenkt" aria-labelledby="restricted-heading" class="flex flex-col gap-4 rounded-[24px] border border-paper-line bg-paper p-6">
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex flex-col gap-1">
+                        <h2 id="restricted-heading" class="m-0 text-[20px] font-extrabold text-night">Eingeschränkte Personen</h2>
+                        <p class="m-0 text-sm text-muted">Ihre Antworten unter deinen Tropfen sieht nur sie selbst, und du bekommst keine Hinweise von ihr. Sie kann dir weiter folgen und deine Tropfen lesen.</p>
+                    </div>
+                    <span class="rounded-full bg-sand px-3 py-1 text-sm font-bold text-night">{{ $restrictedUsers->count() }}</span>
+                </div>
+
+                @forelse ($restrictedUsers as $user)
+                    <div wire:key="restricted-{{ $user->id }}" class="flex flex-wrap items-center justify-between gap-3 border-t border-dune-line pt-4">
+                        <a wire:navigate href="{{ route('oasis.profil', $user->username) }}" class="flex items-center gap-3 text-ink no-underline hover:opacity-80">
+                            <x-network.avatar :user="$user" :size="44" />
+                            <div class="flex flex-col leading-tight">
+                                <span class="font-bold text-night">{{ $user->display_name }}</span>
+                                <span class="text-sm text-muted">{{ '@'.$user->username }}</span>
+                            </div>
+                        </a>
+                        <form wire:submit="unrestrict({{ $user->id }})">
+                            <button type="submit" wire:loading.attr="disabled" class="o-btn o-btn-sm o-btn-outline">Nicht mehr einschränken</button>
+                        </form>
+                    </div>
+                @empty
+                    <p class="m-0 border-t border-dune-line pt-4 text-[15px] text-muted">Du hast aktuell niemanden eingeschränkt.</p>
+                @endforelse
+            </section>
         </div>
 
         <x-slot:aside>
@@ -83,6 +112,7 @@
                 <div class="flex flex-col gap-3 text-[15px] text-ink-2 leading-relaxed">
                     <p class="m-0"><strong class="text-night">Blockieren:</strong> Wenn du jemanden blockierst, existiert ihr füreinander nicht mehr. Tropfen und Profile sind wie nicht existent (404). Bestehende Follows werden beidseitig gelöscht.</p>
                     <p class="m-0"><strong class="text-night">Stummschalten:</strong> Nur für dich sichtbar. Du siehst keine Beiträge der Person mehr im Feed, kannst ihr Profil aber weiter aufrufen. Die Person merkt nichts.</p>
+                    <p class="m-0"><strong class="text-night">Einschränken:</strong> Leiser als Blockieren. Die Person kann weiter lesen und antworten, aber ihre Antworten unter deinen Tropfen sieht nur sie selbst. Sie merkt nichts.</p>
                 </div>
             </x-network.side-card>
 

@@ -65,14 +65,15 @@ it('keeps the privacy pages for signed-in, verified members', function (string $
 it('walks through the check step by step, saving on the way, and ends with a summary', function () {
     $me = N::member();
     $this->actingAs($me)->get(route('app.privacy.check'))->assertOk()->assertSeeLivewire(Checkup::class)
-        ->assertSee('Schritt 1 von 3');
+        ->assertSee('Schritt 1 von 4');
 
     Livewire::test(Checkup::class)
         ->set('settings.profile_audience', 'everyone')->assertSee('Gespeichert')
-        ->call('next')->assertSee('Wer darf dich erwähnen?')->assertSee('Schritt 2 von 3')
-        ->call('next')->call('next')->assertSee('Alles im Blick')->assertSee('Alle – auch ohne Konto')
-        ->call('next')->assertSet('step', 4)
-        ->call('back')->call('back')->call('back')->call('back')->assertSet('step', 1);
+        ->call('next')->assertSee('Wer darf dich erwähnen?')->assertSee('Schritt 2 von 4')
+        ->call('next')->call('next')->assertSee('E-Mail bei Anmeldung von einem neuen Gerät')
+        ->call('next')->assertSee('Alles im Blick')->assertSee('Alle – auch ohne Konto')
+        ->call('next')->assertSet('step', 5)
+        ->call('back')->call('back')->call('back')->call('back')->call('back')->assertSet('step', 1);
 
     expect($me->fresh()->privacy()->profile_audience)->toBe(Audience::Everyone);
 });

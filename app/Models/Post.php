@@ -144,6 +144,9 @@ class Post extends Model
         if ($this->removed_from_oasis_at !== null || $this->held_at !== null) {
             return false;
         }
+        if ($this->reply_to_id !== null && $this->replyTo?->author?->hidesReplyFrom($this) === true) {
+            return false;
+        }
 
         return $this->visibility === Visibility::Public || $viewer?->hasVerifiedEmail() === true;
     }

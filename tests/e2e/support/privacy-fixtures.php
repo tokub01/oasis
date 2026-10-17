@@ -5,6 +5,7 @@
  * may be touched; everything else is merely counted, so the test can prove that demo accounts stay unchanged.
  */
 use App\Actions\Account\DeleteAccount;
+use App\Actions\Network\ManageOasis;
 use App\Models\Block;
 use App\Models\ChatIdentity;
 use App\Models\ContentCheck;
@@ -65,6 +66,12 @@ try {
                 ]);
                 $accounts[$role] = ['id' => $user->id, 'email' => $user->email, 'username' => $user->username,
                     'display_name' => $user->display_name];
+                // The owner's location and oasis carry the run id, so the profile checks can find exactly them.
+                if ($index === 0) {
+                    $user->profile()->create(['location' => 'Ort-'.substr($input['run'], 0, 12)]);
+                    app(ManageOasis::class)->create($user, ['name' => 'Oase '.substr($input['run'], 0, 12),
+                        'description' => 'Privatsphäre-E2E', 'house_rules' => 'Freundlich bleiben.', 'visibility' => 'public', 'color' => 'sun']);
+                }
             }
 
             return ['accounts' => $accounts, 'foreign' => $before,
@@ -72,8 +79,9 @@ try {
         }),
         // The stored row of the owner exactly as the database holds it (null = never saved, defaults apply).
         'privacy' => ['row' => $owner === null ? null : DB::table('privacy_settings')->where('user_id', $owner->id)
-            ->first(['profile_audience', 'default_post_visibility', 'follower_count_audience', 'mentions_audience',
-                'replies_audience', 'carry_audience', 'chat_invites_audience', 'searchable', 'search_engines'])],
+            ->first(['profile_audience', 'default_post_visibility', 'follower_count_audience', 'location_audience',
+                'oases_audience', 'mentions_audience', 'replies_audience', 'carry_audience', 'chat_invites_audience',
+                'searchable', 'search_engines', 'login_alerts'])],
         'state' => [
             'notifications' => DB::table('notifications')->where('notifiable_id', $owner?->id)->get()
                 ->map(fn ($row) => json_decode($row->data, true) + ['type' => $row->type])->values()->all(),

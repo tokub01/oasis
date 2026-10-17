@@ -8,6 +8,7 @@ use App\Actions\Network\ManageReaction;
 use App\Actions\Safety\ManageBlock;
 use App\Actions\Safety\ManageBookmark;
 use App\Actions\Safety\ManageMute;
+use App\Actions\Safety\ManageRestriction;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -73,6 +74,22 @@ trait InteractsWithPosts
         $user = $this->postActor();
         app(ManageMute::class)->mute($user, User::findOrFail($userId));
         $this->postStatus = 'Die Person ist stummgeschaltet. Sie merkt nichts.';
+    }
+
+    /** Verified accounts may restrict a person silently, including in read-only mode. */
+    public function restrictUser(int $userId): void
+    {
+        $user = $this->postActor();
+        app(ManageRestriction::class)->restrict($user, User::findOrFail($userId));
+        $this->postStatus = 'Die Person ist eingeschränkt. Ihre Antworten unter deinen Tropfen sieht nur sie selbst.';
+    }
+
+    /** Undo only the current account's restriction, including in read-only mode. */
+    public function unrestrictUser(int $userId): void
+    {
+        $user = $this->postActor();
+        app(ManageRestriction::class)->unrestrict($user, User::findOrFail($userId));
+        $this->postStatus = 'Einschränkung aufgehoben.';
     }
 
     /** Undo only the current account's mute, including in read-only mode. */

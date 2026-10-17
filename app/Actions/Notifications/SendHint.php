@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 
-/** Single delivery boundary: preferences, safety, visibility and event idempotency. */
+/** Single delivery boundary: preferences, safety (blocks, mutes, restrictions, hidden words), visibility and idempotency. */
 class SendHint
 {
     /** Rechecked by the inbox and digest so later blocks/removals do not expose old excerpts. */
@@ -20,8 +20,9 @@ class SendHint
         return ! $recipient->is($actor)
             && ! $recipient->isBlockedWith($actor)
             && ! in_array($actor->id, $recipient->mutedUserIds(), true)
+            && ! in_array($actor->id, $recipient->restrictedUserIds(), true)
             && ($kind !== NoticeKind::Mention || $recipient->privacy()->allows('mentions_audience', $actor))
-            && ($post === null || $post->isVisibleTo($recipient));
+            && ($post === null || ($post->isVisibleTo($recipient) && ! $recipient->privacy()->hides($post->body)));
     }
 
     /**

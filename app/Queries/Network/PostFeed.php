@@ -103,7 +103,7 @@ class PostFeed
      */
     public function replies(Post $post, ?User $viewer): Collection
     {
-        $query = Post::query()->where('reply_to_id', $post->id)->visibleTo($viewer);
+        $query = $this->withoutHiddenReplies(Post::query()->where('reply_to_id', $post->id)->visibleTo($viewer), $post->author, $viewer);
 
         $replies = $this->withCardData($this->filterSafety($query, $viewer), $viewer)
             ->orderBy('id')->limit(200)->get();
@@ -129,7 +129,47 @@ class PostFeed
     }
 
     /**
-     * Exclude posts from blocked users (bidirectional) and muted users (for this viewer).
+     * Replies the Tropfen's author hides – from restricted accounts or with one of their hidden words – stay visible
+     * only to whoever wrote them (mirrors {@see User::hidesReplyFrom()}).
+     *
+     * @param  Builder<Post>  $query
+     * @return Builder<Post>
+     */
+    private function withoutHiddenReplies(Builder $query, User $owner, ?User $viewer): Builder
+    {
+        $restricted = $owner->restrictedUserIds();
+        $words = $owner->privacy()->hiddenWords();
+        if ($restricted === [] && $words === []) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $shown) use ($owner, $viewer, $restricted, $words): void {
+            $shown->where(fn (Builder $clean) => $this->withoutWords($clean->when($restricted !== [],
+                fn (Builder $people) => $people->whereNotIn('posts.user_id', $restricted)), $words))
+                ->orWhere('posts.user_id', $owner->id)
+                ->when($viewer !== null, fn (Builder $own) => $own->orWhere('posts.user_id', $viewer->id));
+        });
+    }
+
+    /**
+     * Texts without any of the words; LIKE follows the case-insensitive collation of the column.
+     *
+     * @param  Builder<Post>  $query
+     * @param  list<string>  $words
+     * @return Builder<Post>
+     */
+    private function withoutWords(Builder $query, array $words): Builder
+    {
+        foreach ($words as $word) {
+            $query->where('posts.body', 'not like', '%'.self::escapeLike($word).'%');
+        }
+
+        return $query;
+    }
+
+    /**
+     * Exclude posts from blocked users (bidirectional), muted users and – except the viewer's own – posts with one of
+     * the viewer's hidden words.
      *
      * @param  Builder<Post>  $query
      * @return Builder<Post>
@@ -138,6 +178,11 @@ class PostFeed
     {
         if ($viewer === null) {
             return $query;
+        }
+
+        if (($words = $viewer->privacy()->hiddenWords()) !== []) {
+            $query->where(fn (Builder $shown) => $shown->where('posts.user_id', $viewer->id)
+                ->orWhere(fn (Builder $clean) => $this->withoutWords($clean, $words)));
         }
 
         if (! empty($blocked = $viewer->blockedUserIds())) {
@@ -229,10 +274,13 @@ class PostFeed
             });
         });
 
+        $origins = $posts->keyBy('id');
         $replies = $repliesQuery
             ->with(['author.profile', 'author.privacySetting'])
             ->orderBy('id', 'asc')
             ->get()
+            ->reject(fn (Post $reply): bool => $reply->user_id !== $viewer->id
+                && $origins->get($reply->reply_to_id)?->author?->hidesReplyFrom($reply) === true)
             ->groupBy('reply_to_id');
 
         foreach ($posts as $post) {

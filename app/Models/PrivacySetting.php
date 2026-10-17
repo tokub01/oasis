@@ -20,12 +20,16 @@ use InvalidArgumentException;
  * @property Audience $profile_audience who may open the profile page
  * @property Visibility $default_post_visibility preselected audience of new Tropfen
  * @property Audience $follower_count_audience who sees the size of the Karawane on the profile
+ * @property Audience $location_audience who sees the location on the profile
+ * @property Audience $oases_audience who sees the oases the member belongs to on the profile
  * @property Audience $mentions_audience whose @mentions reach the member (link and hint)
  * @property Audience $replies_audience who may answer the member's Tropfen
  * @property Audience $carry_audience who may carry the member's Tropfen further
  * @property Audience $chat_invites_audience who may start a chat with the member or add them to one
  * @property bool $searchable found by name and username in the Oasis search
  * @property bool $search_engines public profile and Tropfen may be indexed by search engines
+ * @property bool $login_alerts mail when someone signs in from a browser or system not seen before
+ * @property array<int, string>|null $hidden_words words hidden from the member's lists, hints and replies ({@see hides()})
  */
 class PrivacySetting extends Model
 {
@@ -33,6 +37,8 @@ class PrivacySetting extends Model
     public const AUDIENCES = [
         'profile_audience' => [Audience::Everyone, Audience::Members, Audience::Following],
         'follower_count_audience' => [Audience::Everyone, Audience::Members, Audience::Following, Audience::Nobody],
+        'location_audience' => [Audience::Everyone, Audience::Members, Audience::Following, Audience::Nobody],
+        'oases_audience' => [Audience::Everyone, Audience::Members, Audience::Following, Audience::Nobody],
         'mentions_audience' => [Audience::Members, Audience::Following, Audience::Nobody],
         'replies_audience' => [Audience::Members, Audience::Following, Audience::Nobody],
         'carry_audience' => [Audience::Members, Audience::Following, Audience::Nobody],
@@ -44,15 +50,17 @@ class PrivacySetting extends Model
 
     /** The account is never mass-assigned: rows are created through $user->privacySetting() (UpdatePrivacySetting). */
     protected $fillable = [
-        'profile_audience', 'default_post_visibility', 'follower_count_audience', 'mentions_audience',
-        'replies_audience', 'carry_audience', 'chat_invites_audience', 'searchable', 'search_engines',
+        'profile_audience', 'default_post_visibility', 'follower_count_audience', 'location_audience', 'oases_audience',
+        'mentions_audience', 'replies_audience', 'carry_audience', 'chat_invites_audience', 'searchable',
+        'search_engines', 'login_alerts', 'hidden_words',
     ];
 
     /** Privacy by default for accounts that never changed anything. */
     protected $attributes = [
         'profile_audience' => 'members', 'default_post_visibility' => 'members', 'follower_count_audience' => 'members',
+        'location_audience' => 'members', 'oases_audience' => 'members',
         'mentions_audience' => 'members', 'replies_audience' => 'members', 'carry_audience' => 'members',
-        'chat_invites_audience' => 'members', 'searchable' => true, 'search_engines' => false,
+        'chat_invites_audience' => 'members', 'searchable' => true, 'search_engines' => false, 'login_alerts' => true,
     ];
 
     /** @return array<string, string> */
@@ -60,10 +68,11 @@ class PrivacySetting extends Model
     {
         return [
             'profile_audience' => Audience::class, 'default_post_visibility' => Visibility::class,
-            'follower_count_audience' => Audience::class, 'mentions_audience' => Audience::class,
+            'follower_count_audience' => Audience::class, 'location_audience' => Audience::class,
+            'oases_audience' => Audience::class, 'mentions_audience' => Audience::class,
             'replies_audience' => Audience::class, 'carry_audience' => Audience::class,
             'chat_invites_audience' => Audience::class, 'searchable' => 'boolean', 'search_engines' => 'boolean',
-            'user_id' => 'integer',
+            'login_alerts' => 'boolean', 'hidden_words' => 'array', 'user_id' => 'integer',
         ];
     }
 
@@ -97,6 +106,29 @@ class PrivacySetting extends Model
             Audience::Following => $viewer?->hasVerifiedEmail() === true && $this->ownerFollows($viewer),
             Audience::Nobody => false,
         };
+    }
+
+    /**
+     * The member's hidden words, lower case.
+     *
+     * @return list<string>
+     */
+    public function hiddenWords(): array
+    {
+        return array_values($this->hidden_words ?? []);
+    }
+
+    /** Whether $text contains one of the hidden words (case-insensitive, also inside longer words, like the search). */
+    public function hides(string $text): bool
+    {
+        $text = mb_strtolower($text);
+        foreach ($this->hiddenWords() as $word) {
+            if (str_contains($text, $word)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** Search engines may index public guest pages only when the profile is public and the member opts in. */

@@ -19,13 +19,13 @@
     </header>
 
     @if ($section)
-        <section wire:key="step-{{ $step }}" class="flex flex-col gap-5 rounded-[24px] bg-paper p-6">
+        <section wire:key="step-{{ $step }}" class="flex flex-col gap-5 rounded-[24px] bg-paper p-5 sm:p-6">
             @foreach ($section[1] as $key)
                 @include('livewire.privacy.partials.setting', ['key' => $key])
             @endforeach
         </section>
     @else
-        <section wire:key="step-summary" aria-label="Zusammenfassung" class="flex flex-col gap-5 rounded-[24px] bg-paper p-6">
+        <section wire:key="step-summary" aria-label="Zusammenfassung" class="flex flex-col gap-5 rounded-[24px] bg-paper p-5 sm:p-6">
             <dl class="m-0 flex flex-col divide-y divide-paper-line">
                 @foreach ($summary as $key => $row)
                     <div wire:key="summary-{{ $key }}" class="flex flex-wrap justify-between gap-x-6 gap-y-1 py-3">
@@ -35,7 +35,9 @@
                 @endforeach
             </dl>
             <ul class="m-0 flex list-none flex-wrap gap-x-6 gap-y-1 p-0">
-                <li><a href="{{ route('safety.index') }}" wire:navigate class="o-link inline-flex min-h-11 items-center text-night">Blockiert &amp; stumm ansehen</a></li>
+                <li><a href="{{ route('safety.index') }}" wire:navigate class="o-link inline-flex min-h-11 items-center text-night">Blockiert, stumm &amp; eingeschränkt</a></li>
+                <li><a href="{{ route('app.privacy.words') }}" wire:navigate class="o-link inline-flex min-h-11 items-center text-night">Verborgene Wörter</a></li>
+                <li><a href="{{ route('app.privacy.devices') }}" wire:navigate class="o-link inline-flex min-h-11 items-center text-night">Geräte und Anmeldungen</a></li>
                 <li><a href="{{ route('account.export') }}" class="o-link inline-flex min-h-11 items-center text-night">Deine Daten herunterladen</a></li>
                 <li><a href="{{ route('app.settings') }}#loeschen-titel" class="o-link inline-flex min-h-11 items-center text-night">Konto löschen</a></li>
             </ul>

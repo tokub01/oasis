@@ -45,7 +45,7 @@ describe('opening writes nothing', function () {
     it('walks the whole check without changing anything and still stores nothing', function () {
         $this->actingAs(N::member());
 
-        Livewire::test(Checkup::class)->call('next')->call('next')->call('next')->call('back')->call('next');
+        Livewire::test(Checkup::class)->call('next')->call('next')->call('next')->call('next')->call('back')->call('next');
 
         expect(PrivacySetting::count())->toBe(0);
     });
@@ -195,13 +195,13 @@ describe('guided check', function () {
         $this->actingAs(N::member());
 
         expect(thrownBy(fn () => Livewire::test(Checkup::class)->set('step', $step)))->toBe(CannotUpdateLockedPropertyException::class);
-    })->with([0, 4, PHP_INT_MAX, 'summary']);
+    })->with([0, 5, PHP_INT_MAX, 'summary']);
 
     it('stays within the steps when walking past either end', function () {
         $this->actingAs(N::member());
 
         Livewire::test(Checkup::class)->call('back')->assertSet('step', 1)
-            ->call('next')->call('next')->call('next')->call('next')->call('next')->assertSet('step', 4)->assertOk();
+            ->call('next')->call('next')->call('next')->call('next')->call('next')->call('next')->assertSet('step', 5)->assertOk();
     });
 
     it('rejects manipulated keys in the check too and keeps the summary readable', function () {
@@ -209,14 +209,14 @@ describe('guided check', function () {
 
         Livewire::test(Checkup::class)->set('settings.default_post_visibility', ['public'])
             ->assertHasErrors('settings.default_post_visibility')
-            ->call('next')->call('next')->call('next')->assertSee('Alles im Blick')->assertSee('Nur für Mitglieder');
+            ->call('next')->call('next')->call('next')->call('next')->assertSee('Alles im Blick')->assertSee('Nur für Mitglieder');
         expect(PrivacySetting::count())->toBe(0);
     });
 
     it('shows a saved change in the summary of the same session', function () {
         $this->actingAs(N::member());
 
-        Livewire::test(Checkup::class)->set('settings.search_engines', true)->call('next')->call('next')->call('next')
+        Livewire::test(Checkup::class)->set('settings.search_engines', true)->call('next')->call('next')->call('next')->call('next')
             ->assertSeeHtml('Öffentliches Profil in Suchmaschinen</dt>')
             ->assertSeeHtml('<dd class="m-0 font-bold text-night">Ja</dd>');
     });
@@ -224,8 +224,9 @@ describe('guided check', function () {
     it('links export, blocked/muted and account deletion from the summary', function () {
         $this->actingAs(N::member());
 
-        Livewire::test(Checkup::class)->call('next')->call('next')->call('next')
+        Livewire::test(Checkup::class)->call('next')->call('next')->call('next')->call('next')
             ->assertSee(route('account.export'), false)->assertSee(route('safety.index'), false)
+            ->assertSee(route('app.privacy.words'), false)->assertSee(route('app.privacy.devices'), false)
             ->assertSee(route('app.settings').'#loeschen-titel', false);
     });
 });

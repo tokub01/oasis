@@ -91,6 +91,15 @@
                                 <button type="submit" wire:loading.attr="disabled" class="{{ $menuItem }}">Stummschalten</button>
                             </form>
                         @endif
+                        @if ($viewer->hasRestricted($post->author))
+                            <form wire:submit="unrestrictUser({{ $post->author->id }})">
+                                <button type="submit" wire:loading.attr="disabled" class="{{ $menuItem }}">Nicht mehr einschränken</button>
+                            </form>
+                        @else
+                            <form wire:submit="restrictUser({{ $post->author->id }})">
+                                <button type="submit" wire:loading.attr="disabled" class="{{ $menuItem }}">Einschränken</button>
+                            </form>
+                        @endif
                         <details>
                             <summary class="{{ $menuItem }} list-none [&::-webkit-details-marker]:hidden">Blockieren …</summary>
                             <div class="flex flex-col gap-2 px-3 pt-1 pb-2 text-sm">

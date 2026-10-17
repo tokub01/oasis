@@ -16,11 +16,11 @@
         'Mitmachen' => auth()->check() ? [
             ['Zur App', route('app.home')],
             ['Gemeinsam starten', route('oasis.gemeinsam')],
-            ['Gründungsmitglied', route('oasis.gruendung')],
+            ['Gründungs­mitglied', route('oasis.gruendung')],
         ] : [
             [config('oasis.trial_days').' Tage testen', route('register')],
             ['Gemeinsam starten', route('oasis.gemeinsam')],
-            ['Gründungsmitglied', route('oasis.gruendung')],
+            ['Gründungs­mitglied', route('oasis.gruendung')],
             ['Als Gast reinlesen', route('oasis.entdecken')],
             ['Anmelden', route('login')],
         ],
@@ -32,12 +32,13 @@
             ['Impressum', route('oasis.impressum')],
             ['Datenschutz', route('oasis.datenschutz')],
             ['AGB', route('oasis.agb')],
-            ['Widerrufsbelehrung', route('oasis.widerrufsbelehrung')],
+            ['Widerrufs­belehrung', route('oasis.widerrufsbelehrung')],
         ],
     ];
 @endphp
 
 <footer class="bg-night text-on-night">
+    {{-- Long labels carry soft hyphens (U+00AD) so they break inside the two columns of a 320 px phone. --}}
     <div class="o-container flex flex-col gap-12 pt-[72px] pb-9">
         <div class="flex flex-wrap justify-between gap-x-12 gap-y-10">
             <div class="flex max-w-[360px] flex-[1_1_280px] flex-col gap-4">

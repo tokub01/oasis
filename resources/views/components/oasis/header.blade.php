@@ -61,7 +61,8 @@
                     <a href="{{ route('app.home') }}" wire:navigate class="o-btn o-btn-sm o-btn-primary whitespace-nowrap max-sm:px-4">Zur App</a>
                 @else
                     <a href="{{ route('login') }}" wire:navigate class="hidden min-h-11 items-center text-base font-semibold text-night no-underline xl:inline-flex">Anmelden</a>
-                    <a href="{{ route('register') }}" wire:navigate class="o-btn o-btn-sm o-btn-primary whitespace-nowrap max-sm:px-4">{{ config('oasis.trial_days') }} Tage testen</a>
+                    {{-- Below 360 px logo, button and menu do not fit in one row: the button moves into the menu. --}}
+                    <a href="{{ route('register') }}" wire:navigate class="o-btn o-btn-sm o-btn-primary whitespace-nowrap max-sm:px-4 max-[359px]:hidden">{{ config('oasis.trial_days') }} Tage testen</a>
                 @endauth
 
                 <details class="group relative xl:hidden">
@@ -89,6 +90,7 @@
                         @guest
                             <div aria-hidden="true" class="mx-3 my-1 h-px bg-paper-line"></div>
                             <a href="{{ route('login') }}" wire:navigate class="flex min-h-11 items-center rounded-xl px-3 font-bold text-night no-underline">Anmelden</a>
+                            <a href="{{ route('register') }}" wire:navigate class="o-btn o-btn-sm o-btn-primary min-[360px]:hidden">{{ config('oasis.trial_days') }} Tage testen</a>
                         @endguest
                     </div>
                 </details>

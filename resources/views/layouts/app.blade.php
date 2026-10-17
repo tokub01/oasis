@@ -90,16 +90,17 @@
                 <nav aria-label="App-Navigation"
                      class="fixed inset-x-0 bottom-0 z-20 border-t border-dune-line bg-paper pb-[env(safe-area-inset-bottom)] lg:static lg:border-0 lg:bg-transparent lg:pb-0">
                     <ul class="m-0 flex list-none justify-around p-0 px-2 py-1 lg:flex-col lg:px-0 lg:justify-start lg:gap-1 lg:py-0">
+                        {{-- Below 380 px five labels do not fit: the bar shows icons, the labels stay for screen readers. --}}
                         @foreach ($nav as $key => [$label, $icon, $href])
-                            <li>
+                            <li class="min-w-0 flex-1 lg:flex-none">
                                 <a href="{{ $href }}" wire:navigate @if ($active === $key) aria-current="page" @endif
                                    @class([
-                                       'flex min-h-12 flex-col items-center justify-center gap-1 rounded-2xl px-3 text-xs font-bold no-underline lg:flex-row lg:justify-start lg:gap-3 lg:px-4 lg:text-base',
+                                       'flex min-h-12 flex-col items-center justify-center gap-1 rounded-2xl px-1 text-xs font-bold no-underline sm:px-3 lg:flex-row lg:justify-start lg:gap-3 lg:px-4 lg:text-base',
                                        'bg-night text-on-night' => $active === $key,
                                        'text-ink-2' => $active !== $key,
                                    ])>
                                     <x-oasis.icon :name="$icon" :size="22" />
-                                    <span>{{ $label }}</span>
+                                    <span class="max-w-full truncate max-[379px]:sr-only">{{ $label }}</span>
                                 </a>
                             </li>
                         @endforeach

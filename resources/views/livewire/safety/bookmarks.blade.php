@@ -32,8 +32,8 @@
             </x-network.side-card>
 
             <x-network.side-card title="Sicherheit">
-                <p class="m-0 text-[15px] text-ink-2">Verwalte blockierte und stummgeschaltete Konten.</p>
-                <a wire:navigate href="{{ route('safety.index') }}" class="o-btn o-btn-md o-btn-outline self-start">Sicherheitseinstellungen</a>
+                <p class="m-0 text-[15px] text-ink-2">Verwalte blockierte, stummgeschaltete und eingeschränkte Konten.</p>
+                <a wire:navigate href="{{ route('safety.index') }}" class="o-btn o-btn-md o-btn-outline self-start">Konten verwalten</a>
             </x-network.side-card>
         </x-slot:aside>
     </x-network.columns>

@@ -159,8 +159,8 @@
                 <p class="max-w-[32em] text-lg leading-[1.6] text-ink-2">Ein Netzwerk ist nur so gut wie die Menschen darin. Lade deine WG, deine Fachschaft oder dein Team ein. Euer Test beginnt erst, wenn alle da sind.</p>
                 <a href="{{ route('oasis.gemeinsam') }}" class="o-btn o-btn-md o-btn-outline self-start">So funktioniert der Gruppenstart</a>
             </div>
-            <figure aria-label="Beispiel: eine Gruppe startet gemeinsam" class="flex w-full max-w-[440px] flex-col gap-[18px] justify-self-center rounded-[28px] bg-paper p-7 shadow-card">
-                <div class="flex items-center justify-between gap-3">
+            <figure aria-label="Beispiel: eine Gruppe startet gemeinsam" class="flex w-full max-w-[440px] flex-col gap-[18px] justify-self-center rounded-[28px] bg-paper p-5 shadow-card sm:p-7">
+                <div class="flex flex-wrap items-center justify-between gap-3">
                     <div class="flex flex-col leading-[1.3]">
                         <span class="text-[19px] font-extrabold text-night">WG Kastanienallee</span>
                         <span class="text-[15px] text-muted">4 von 5 sind dabei</span>

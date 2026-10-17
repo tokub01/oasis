@@ -21,7 +21,8 @@
     $carriedMuted = $carried && $viewer && in_array($carried->user_id, $viewer->mutedUserIds(), true);
     $postUrl = route('network.posts.show', $post);
     $bookmarked = $viewer && ($post->bookmarked ?? $viewer->hasBookmarked($post));
-    // Phones: the actions share one row as icon-over-label tiles; from 640px they sit side by side as pills.
+    // Phones: the actions share one row as icon-over-label tiles (icons only below 380px, labels stay for screen
+    // readers); from 640px they sit side by side as pills.
     $actionCount = ($canInteract ? 1 + (int) $canReply + (int) $canCarry : 0) + ($viewer ? 1 : 0);
     $actionGrid = $actionCount === 3 ? 'grid-cols-3' : 'grid-cols-4';
     $action = 'inline-flex min-h-11 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-none bg-transparent px-1 py-1 text-xs no-underline sm:w-auto sm:flex-row sm:gap-2 sm:rounded-full sm:px-3 sm:text-base';
@@ -219,24 +220,24 @@
             @if ($canInteract)
                 @if ($canReply)
                     <a wire:navigate href="{{ $postUrl }}#antworten" class="{{ $action }} text-night">
-                        <x-oasis.icon name="reply" :size="20" /><span>Antworten</span>
+                        <x-oasis.icon name="reply" :size="20" /><span class="max-[379px]:sr-only">Antworten</span>
                     </a>
                 @endif
                 @if ($canCarry)
                     <a wire:navigate href="{{ route('network.posts.carry', $post) }}" class="{{ $action }} text-night">
-                        <x-oasis.icon name="repost" :size="20" /><span>Weitertragen</span>
+                        <x-oasis.icon name="repost" :size="20" /><span class="max-[379px]:sr-only">Weitertragen</span>
                     </a>
                 @endif
                 @if ($post->reacted)
                     <form wire:submit="unreact({{ $post->id }})">
                         <button type="submit" wire:loading.attr="disabled" aria-pressed="true" class="{{ $action }} text-sun-text">
-                            <x-oasis.icon name="heart" :size="20" /><span>Reagiert</span>
+                            <x-oasis.icon name="heart" :size="20" /><span class="max-[379px]:sr-only">Reagiert</span>
                         </button>
                     </form>
                 @else
                     <form wire:submit="react({{ $post->id }})">
                         <button type="submit" wire:loading.attr="disabled" aria-pressed="false" class="{{ $action }} text-night">
-                            <x-oasis.icon name="heart" :size="20" /><span>Reagieren</span>
+                            <x-oasis.icon name="heart" :size="20" /><span class="max-[379px]:sr-only">Reagieren</span>
                         </button>
                     </form>
                 @endif
@@ -246,14 +247,14 @@
                 <form wire:submit="unbookmark({{ $post->id }})">
                     <button type="submit" wire:loading.attr="disabled" aria-pressed="true" aria-label="Aus Merkliste entfernen" title="Aus Merkliste entfernen" class="{{ $action }} text-spring-text">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="flex-none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-                        <span>Gemerkt</span>
+                        <span class="max-[379px]:sr-only">Gemerkt</span>
                     </button>
                 </form>
             @else
                 <form wire:submit="bookmark({{ $post->id }})">
                     <button type="submit" wire:loading.attr="disabled" aria-pressed="false" aria-label="Tropfen merken" title="Tropfen merken" class="{{ $action }} text-night">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="flex-none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-                        <span>Merken</span>
+                        <span class="max-[379px]:sr-only">Merken</span>
                     </button>
                 </form>
             @endif

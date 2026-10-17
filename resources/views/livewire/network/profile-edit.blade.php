@@ -31,7 +31,7 @@
                 <legend class="mb-2 text-[15px] font-bold">Farbe deines Profilbilds</legend>
                 <div class="flex flex-wrap gap-4">
                     @foreach (\App\Enums\Network\AvatarColor::cases() as $color)
-                        <label wire:key="profile-edit-2-{{ $color->value }}" class="flex items-center gap-2">
+                        <label wire:key="profile-edit-2-{{ $color->value }}" class="flex min-h-11 items-center gap-2">
                             <input type="radio" name="avatar_color" wire:model="avatar_color" aria-describedby="profile-edit-avatar_color-error" value="{{ $color->value }}" >
                             <span aria-hidden="true" class="inline-block size-6 rounded-full {{ $color->classes() }}"></span>
                             {{ $color->label() }}

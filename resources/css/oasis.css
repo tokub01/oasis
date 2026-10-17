@@ -65,6 +65,16 @@
         font-family: var(--font-sans);
         font-size: 17px;
         line-height: 1.6;
+        /* Long German compounds and addresses must never push the page sideways. */
+        overflow-wrap: break-word;
+    }
+
+    /* Down to 320 px: hyphenate (lang="de") instead of cutting words like "Verbraucherstreitbeilegung". Wider screens
+       keep whole words. */
+    @media (max-width: 479px) {
+        body {
+            hyphens: auto;
+        }
     }
 
     a {
@@ -211,8 +221,13 @@
         align-items: center;
         justify-content: center;
         gap: 10px;
+        /* A long label wraps inside its card instead of overflowing it (narrow phones). */
+        max-width: 100%;
         min-height: 56px;
+        padding-block: 8px;
         padding-inline: 28px;
+        line-height: 1.25;
+        text-align: center;
         border-radius: 999px;
         font-size: 18px;
         font-weight: 800;

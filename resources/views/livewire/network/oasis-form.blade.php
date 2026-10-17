@@ -28,7 +28,7 @@
             <fieldset class="m-0 flex flex-col gap-2 border-none p-0">
                 <legend class="mb-2 text-[15px] font-bold">Wer darf die Oase lesen?</legend>
                 @foreach (\App\Enums\Network\Visibility::cases() as $option)
-                    <label wire:key="oasis-form-1-{{ $option->value }}" class="flex items-center gap-2">
+                    <label wire:key="oasis-form-1-{{ $option->value }}" class="flex min-h-11 items-center gap-2">
                         <input type="radio" name="visibility" wire:model="visibility" aria-describedby="oasis-form-visibility-error" value="{{ $option->value }}" >
                         {{ $option->label() }}
                     </label>
@@ -39,7 +39,7 @@
                 <legend class="mb-2 text-[15px] font-bold">Farbe</legend>
                 <div class="flex flex-wrap gap-4">
                     @foreach (\App\Enums\Network\AvatarColor::cases() as $color)
-                        <label wire:key="oasis-form-2-{{ $color->value }}" class="flex items-center gap-2">
+                        <label wire:key="oasis-form-2-{{ $color->value }}" class="flex min-h-11 items-center gap-2">
                             <input type="radio" name="color" wire:model="color" aria-describedby="oasis-form-color-error" value="{{ $color->value }}" >
                             <span aria-hidden="true" class="inline-block size-6 rounded-full {{ $color->classes() }}"></span>
                             {{ $color->label() }}
